@@ -1,0 +1,15 @@
+name: HiddenOre
+version: 1.0.0
+main: com.volmit.hiddenore.HiddenOre
+api-version: 1.20
+description: A unique mining feature which removes the need to generate ores, and allows economy changes on the fly.
+authors: [d15c07d, VolmitSoftware]
+commands:
+  hiddenore:
+    description: HiddenOre base command.
+    usage: /hiddenore [reload|debug]
+    permission: hiddenore.admin
+permissions:
+  hiddenore.admin:
+    description: Allows use of all Mining plugin commands
+    default: op

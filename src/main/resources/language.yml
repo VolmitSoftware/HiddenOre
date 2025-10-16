@@ -1,0 +1,7 @@
+prefix: "<green>[HiddenOre]</green> "
+no_permission: "<red>You do not have permission to use this command.</red>"
+reloaded: "<gold>Plugin config & messages reloaded.</gold>"
+usage:
+  - "<aqua>HiddenOre by VolmitSoftware</aqua>"
+  - "<yellow>Usage: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Debug: <white>/hiddenore debug</white></yellow>"
