@@ -6,6 +6,7 @@ import com.volmit.hiddenore.rules.MiningRuleManager;
 import com.volmit.hiddenore.util.ConfigWatcher;
 import com.volmit.hiddenore.util.Messages;
 import com.volmit.hiddenore.vein.PlayerVeinState;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -56,6 +57,7 @@ public class HiddenOre extends JavaPlugin {
         String version = getDescription().getVersion();
         String pluginName = getDescription().getName();
         getLogger().info(ASCII_BANNER + "\n" + pluginName + " v" + version);
+        new Metrics(this, 27610);
     }
 
     public MiningRuleManager getRuleManager() {
