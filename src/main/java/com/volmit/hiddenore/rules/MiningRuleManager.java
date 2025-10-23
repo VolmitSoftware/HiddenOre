@@ -19,6 +19,7 @@ public class MiningRuleManager {
         reload();
     }
 
+    @SuppressWarnings("unchecked")
     public void reload() {
         guaranteedDrops.clear();
         dropRules.clear();
@@ -36,13 +37,10 @@ public class MiningRuleManager {
             }
         }
 
-        // Load drops
+        // Load drops (support both item drops and command drops)
         List<Map<?, ?>> dropList = plugin.getConfig().getMapList("drops");
         for (Map<?, ?> entry : dropList) {
-            String itemName = (String) entry.get("item");
-            Material mat = Material.matchMaterial(itemName.toUpperCase(Locale.ROOT));
-            if (mat == null) continue;
-
+            // Basic common parse
             Object chanceObj = entry.get("chance");
             double chance = chanceObj instanceof Number ? ((Number) chanceObj).doubleValue() : 0.0;
 
@@ -51,6 +49,37 @@ public class MiningRuleManager {
 
             Object maxYObj = entry.get("max_y");
             int maxY = maxYObj instanceof Number ? ((Number) maxYObj).intValue() : 320;
+
+            // Detect if this is a command drop: either "type: command" or presence of "command" / "commands" key
+            String typeStr = entry.get("type") instanceof String ? ((String) entry.get("type")).toLowerCase(Locale.ROOT) : "";
+            Object commandObj = entry.get("command");
+            Object commandsObj = entry.get("commands");
+            boolean isCommand = "command".equals(typeStr) || commandObj != null || commandsObj != null;
+
+            if (isCommand) {
+                // Build list of commands (support single string or list)
+                List<String> commands = new ArrayList<>();
+                if (commandObj instanceof String) {
+                    commands.add((String) commandObj);
+                } else if (commandsObj instanceof List) {
+                    for (Object o : (List<?>) commandsObj) {
+                        if (o instanceof String) commands.add((String) o);
+                    }
+                } else {
+                    // fallback: maybe entry specified "item" but type: command — allow commands empty
+                }
+
+                // Command drops: chance only, no fortune, no veins, no xp, no tool tiers
+                ItemDropRule rule = new ItemDropRule(commands, chance, minY, maxY);
+                dropRules.add(rule);
+                continue;
+            }
+
+            // Otherwise it's an item drop
+            String itemName = entry.get("item") instanceof String ? (String) entry.get("item") : null;
+            if (itemName == null) continue;
+            Material mat = Material.matchMaterial(itemName.toUpperCase(Locale.ROOT));
+            if (mat == null) continue;
 
             Object fortuneObj = entry.get("fortune_multiplier");
             boolean fortune = fortuneObj instanceof Boolean && (Boolean) fortuneObj;
@@ -104,7 +133,16 @@ public class MiningRuleManager {
         ToolTier pickaxeTier = ToolTier.fromMaterial(pickaxeMat);
         List<ItemDropRule> result = new ArrayList<>();
         for (ItemDropRule rule : dropRules) {
-            if (pickaxeTier != null && rule.toolTiers.contains(pickaxeTier) && y >= rule.minY && y <= rule.maxY) {
+            if (y < rule.minY || y > rule.maxY) continue;
+
+            if (rule.type == ItemDropRule.DropType.COMMAND) {
+                // command drops are independent of tool tier
+                result.add(rule);
+                continue;
+            }
+
+            // item drop: check tool tier membership
+            if (pickaxeTier != null && rule.toolTiers.contains(pickaxeTier)) {
                 result.add(rule);
             }
         }

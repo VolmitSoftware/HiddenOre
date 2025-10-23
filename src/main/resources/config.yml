@@ -98,3 +98,12 @@ drops:
     tool_tiers: [IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
     vein_max_size: 2
     exp_drop: 7
+
+  # Example command drop (percentage chance only, not affected by enchantments/veins/XP)
+  - type: command
+    commands:
+      - "say &b%player% &7received a &bRare &7crate key while mining!"
+      - "crates give %player% rare 1"
+    chance: 0.0005
+    min_y: -64
+    max_y: 320

@@ -3,7 +3,6 @@ package com.volmit.hiddenore.listeners;
 import com.volmit.hiddenore.HiddenOre;
 import com.volmit.hiddenore.rules.ItemDropRule;
 import com.volmit.hiddenore.util.MiningUtil;
-import com.volmit.hiddenore.util.ToolTier;
 import com.volmit.hiddenore.vein.PlayerVeinState;
 import com.volmit.hiddenore.vein.VeinConfig;
 import net.kyori.adventure.text.Component;
@@ -11,7 +10,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -80,9 +78,9 @@ public class MiningListener implements Listener {
                     && veinCfg != null
                     && withinWindow(state, now, veinCfg.tokenWindowMs)
                     && withinRange(state, event.getBlock().getLocation(), veinCfg.tokenRange)) {
-                // Repeat the last drop
+                // Repeat the last drop (only if it was an ITEM type)
                 ItemDropRule rule = findRuleByKey(state.currentDropKey);
-                if (rule != null) {
+                if (rule != null && rule.type == ItemDropRule.DropType.ITEM) {
                     int amt = MiningUtil.applyFortune(toolClone, rule, 1);
                     drops.merge(rule.material, amt, Integer::sum);
 
@@ -103,11 +101,42 @@ public class MiningListener implements Listener {
             } else {
                 // Normal random drop logic
                 List<ItemDropRule> rules = plugin.getRuleManager().getApplicableDrops(tool.getType(), y);
+
+                // Collect commands to execute on success (main thread)
+                List<String> commandsToExecute = new ArrayList<>();
+
                 for (ItemDropRule rule : rules) {
                     double roll = ThreadLocalRandom.current().nextDouble();
                     boolean dropped = false;
                     int amount = 0;
 
+                    if (rule.type == ItemDropRule.DropType.COMMAND) {
+                        // Command drops: purely percentage based, not affected by enchantments, no xp, no vein
+                        if (roll < rule.chance) {
+                            // Add all commands for execution
+                            if (rule.commands != null) commandsToExecute.addAll(rule.commands);
+                            dropped = true;
+                            customDropOccurred = true;
+
+                            if (debug) {
+                                debugMessages.add(plugin.getMessages().parse(
+                                        "<gray>Command drop roll: <yellow>command</yellow> chance=<gold>" + rule.chance +
+                                                "</gold>, roll=<blue>" + String.format("%.4f", roll) +
+                                                "</blue> | <green>SUCCESS!</green>"
+                                ));
+                            }
+                        } else if (debug) {
+                            debugMessages.add(plugin.getMessages().parse(
+                                    "<gray>Command drop roll: <yellow>command</yellow> chance=<gold>" + rule.chance +
+                                            "</gold>, roll=<blue>" + String.format("%.4f", roll) +
+                                            "</blue> | <red>fail</red>"
+                            ));
+                        }
+                        // continue to next rule (no XP, no vein etc.)
+                        continue;
+                    }
+
+                    // ITEM drop path
                     if (roll < rule.chance) {
                         amount = MiningUtil.applyFortune(toolClone, rule, 1);
                         drops.merge(rule.material, amount, Integer::sum);
@@ -120,7 +149,7 @@ public class MiningListener implements Listener {
                             expToDrop.put(rule.material, expToDrop.getOrDefault(rule.material, 0) + exp);
                         }
 
-                        // Try to start a vein if configured
+                        // Try to start a vein if configured and allowed
                         if (veinCfg != null && rule.veinMaxSize > 0 && now >= state.cooldownUntil) {
                             double veinChance = veinCfg.veinBaseChance;
                             veinChance *= 1.0 + computeVeinChanceBonus(player, toolClone, veinCfg);
@@ -146,6 +175,7 @@ public class MiningListener implements Listener {
                             }
                         }
                     }
+
                     if (debug) {
                         debugMessages.add(plugin.getMessages().parse(
                                 "<gray>Drop roll for <yellow>" + rule.material.name().toLowerCase(Locale.ROOT) +
@@ -156,6 +186,17 @@ public class MiningListener implements Listener {
                                         " at Y=" + y + (rule.fortuneMultiplier ? " <green>[fortune]</green>" : "")
                         ));
                     }
+                }
+
+                // Execute queued commands on main thread
+                if (!commandsToExecute.isEmpty()) {
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        for (String rawCmd : commandsToExecute) {
+                            String cmd = applyCommandPlaceholders(rawCmd, player, loc);
+                            // execute as console
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                        }
+                    });
                 }
             }
 
@@ -212,10 +253,6 @@ public class MiningListener implements Listener {
         return (now - state.lastMineTime) <= windowMs;
     }
 
-    /**
-     * Enforces that the next block mined for a venin drop must be within the token_range of the last mined block.
-     */
-
     private boolean withinRange(PlayerVeinState state, org.bukkit.Location block, double maxRange) {
         if (state.lastMinedBlock == null) return false;
         return state.lastMinedBlock.getWorld().equals(block.getWorld()) &&
@@ -226,7 +263,7 @@ public class MiningListener implements Listener {
         double total = 0.0;
 
         // Tool enchantments
-        for (Map.Entry<Enchantment, Integer> ench : tool.getEnchantments().entrySet()) {
+        for (Map.Entry<org.bukkit.enchantments.Enchantment, Integer> ench : tool.getEnchantments().entrySet()) {
             String key = ench.getKey().getKey().getKey().toLowerCase(Locale.ROOT);
             Double mod = cfg.enchantModifiers.get(key);
             if (mod != null) {
@@ -248,9 +285,15 @@ public class MiningListener implements Listener {
         return total;
     }
 
-    // Used to uniquely identify a drop for a vein chain
+    // Used to uniquely identify a drop for a vein chain (only used for ITEM drops)
     private String veinDropKey(ItemDropRule rule) {
-        return rule.material.name() + ":" + rule.minY + ":" + rule.maxY;
+        if (rule.type == ItemDropRule.DropType.ITEM && rule.material != null) {
+            return "ITEM:" + rule.material.name() + ":" + rule.minY + ":" + rule.maxY;
+        } else if (rule.type == ItemDropRule.DropType.COMMAND) {
+            return "CMD:" + (rule.commands == null ? "" : String.join("|", rule.commands)) + ":" + rule.minY + ":" + rule.maxY;
+        } else {
+            return "UNKNOWN";
+        }
     }
 
     // Finds a rule by its unique key (for vein chaining)
@@ -260,5 +303,20 @@ public class MiningListener implements Listener {
             if (veinDropKey(rule).equals(key)) return rule;
         }
         return null;
+    }
+
+    // placeholders
+    private String applyCommandPlaceholders(String raw, Player player, org.bukkit.Location loc) {
+        if (raw == null) return "";
+        String result = raw;
+        result = result.replace("%player%", player.getName());
+        result = result.replace("%uuid%", player.getUniqueId().toString());
+        result = result.replace("%x%", String.valueOf(loc.getBlockX()));
+        result = result.replace("%y%", String.valueOf(loc.getBlockY()));
+        result = result.replace("%z%", String.valueOf(loc.getBlockZ()));
+        result = result.replace("%world%", loc.getWorld() == null ? "" : loc.getWorld().getName());
+        // strip leading slash if present to allow configuration to use "/say ..." or "say ..."
+        if (result.startsWith("/")) result = result.substring(1);
+        return result;
     }
 }
