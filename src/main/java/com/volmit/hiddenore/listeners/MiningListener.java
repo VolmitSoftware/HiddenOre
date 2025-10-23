@@ -27,6 +27,16 @@ public class MiningListener implements Listener {
         this.plugin = plugin;
     }
 
+    private static class CommandExec {
+        final String command;
+        final ItemDropRule.ExecutionTarget target;
+
+        CommandExec(String command, ItemDropRule.ExecutionTarget target) {
+            this.command = command;
+            this.target = target;
+        }
+    }
+
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         if (event.isCancelled()) return;
@@ -102,8 +112,7 @@ public class MiningListener implements Listener {
                 // Normal random drop logic
                 List<ItemDropRule> rules = plugin.getRuleManager().getApplicableDrops(tool.getType(), y);
 
-                // Collect commands to execute on success (main thread)
-                List<String> commandsToExecute = new ArrayList<>();
+                List<CommandExec> commandsToExecute = new ArrayList<>();
 
                 for (ItemDropRule rule : rules) {
                     double roll = ThreadLocalRandom.current().nextDouble();
@@ -113,8 +122,28 @@ public class MiningListener implements Listener {
                     if (rule.type == ItemDropRule.DropType.COMMAND) {
                         // Command drops: purely percentage based, not affected by enchantments, no xp, no vein
                         if (roll < rule.chance) {
-                            // Add all commands for execution
-                            if (rule.commands != null) commandsToExecute.addAll(rule.commands);
+                            if (rule.commands != null) {
+                                for (String raw : rule.commands) {
+                                    if (raw == null) continue;
+                                    String trimmed = raw.trim();
+                                    ItemDropRule.ExecutionTarget parsedTarget = rule.executionTarget; // rule-level default
+                                    String cmdText = trimmed;
+
+                                    // Detect prefix: "player:" or "console:"
+                                    int colon = trimmed.indexOf(':');
+                                    if (colon > 0) {
+                                        String prefix = trimmed.substring(0, colon).toLowerCase(Locale.ROOT);
+                                        if ("player".equals(prefix) || "console".equals(prefix)) {
+                                            cmdText = trimmed.substring(colon + 1).trim();
+                                            parsedTarget = "player".equals(prefix) ? ItemDropRule.ExecutionTarget.PLAYER : ItemDropRule.ExecutionTarget.CONSOLE;
+                                        }
+                                    }
+
+                                    if (!cmdText.isEmpty()) {
+                                        commandsToExecute.add(new CommandExec(cmdText, parsedTarget));
+                                    }
+                                }
+                            }
                             dropped = true;
                             customDropOccurred = true;
 
@@ -136,7 +165,6 @@ public class MiningListener implements Listener {
                         continue;
                     }
 
-                    // ITEM drop path
                     if (roll < rule.chance) {
                         amount = MiningUtil.applyFortune(toolClone, rule, 1);
                         drops.merge(rule.material, amount, Integer::sum);
@@ -178,11 +206,11 @@ public class MiningListener implements Listener {
 
                     if (debug) {
                         debugMessages.add(plugin.getMessages().parse(
-                                "<gray>Drop roll for <yellow>" + rule.material.name().toLowerCase(Locale.ROOT) +
+                                "<gray>Drop roll for <yellow>" + (rule.type == ItemDropRule.DropType.ITEM ? rule.material.name().toLowerCase(Locale.ROOT) : "command") +
                                         "</yellow>: chance=<gold>" + rule.chance +
                                         "</gold>, roll=<blue>" + String.format("%.4f", roll) +
                                         "</blue> | " + (dropped ? "<green>SUCCESS!</green>" : "<red>fail</red>") +
-                                        (dropped ? " <yellow>Amount: " + amount + "</yellow>" : "") +
+                                        (dropped && rule.type == ItemDropRule.DropType.ITEM ? " <yellow>Amount: " + amount + "</yellow>" : "") +
                                         " at Y=" + y + (rule.fortuneMultiplier ? " <green>[fortune]</green>" : "")
                         ));
                     }
@@ -191,10 +219,14 @@ public class MiningListener implements Listener {
                 // Execute queued commands on main thread
                 if (!commandsToExecute.isEmpty()) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
-                        for (String rawCmd : commandsToExecute) {
-                            String cmd = applyCommandPlaceholders(rawCmd, player, loc);
-                            // execute as console
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                        for (CommandExec ce : commandsToExecute) {
+                            String cmdWithPlaceholders = applyCommandPlaceholders(ce.command, player, loc);
+                            String cmd = cmdWithPlaceholders.startsWith("/") ? cmdWithPlaceholders.substring(1) : cmdWithPlaceholders;
+                            if (ce.target == ItemDropRule.ExecutionTarget.PLAYER) {
+                                Bukkit.dispatchCommand(player, cmd);
+                            } else {
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                            }
                         }
                     });
                 }
@@ -305,7 +337,6 @@ public class MiningListener implements Listener {
         return null;
     }
 
-    // placeholders
     private String applyCommandPlaceholders(String raw, Player player, org.bukkit.Location loc) {
         if (raw == null) return "";
         String result = raw;
@@ -315,8 +346,6 @@ public class MiningListener implements Listener {
         result = result.replace("%y%", String.valueOf(loc.getBlockY()));
         result = result.replace("%z%", String.valueOf(loc.getBlockZ()));
         result = result.replace("%world%", loc.getWorld() == null ? "" : loc.getWorld().getName());
-        // strip leading slash if present to allow configuration to use "/say ..." or "say ..."
-        if (result.startsWith("/")) result = result.substring(1);
         return result;
     }
 }

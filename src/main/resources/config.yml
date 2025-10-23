@@ -100,10 +100,14 @@ drops:
     exp_drop: 7
 
   # Example command drop (percentage chance only, not affected by enchantments/veins/XP)
+  # You can specify whether you want the command to be executed by the player, or console using "player:" and "console:"
+  # If you don't specify what it will run as, it will default to what you have execute_as set to
   - type: command
     commands:
-      - "say &b%player% &7received a &bRare &7crate key while mining!"
-      - "crates give %player% rare 1"
+      - "player:say I rolled a player-level bonus!"
+      - "console:say %player% rolled a server-level bonus!"
+      - "give %player% diamond 1"
     chance: 0.0005
     min_y: -64
     max_y: 320
+    execute_as: console

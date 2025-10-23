@@ -1,5 +1,6 @@
 package com.volmit.hiddenore.rules;
 
+import com.volmit.hiddenore.rules.ItemDropRule;
 import com.volmit.hiddenore.util.ToolTier;
 import com.volmit.hiddenore.vein.VeinConfig;
 import org.bukkit.Material;
@@ -57,7 +58,6 @@ public class MiningRuleManager {
             boolean isCommand = "command".equals(typeStr) || commandObj != null || commandsObj != null;
 
             if (isCommand) {
-                // Build list of commands (support single string or list)
                 List<String> commands = new ArrayList<>();
                 if (commandObj instanceof String) {
                     commands.add((String) commandObj);
@@ -65,12 +65,22 @@ public class MiningRuleManager {
                     for (Object o : (List<?>) commandsObj) {
                         if (o instanceof String) commands.add((String) o);
                     }
-                } else {
-                    // fallback: maybe entry specified "item" but type: command — allow commands empty
                 }
 
-                // Command drops: chance only, no fortune, no veins, no xp, no tool tiers
-                ItemDropRule rule = new ItemDropRule(commands, chance, minY, maxY);
+                ItemDropRule.ExecutionTarget execTarget = ItemDropRule.ExecutionTarget.CONSOLE;
+                Object execAsObj = entry.get("execute_as");
+                if (execAsObj instanceof String) {
+                    String execAs = ((String) execAsObj).toLowerCase(Locale.ROOT);
+                    if ("player".equals(execAs) || "as_player".equals(execAs)) execTarget = ItemDropRule.ExecutionTarget.PLAYER;
+                } else {
+                    Object asPlayerObj = entry.get("as_player");
+                    if (asPlayerObj instanceof Boolean && (Boolean) asPlayerObj) {
+                        execTarget = ItemDropRule.ExecutionTarget.PLAYER;
+                    }
+                }
+
+                // Command drops: chance only, no fortune, no veins, no xp, default tool tiers empty
+                ItemDropRule rule = new ItemDropRule(commands, chance, minY, maxY, execTarget);
                 dropRules.add(rule);
                 continue;
             }
@@ -136,12 +146,10 @@ public class MiningRuleManager {
             if (y < rule.minY || y > rule.maxY) continue;
 
             if (rule.type == ItemDropRule.DropType.COMMAND) {
-                // command drops are independent of tool tier
                 result.add(rule);
                 continue;
             }
 
-            // item drop: check tool tier membership
             if (pickaxeTier != null && rule.toolTiers.contains(pickaxeTier)) {
                 result.add(rule);
             }
