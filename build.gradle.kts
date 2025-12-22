@@ -5,7 +5,8 @@ plugins {
 }
 
 group = "com.volmit"
-version = "1.0.0"
+version = "1.1.0-1.21.10-1.21.10"
+val apiVersion = "1.21"
 
 repositories {
     mavenCentral()
@@ -31,6 +32,16 @@ tasks{
     }
     runServer {
         minecraftVersion("1.21.10")
+    }
+
+    processResources {
+        inputs.properties(
+            "version" to project.version,
+            "apiVersion" to apiVersion
+        )
+        filesMatching("plugin.yml") {
+            expand(inputs.properties)
+        }
     }
 }
 
