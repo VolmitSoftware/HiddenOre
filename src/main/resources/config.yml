@@ -2,12 +2,21 @@ auto_pickup_drops: false
 suppress_block_drop_on_custom_drop: true
 
 generation:
+  # If disabled, no changes will be made to the world generation
   enabled: false
+  # Global settings for all worlds excluding overrides
   global:
+    # If true, by default all ores will be removed from the world generation
     default: true
+    # Override for the default value of a specific ore
+    # accepted keys are:
+    # COAL_ORE, COPPER_ORE, IRON_ORE, GOLD_ORE, DIAMOND_ORE, REDSTONE_ORE, LAPIS_ORE, EMERALD_ORE
+    # DEEPSLATE_COAL_ORE, DEEPSLATE_COPPER_ORE, DEEPSLATE_IRON_ORE, DEEPSLATE_GOLD_ORE, DEEPSLATE_DIAMOND_ORE, DEEPSLATE_REDSTONE_ORE, DEEPSLATE_LAPIS_ORE, DEEPSLATE_EMERALD_ORE
+    # NETHER_GOLD_ORE, NETHER_QUARTZ_ORE, ANCIENT_DEBRIS
     NETHER_GOLD_ORE: false
     NETHER_QUARTZ_ORE: false
     ANCIENT_DEBRIS: false
+  # Overrides for specific worlds
   overrides:
     world_the_end:
       default: false
