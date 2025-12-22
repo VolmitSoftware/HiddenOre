@@ -56,9 +56,16 @@ public class HiddenOre extends JavaPlugin {
             getLogger().log(Level.SEVERE, "Error enabling plugin: ", e);
         }
 
-        String version = getDescription().getVersion();
-        String pluginName = getDescription().getName();
-        getLogger().info(ASCII_BANNER + "\n" + pluginName + " v" + version);
+        for (String line : ASCII_BANNER.split("\n")) {
+            getLogger().info(line);
+        }
+        if (generationRules.isEnabled()) {
+            getLogger().info("HiddenOre is currently configured to remove ores from newly generated chunks");
+            getLogger().info("If this is unintended, you can disable it in the config");
+        } else {
+            getLogger().info("HiddenOre has the ability to remove ores as they generate in new chunks,");
+            getLogger().info("you can enable this ability in the config.");
+        }
         new Metrics(this, 27610);
     }
 

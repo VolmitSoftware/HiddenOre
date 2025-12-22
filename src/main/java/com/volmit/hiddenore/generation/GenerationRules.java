@@ -23,6 +23,7 @@ import static com.volmit.hiddenore.generation.Blocks.getReplacement;
 public class GenerationRules extends BlockPopulator implements Listener {
     private volatile Map<String, Map<Material, Material>> worldOverrides = Map.of();
     private volatile Map<Material, Material> defaults = Map.of();
+    private volatile boolean enabled;
     private final HiddenOre plugin;
 
     public GenerationRules(HiddenOre plugin) {
@@ -34,6 +35,7 @@ public class GenerationRules extends BlockPopulator implements Listener {
     public void reload() {
         final ConfigurationSection config = plugin.getConfig().getConfigurationSection("generation");
         if (config == null || !config.getBoolean("enabled", false)) {
+            enabled = false;
             defaults = Map.of();
             worldOverrides = Map.of();
             return;
@@ -51,6 +53,11 @@ public class GenerationRules extends BlockPopulator implements Listener {
         }
 
         defaults = parseReplacements(config.getConfigurationSection("global"));
+        enabled = true;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     @NotNull
