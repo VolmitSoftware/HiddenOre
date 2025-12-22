@@ -1,6 +1,22 @@
 auto_pickup_drops: false
 suppress_block_drop_on_custom_drop: true
 
+generation:
+  enabled: false
+  global:
+    default: true
+    NETHER_GOLD_ORE: false
+    NETHER_QUARTZ_ORE: false
+    ANCIENT_DEBRIS: false
+  overrides:
+    world_the_end:
+      default: false
+    world_nether:
+      default: false
+      NETHER_GOLD_ORE: true
+      NETHER_QUARTZ_ORE: true
+      ANCIENT_DEBRIS: true
+
 blocks:
   stone:
     drop: cobblestone

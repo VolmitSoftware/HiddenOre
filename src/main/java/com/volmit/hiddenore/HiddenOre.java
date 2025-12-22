@@ -1,6 +1,7 @@
 package com.volmit.hiddenore;
 
 import com.volmit.hiddenore.commands.HiddenOreCommand;
+import com.volmit.hiddenore.generation.GenerationRules;
 import com.volmit.hiddenore.listeners.MiningListener;
 import com.volmit.hiddenore.rules.MiningRuleManager;
 import com.volmit.hiddenore.util.ConfigWatcher;
@@ -19,6 +20,7 @@ import java.util.logging.Level;
 
 public class HiddenOre extends JavaPlugin {
     private MiningRuleManager ruleManager;
+    private GenerationRules generationRules;
     private Messages messages;
     private final Set<UUID> debugPlayers = new HashSet<>();
     private final HashMap<UUID, PlayerVeinState> veinStates = new HashMap<>();
@@ -71,6 +73,8 @@ public class HiddenOre extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         ruleManager = new MiningRuleManager(this);
+        if (generationRules != null) generationRules.reload();
+        else generationRules = new GenerationRules(this);
         File langFile = new File(getDataFolder(), "language.yml");
         YamlConfiguration langConfig = YamlConfiguration.loadConfiguration(langFile);
         this.messages = new Messages(langConfig);
