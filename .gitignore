@@ -5,6 +5,7 @@ libs/
 .gradle/
 
 .idea/
+run/
 
 .DS_Store
 
