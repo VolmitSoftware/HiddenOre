@@ -1,7 +1,7 @@
 auto_pickup_drops: false
 suppress_block_drop_on_custom_drop: true
 
-generation:
+ore-removal:
   # If disabled, no changes will be made to the world generation
   enabled: false
   # Global settings for all worlds excluding overrides

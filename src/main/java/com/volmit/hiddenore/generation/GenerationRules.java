@@ -33,7 +33,7 @@ public class GenerationRules extends BlockPopulator implements Listener {
     }
 
     public void reload() {
-        final ConfigurationSection config = plugin.getConfig().getConfigurationSection("generation");
+        final ConfigurationSection config = plugin.getConfig().getConfigurationSection("ore-removal");
         if (config == null || !config.getBoolean("enabled", false)) {
             enabled = false;
             defaults = Map.of();
