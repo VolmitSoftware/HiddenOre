@@ -102,8 +102,6 @@ public class GenerationRules extends BlockPopulator implements Listener {
         final int xMax = xCenter + region.getBuffer() + 16;
         final int zMax = zCenter + region.getBuffer() + 16;
 
-        final long start = System.currentTimeMillis();
-        long replaced = 0;
         for (int cX = -buffer; cX <= buffer; cX++) {
             for (int cZ = -buffer; cZ <= buffer; cZ++) {
                 final int bX = (cX + centerX) << 4;
@@ -119,12 +117,10 @@ public class GenerationRules extends BlockPopulator implements Listener {
                             final Material type = blocks.get(region.getType(x, y, z));
                             if (type == null) continue;
                             region.setType(x, y, z, type);
-                            replaced++;
                         }
                     }
                 }
             }
         }
-        plugin.getLogger().info("Replaced " + replaced + " blocks in " + (System.currentTimeMillis() - start) + "ms in world " + world.getName());
     }
 }
