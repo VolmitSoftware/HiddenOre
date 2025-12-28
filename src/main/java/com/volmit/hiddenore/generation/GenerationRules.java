@@ -21,7 +21,7 @@ import static com.volmit.hiddenore.generation.Blocks.ORES;
 import static com.volmit.hiddenore.generation.Blocks.getReplacement;
 
 public class GenerationRules extends BlockPopulator implements Listener {
-    private volatile Map<String, Map<Material, Material>> worldOverrides = Map.of();
+    private volatile Map<String, Map<Material, Material>> worldExceptions = Map.of();
     private volatile Map<Material, Material> defaults = Map.of();
     private volatile boolean enabled;
     private final HiddenOre plugin;
@@ -37,19 +37,19 @@ public class GenerationRules extends BlockPopulator implements Listener {
         if (config == null || !config.getBoolean("enabled", false)) {
             enabled = false;
             defaults = Map.of();
-            worldOverrides = Map.of();
+            worldExceptions = Map.of();
             return;
         }
 
-        final ConfigurationSection overrides = config.getConfigurationSection("overrides");
-        if (overrides == null) {
-            this.worldOverrides = Map.of();
+        final ConfigurationSection exceptions = config.getConfigurationSection("exceptions");
+        if (exceptions == null) {
+            this.worldExceptions = Map.of();
         } else {
-            final Map<String, Map<Material, Material>> worldOverrides = new HashMap<>();
-            for (final String world : overrides.getKeys(false)) {
-                worldOverrides.put(world, parseReplacements(overrides.getConfigurationSection(world)));
+            final Map<String, Map<Material, Material>> worldExceptions = new HashMap<>();
+            for (final String world : exceptions.getKeys(false)) {
+                worldExceptions.put(world, parseReplacements(exceptions.getConfigurationSection(world)));
             }
-            this.worldOverrides = Map.copyOf(worldOverrides);
+            this.worldExceptions = Map.copyOf(worldExceptions);
         }
 
         defaults = parseReplacements(config.getConfigurationSection("global"));
@@ -86,7 +86,7 @@ public class GenerationRules extends BlockPopulator implements Listener {
                          final int chunkX,
                          final int chunkZ,
                          final @NotNull LimitedRegion region) {
-        final var blocks = worldOverrides.getOrDefault(world.getName(), defaults);
+        final var blocks = worldExceptions.getOrDefault(world.getName(), defaults);
         if (blocks.isEmpty()) return;
 
         final int buffer = region.getBuffer() >> 4;
