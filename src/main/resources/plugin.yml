@@ -1,7 +1,7 @@
-name: HiddenOre
-version: $version
-main: com.volmit.hiddenore.HiddenOre
-api-version: $apiVersion
+name: ${name}
+version: ${version}
+main: ${main}
+api-version: ${apiVersion}
 load: STARTUP
 description: A unique mining feature which removes the need to generate ores, and allows economy changes on the fly.
 authors: [d15c07d, VolmitSoftware]

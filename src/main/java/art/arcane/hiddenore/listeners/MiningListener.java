@@ -1,10 +1,10 @@
-package com.volmit.hiddenore.listeners;
+package art.arcane.hiddenore.listeners;
 
-import com.volmit.hiddenore.HiddenOre;
-import com.volmit.hiddenore.rules.ItemDropRule;
-import com.volmit.hiddenore.util.MiningUtil;
-import com.volmit.hiddenore.vein.PlayerVeinState;
-import com.volmit.hiddenore.vein.VeinConfig;
+import art.arcane.hiddenore.HiddenOre;
+import art.arcane.hiddenore.rules.ItemDropRule;
+import art.arcane.hiddenore.util.project.MiningUtil;
+import art.arcane.hiddenore.vein.PlayerVeinState;
+import art.arcane.hiddenore.vein.VeinConfig;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;

@@ -1,4 +1,4 @@
-package com.volmit.hiddenore.generation;
+package art.arcane.hiddenore.generation;
 
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;

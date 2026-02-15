@@ -1,6 +1,6 @@
-package com.volmit.hiddenore.util;
+package art.arcane.hiddenore.util.project;
 
-import com.volmit.hiddenore.rules.ItemDropRule;
+import art.arcane.hiddenore.rules.ItemDropRule;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;

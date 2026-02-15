@@ -1,12 +1,13 @@
-package com.volmit.hiddenore;
+package art.arcane.hiddenore;
 
-import com.volmit.hiddenore.commands.HiddenOreCommand;
-import com.volmit.hiddenore.generation.GenerationRules;
-import com.volmit.hiddenore.listeners.MiningListener;
-import com.volmit.hiddenore.rules.MiningRuleManager;
-import com.volmit.hiddenore.util.ConfigWatcher;
-import com.volmit.hiddenore.util.Messages;
-import com.volmit.hiddenore.vein.PlayerVeinState;
+import art.arcane.hiddenore.generation.GenerationRules;
+import art.arcane.hiddenore.listeners.MiningListener;
+import art.arcane.hiddenore.rules.MiningRuleManager;
+import art.arcane.hiddenore.service.HiddenOreCommandService;
+import art.arcane.hiddenore.util.common.SplashScreen;
+import art.arcane.hiddenore.util.project.ConfigWatcher;
+import art.arcane.hiddenore.util.common.Messages;
+import art.arcane.hiddenore.vein.PlayerVeinState;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,14 +26,7 @@ public class HiddenOre extends JavaPlugin {
     private final Set<UUID> debugPlayers = new HashSet<>();
     private final HashMap<UUID, PlayerVeinState> veinStates = new HashMap<>();
     private ConfigWatcher configWatcher;
-
-    private static final String ASCII_BANNER =
-            " _   _ _     _     _            _____          \n" +
-                    "| | | (_)   | |   | |          |  _  |         \n" +
-                    "| |_| |_  __| | __| | ___ _ __ | | | |_ __ ___ \n" +
-                    "|  _  | |/ _` |/ _` |/ _ \\ '_ \\| | | | '__/ _ \\\n" +
-                    "| | | | | (_| | (_| |  __/ | | \\ \\_/ / | |  __/\n" +
-                    "\\_| |_/_|\\__,_|\\__,_|\\___|_| |_|\\___/|_|  \\___|\n";
+    private HiddenOreCommandService commandService;
 
     @Override
     public void onEnable() {
@@ -47,7 +41,8 @@ public class HiddenOre extends JavaPlugin {
             }
             reloadAll();
             getServer().getPluginManager().registerEvents(new MiningListener(this), this);
-            getCommand("hiddenore").setExecutor(new HiddenOreCommand(this));
+            commandService = new HiddenOreCommandService(this);
+            commandService.register();
             configWatcher = new ConfigWatcher(this);
             configWatcher.start();
         } catch (Exception e) {
@@ -56,16 +51,19 @@ public class HiddenOre extends JavaPlugin {
             getLogger().log(Level.SEVERE, "Error enabling plugin: ", e);
         }
 
-        for (String line : ASCII_BANNER.split("\n")) {
-            getLogger().info(line);
+        SplashScreen.print(this, success, errorMsg);
+        if (success && generationRules != null) {
+            if (generationRules.isEnabled()) {
+                getLogger().info("HiddenOre is currently configured to remove ores from newly generated chunks");
+                getLogger().info("If this is unintended, you can disable it in the config");
+            } else {
+                getLogger().info("HiddenOre has the ability to remove ores as they generate in new chunks,");
+                getLogger().info("you can enable this ability in the config.");
+            }
+        } else if (!success) {
+            getLogger().warning("HiddenOre started with initialization errors. Check the stacktrace above.");
         }
-        if (generationRules.isEnabled()) {
-            getLogger().info("HiddenOre is currently configured to remove ores from newly generated chunks");
-            getLogger().info("If this is unintended, you can disable it in the config");
-        } else {
-            getLogger().info("HiddenOre has the ability to remove ores as they generate in new chunks,");
-            getLogger().info("you can enable this ability in the config.");
-        }
+
         new Metrics(this, 27610);
     }
 

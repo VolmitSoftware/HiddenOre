@@ -1,6 +1,6 @@
-package com.volmit.hiddenore.rules;
+package art.arcane.hiddenore.rules;
 
-import com.volmit.hiddenore.util.ToolTier;
+import art.arcane.hiddenore.util.project.ToolTier;
 import org.bukkit.Material;
 
 import java.util.Collections;

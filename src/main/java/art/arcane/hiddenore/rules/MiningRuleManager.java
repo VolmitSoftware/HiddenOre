@@ -1,8 +1,8 @@
-package com.volmit.hiddenore.rules;
+package art.arcane.hiddenore.rules;
 
-import com.volmit.hiddenore.rules.ItemDropRule;
-import com.volmit.hiddenore.util.ToolTier;
-import com.volmit.hiddenore.vein.VeinConfig;
+import art.arcane.hiddenore.rules.ItemDropRule;
+import art.arcane.hiddenore.util.project.ToolTier;
+import art.arcane.hiddenore.vein.VeinConfig;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;

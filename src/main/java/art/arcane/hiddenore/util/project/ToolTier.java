@@ -1,4 +1,4 @@
-package com.volmit.hiddenore.util;
+package art.arcane.hiddenore.util.project;
 
 import org.bukkit.Material;
 

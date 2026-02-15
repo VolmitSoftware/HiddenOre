@@ -1,6 +1,6 @@
-package com.volmit.hiddenore.generation;
+package art.arcane.hiddenore.generation;
 
-import com.volmit.hiddenore.HiddenOre;
+import art.arcane.hiddenore.HiddenOre;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-import static com.volmit.hiddenore.generation.Blocks.ORES;
-import static com.volmit.hiddenore.generation.Blocks.getReplacement;
+import static art.arcane.hiddenore.generation.Blocks.ORES;
+import static art.arcane.hiddenore.generation.Blocks.getReplacement;
 
 public class GenerationRules extends BlockPopulator implements Listener {
     private volatile Map<String, Map<Material, Material>> worldExceptions = Map.of();

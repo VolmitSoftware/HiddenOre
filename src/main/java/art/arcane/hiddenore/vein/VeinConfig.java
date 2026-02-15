@@ -1,4 +1,4 @@
-package com.volmit.hiddenore.vein;
+package art.arcane.hiddenore.vein;
 
 import org.bukkit.configuration.ConfigurationSection;
 

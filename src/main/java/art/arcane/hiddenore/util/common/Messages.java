@@ -1,4 +1,4 @@
-package com.volmit.hiddenore.util;
+package art.arcane.hiddenore.util.common;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;

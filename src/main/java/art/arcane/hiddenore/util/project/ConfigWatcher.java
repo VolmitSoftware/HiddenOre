@@ -1,6 +1,6 @@
-package com.volmit.hiddenore.util;
+package art.arcane.hiddenore.util.project;
 
-import com.volmit.hiddenore.HiddenOre;
+import art.arcane.hiddenore.HiddenOre;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
