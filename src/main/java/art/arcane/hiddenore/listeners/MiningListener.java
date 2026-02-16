@@ -2,6 +2,7 @@ package art.arcane.hiddenore.listeners;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.rules.ItemDropRule;
+import art.arcane.hiddenore.util.common.SchedulerUtils;
 import art.arcane.hiddenore.util.project.MiningUtil;
 import art.arcane.hiddenore.vein.PlayerVeinState;
 import art.arcane.hiddenore.vein.VeinConfig;
@@ -66,6 +67,7 @@ public class MiningListener implements Listener {
 
         final VeinConfig veinCfg = plugin.getRuleManager().getVeinConfig();
         final PlayerVeinState state = plugin.getPlayerVeinState(uuid);
+        final double veinChanceBonus = veinCfg == null ? 0.0 : computeVeinChanceBonus(player, toolClone, veinCfg);
 
         // Get guaranteed drop (e.g. stone -> cobblestone)
         Material guaranteedDrop = plugin.getRuleManager().getGuaranteedDrop(blockType);
@@ -75,7 +77,11 @@ public class MiningListener implements Listener {
 
         event.setDropItems(false);
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        if (!SchedulerUtils.runAsync(plugin, () -> {
+            if (!plugin.isEnabled()) {
+                return;
+            }
+
             Map<Material, Integer> drops = new HashMap<>();
             Map<Material, Integer> expToDrop = new HashMap<>();
             List<Component> debugMessages = debug ? new ArrayList<>() : null;
@@ -87,7 +93,7 @@ public class MiningListener implements Listener {
             if (state.veinTokens > 0
                     && veinCfg != null
                     && withinWindow(state, now, veinCfg.tokenWindowMs)
-                    && withinRange(state, event.getBlock().getLocation(), veinCfg.tokenRange)) {
+                    && withinRange(state, loc, veinCfg.tokenRange)) {
                 // Repeat the last drop (only if it was an ITEM type)
                 ItemDropRule rule = findRuleByKey(state.currentDropKey);
                 if (rule != null && rule.type == ItemDropRule.DropType.ITEM) {
@@ -180,7 +186,7 @@ public class MiningListener implements Listener {
                         // Try to start a vein if configured and allowed
                         if (veinCfg != null && rule.veinMaxSize > 0 && now >= state.cooldownUntil) {
                             double veinChance = veinCfg.veinBaseChance;
-                            veinChance *= 1.0 + computeVeinChanceBonus(player, toolClone, veinCfg);
+                            veinChance *= 1.0 + veinChanceBonus;
                             veinChance = Math.max(0.0, Math.min(veinChance, 0.95));
                             double veinRoll = ThreadLocalRandom.current().nextDouble();
                             if (veinRoll < veinChance) {
@@ -192,7 +198,7 @@ public class MiningListener implements Listener {
                                 // Play vein start sound if valid
                                 try {
                                     Sound veinSound = Sound.valueOf(veinCfg.veinStartSound);
-                                    Bukkit.getScheduler().runTask(plugin, () ->
+                                    SchedulerUtils.runSync(plugin, () ->
                                             player.playSound(player.getLocation(), veinSound, veinCfg.veinStartSoundVolume, veinCfg.veinStartSoundPitch));
                                 } catch (IllegalArgumentException ignored) {}
 
@@ -218,7 +224,7 @@ public class MiningListener implements Listener {
 
                 // Execute queued commands on main thread
                 if (!commandsToExecute.isEmpty()) {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    SchedulerUtils.runSync(plugin, () -> {
                         for (CommandExec ce : commandsToExecute) {
                             String cmdWithPlaceholders = applyCommandPlaceholders(ce.command, player, loc);
                             String cmd = cmdWithPlaceholders.startsWith("/") ? cmdWithPlaceholders.substring(1) : cmdWithPlaceholders;
@@ -246,20 +252,20 @@ public class MiningListener implements Listener {
 
             // Update vein state
             state.lastMineTime = now;
-            state.lastMinedBlock = event.getBlock().getLocation();
+            state.lastMinedBlock = loc;
 
             if (drops.isEmpty() && (debug && debugMessages != null && !debugMessages.isEmpty())) {
                 debugMessages.add(plugin.getMessages().parse("<red>No drops for this block at Y=" + y + "</red>"));
             }
 
             if (debug && debugMessages != null && !debugMessages.isEmpty()) {
-                Bukkit.getScheduler().runTask(plugin, () -> {
+                SchedulerUtils.runSync(plugin, () -> {
                     for (Component msg : debugMessages) player.sendMessage(msg);
                 });
             }
             if (drops.isEmpty()) return;
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            SchedulerUtils.runSync(plugin, () -> {
                 boolean autoPickup = plugin.isAutoPickup();
                 for (Map.Entry<Material, Integer> e : drops.entrySet()) {
                     ItemStack stack = new ItemStack(e.getKey(), e.getValue());
@@ -276,7 +282,9 @@ public class MiningListener implements Listener {
                     world.spawn(centerLoc, org.bukkit.entity.ExperienceOrb.class, orb -> orb.setExperience(totalExp));
                 }
             });
-        });
+        })) {
+            plugin.getLogger().warning("Failed to schedule async mining evaluation while plugin is disabled.");
+        }
     }
 
     // --- VEIN HELPERS ---

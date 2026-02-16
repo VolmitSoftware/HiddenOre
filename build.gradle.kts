@@ -14,7 +14,7 @@ val apiVersion = "1.21"
 val main = "art.arcane.hiddenore.HiddenOre"
 val lib = "art.arcane.hiddenore.libs"
 
-registerCustomOutputTaskUnix("PsychoLT", "/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/plugins")
+registerCustomOutputTaskUnix("PsychoLT", "/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/plugin-jars")
 
 tasks {
     jar { enabled = false }
@@ -60,6 +60,7 @@ sourceSets["main"].java {
     include("art/arcane/volmlib/util/collection/**")
     include("art/arcane/volmlib/util/function/**")
     include("art/arcane/volmlib/util/json/**")
+    include("art/arcane/volmlib/util/scheduling/FoliaScheduler.java")
     include("art/arcane/volmlib/util/scheduling/Queue.java")
     include("art/arcane/volmlib/util/scheduling/ShurikenQueue.java")
 }

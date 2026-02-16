@@ -1,6 +1,7 @@
 package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
+import art.arcane.hiddenore.util.common.SchedulerUtils;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,6 +17,9 @@ public class ConfigWatcher implements Runnable {
     private final HiddenOre plugin;
     private final Set<String> watchedFiles;
     private final Path dir;
+    private volatile boolean running;
+    private volatile Thread thread;
+    private volatile WatchService watchService;
 
     public ConfigWatcher(HiddenOre plugin) {
         this.plugin = plugin;
@@ -25,19 +29,49 @@ public class ConfigWatcher implements Runnable {
         watchedFiles.add("language.yml");
     }
 
-    public void start() {
-        Thread t = new Thread(this, "HiddenOre-ConfigWatcher");
-        t.setDaemon(true);
-        t.start();
+    public synchronized void start() {
+        if (thread != null && thread.isAlive()) {
+            return;
+        }
+
+        running = true;
+        Thread watcherThread = new Thread(this, "HiddenOre-ConfigWatcher");
+        watcherThread.setDaemon(true);
+        thread = watcherThread;
+        watcherThread.start();
+    }
+
+    public synchronized void stop() {
+        running = false;
+
+        WatchService watcher = watchService;
+        if (watcher != null) {
+            try {
+                watcher.close();
+            } catch (IOException ignored) {
+            }
+        }
+
+        Thread watcherThread = thread;
+        if (watcherThread != null) {
+            watcherThread.interrupt();
+        }
     }
 
     @Override
     public void run() {
         try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
+            watchService = watcher;
             dir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
 
-            while (true) {
-                WatchKey key = watcher.take();
+            while (running && plugin.isEnabled()) {
+                WatchKey key;
+                try {
+                    key = watcher.take();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
                 boolean shouldReload = false;
 
                 for (WatchEvent<?> event : key.pollEvents()) {
@@ -49,18 +83,30 @@ public class ConfigWatcher implements Runnable {
                     }
                 }
 
-                if (shouldReload) {
-                    Bukkit.getScheduler().runTask(plugin, this::reloadAndNotifyOps);
+                if (shouldReload && plugin.isEnabled()) {
+                    SchedulerUtils.runSync(plugin, this::reloadAndNotifyOps);
                 }
 
                 if (!key.reset()) break;
             }
-        } catch (IOException | InterruptedException e) {
-            plugin.getLogger().warning("ConfigWatcher stopped: " + e.getMessage());
+        } catch (ClosedWatchServiceException ignored) {
+            // Shutdown path.
+        } catch (IOException e) {
+            if (running) {
+                plugin.getLogger().warning("ConfigWatcher stopped: " + e.getMessage());
+            }
+        } finally {
+            watchService = null;
+            thread = null;
+            running = false;
         }
     }
 
     private void reloadAndNotifyOps() {
+        if (!plugin.isEnabled()) {
+            return;
+        }
+
         plugin.reloadConfig();
         // Reload language
         File langFile = new File(plugin.getDataFolder(), "language.yml");
@@ -75,7 +121,13 @@ public class ConfigWatcher implements Runnable {
         float volume = (float) lang.getDouble("config_reloaded_sound_volume", 1.0);
         float pitch = (float) lang.getDouble("config_reloaded_sound_pitch", 1.6);
 
-        Sound sound = Sound.sound(org.bukkit.Sound.valueOf(soundStr).key(), Sound.Source.MASTER, volume, pitch);
+        org.bukkit.Sound bukkitSound;
+        try {
+            bukkitSound = org.bukkit.Sound.valueOf(soundStr);
+        } catch (IllegalArgumentException ignored) {
+            bukkitSound = org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+        }
+        Sound sound = Sound.sound(bukkitSound.key(), Sound.Source.MASTER, volume, pitch);
 
         Bukkit.getOnlinePlayers().stream()
                 .filter(Player::isOp)

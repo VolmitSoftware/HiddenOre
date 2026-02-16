@@ -67,6 +67,14 @@ public class HiddenOre extends JavaPlugin {
         new Metrics(this, 27610);
     }
 
+    @Override
+    public void onDisable() {
+        if (configWatcher != null) {
+            configWatcher.stop();
+            configWatcher = null;
+        }
+    }
+
     public MiningRuleManager getRuleManager() {
         return ruleManager;
     }

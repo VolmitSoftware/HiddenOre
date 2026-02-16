@@ -1,6 +1,7 @@
 name: ${name}
 version: ${version}
 main: ${main}
+folia-supported: true
 api-version: ${apiVersion}
 load: STARTUP
 description: A unique mining feature which removes the need to generate ores, and allows economy changes on the fly.
