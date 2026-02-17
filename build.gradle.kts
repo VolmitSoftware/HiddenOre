@@ -13,6 +13,11 @@ version = "1.1.0-1.21.10-1.21.10"
 val apiVersion = "1.21"
 val main = "art.arcane.hiddenore.HiddenOre"
 val lib = "art.arcane.hiddenore.libs"
+val volmLibCoordinate: String = providers.gradleProperty("volmLibCoordinate")
+    .orElse("com.github.VolmitSoftware:VolmLib:master-SNAPSHOT")
+    .get()
+val authTokenProperty: String? = providers.gradleProperty("authToken").orNull
+val jitpackAuthToken: String? = authTokenProperty ?: providers.gradleProperty("jitpackAuthToken").orNull
 
 registerCustomOutputTaskUnix("PsychoLT", "/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/plugin-jars")
 
@@ -52,26 +57,25 @@ tasks {
     }
 }
 
-sourceSets["main"].java {
-    srcDir("../VolmLib/shared/src/main/java")
-    include("art/arcane/hiddenore/**")
-    include("art/arcane/volmlib/util/director/**")
-    include("art/arcane/volmlib/util/decree/**")
-    include("art/arcane/volmlib/util/collection/**")
-    include("art/arcane/volmlib/util/function/**")
-    include("art/arcane/volmlib/util/json/**")
-    include("art/arcane/volmlib/util/scheduling/FoliaScheduler.java")
-    include("art/arcane/volmlib/util/scheduling/Queue.java")
-    include("art/arcane/volmlib/util/scheduling/ShurikenQueue.java")
-}
-
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://jitpack.io") {
+        if (jitpackAuthToken != null) {
+            credentials {
+                username = jitpackAuthToken
+                password = "."
+            }
+        }
+    }
 }
 
 dependencies {
     compileOnly(libs.paper)
+    implementation(volmLibCoordinate) {
+        isChanging = true
+        isTransitive = false
+    }
     implementation(libs.bstats)
 }
 
@@ -82,8 +86,8 @@ java {
 }
 
 configurations.configureEach {
-    resolutionStrategy.cacheChangingModulesFor(60, "minutes")
-    resolutionStrategy.cacheDynamicVersionsFor(60, "minutes")
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+    resolutionStrategy.cacheDynamicVersionsFor(0, "seconds")
 }
 
 if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {

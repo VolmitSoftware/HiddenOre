@@ -2,12 +2,12 @@ package art.arcane.hiddenore.commands;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.util.common.Messages;
-import art.arcane.volmlib.util.decree.annotations.Decree;
-import art.arcane.volmlib.util.decree.annotations.Param;
+import art.arcane.volmlib.util.director.annotations.Director;
+import art.arcane.volmlib.util.director.annotations.Param;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@Decree(name = "hiddenore", description = "HiddenOre command root")
+@Director(name = "hiddenore", description = "HiddenOre command root")
 public class CommandHiddenOre {
     private final HiddenOre plugin;
 
@@ -15,7 +15,7 @@ public class CommandHiddenOre {
         this.plugin = plugin;
     }
 
-    @Decree(name = "reload", description = "Reload HiddenOre configuration and language files")
+    @Director(name = "reload", description = "Reload HiddenOre configuration and language files")
     public void reload(@Param(name = "sender", contextual = true) CommandSender sender) {
         Messages messages = plugin.getMessages();
         if (!sender.hasPermission("hiddenore.admin")) {
@@ -27,7 +27,7 @@ public class CommandHiddenOre {
         sender.sendMessage(messages.get("reloaded"));
     }
 
-    @Decree(name = "debug", description = "Toggle ore debug mode for yourself")
+    @Director(name = "debug", description = "Toggle ore debug mode for yourself")
     public void debug(@Param(name = "sender", contextual = true) CommandSender sender) {
         Messages messages = plugin.getMessages();
         if (!sender.hasPermission("hiddenore.admin")) {

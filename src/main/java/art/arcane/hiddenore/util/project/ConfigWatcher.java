@@ -1,7 +1,7 @@
 package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
-import art.arcane.hiddenore.util.common.SchedulerUtils;
+import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;

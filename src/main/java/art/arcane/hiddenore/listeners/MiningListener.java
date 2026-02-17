@@ -2,10 +2,10 @@ package art.arcane.hiddenore.listeners;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.rules.ItemDropRule;
-import art.arcane.hiddenore.util.common.SchedulerUtils;
 import art.arcane.hiddenore.util.project.MiningUtil;
 import art.arcane.hiddenore.vein.PlayerVeinState;
 import art.arcane.hiddenore.vein.VeinConfig;
+import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;

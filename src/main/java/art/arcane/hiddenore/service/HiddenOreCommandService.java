@@ -2,7 +2,7 @@ package art.arcane.hiddenore.service;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.commands.CommandHiddenOre;
-import art.arcane.volmlib.util.director.compat.DirectorDecreeEngineFactory;
+import art.arcane.volmlib.util.director.compat.DirectorEngineFactory;
 import art.arcane.volmlib.util.director.context.DirectorContextRegistry;
 import art.arcane.volmlib.util.director.help.DirectorMiniMenu;
 import art.arcane.volmlib.util.director.runtime.DirectorExecutionResult;
@@ -67,7 +67,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
                 return director;
             }
 
-            director = DirectorDecreeEngineFactory.create(
+            director = DirectorEngineFactory.create(
                     new CommandHiddenOre(plugin),
                     null,
                     buildDirectorContexts(),
