@@ -22,338 +22,339 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MiningListener implements Listener {
-    private final HiddenOre plugin;
+  private final HiddenOre plugin;
 
-    public MiningListener(HiddenOre plugin) {
-        this.plugin = plugin;
+  public MiningListener(HiddenOre plugin) {
+    this.plugin = plugin;
+  }
+
+  @EventHandler
+  public void onBlockBreak(BlockBreakEvent event) {
+    if (event.isCancelled()) return;
+
+    final Player player = event.getPlayer();
+    if (player.getGameMode() == GameMode.CREATIVE) return; // Skip creative mode
+
+    final UUID uuid = player.getUniqueId();
+    final boolean debug = plugin.isDebug(uuid);
+
+    final Material blockType = event.getBlock().getType();
+    final ItemStack tool = player.getInventory().getItemInMainHand();
+    if (tool == null || !MiningUtil.isPickaxe(tool.getType())) return;
+
+    // Only act if block is in blocks section
+    boolean isCustomBlock = plugin.getRuleManager().getGuaranteedDrop(blockType) != null;
+    if (!isCustomBlock) {
+      // Not a configured block, let vanilla drops occur
+      return;
     }
 
-    private static class CommandExec {
-        final String command;
-        final ItemDropRule.ExecutionTarget target;
+    final int y = event.getBlock().getY();
+    final org.bukkit.Location loc = event.getBlock().getLocation();
+    final org.bukkit.Location centerLoc = loc.clone().add(0.5, 0.5, 0.5);
+    final org.bukkit.World world = event.getBlock().getWorld();
+    final ItemStack toolClone = tool.clone();
 
-        CommandExec(String command, ItemDropRule.ExecutionTarget target) {
-            this.command = command;
-            this.target = target;
+    final VeinConfig veinCfg = plugin.getRuleManager().getVeinConfig();
+    final PlayerVeinState state = plugin.getPlayerVeinState(uuid);
+    final double veinChanceBonus = veinCfg == null ? 0.0 : computeVeinChanceBonus(player, toolClone, veinCfg);
+
+    // Get guaranteed drop (e.g. stone -> cobblestone)
+    Material guaranteedDrop = plugin.getRuleManager().getGuaranteedDrop(blockType);
+
+    // Configurable flag: suppress block drop if a custom drop occurs
+    boolean suppressBlockDrop = plugin.getConfig().getBoolean("suppress_block_drop_on_custom_drop", false);
+
+    event.setDropItems(false);
+
+    if (!SchedulerUtils.runAsync(plugin, () -> {
+      if (!plugin.isEnabled()) {
+        return;
+      }
+
+      Map<Material, Integer> drops = new HashMap<>();
+      Map<Material, Integer> expToDrop = new HashMap<>();
+      List<Component> debugMessages = debug ? new ArrayList<>() : null;
+      long now = System.currentTimeMillis();
+
+      boolean customDropOccurred = false;
+
+      // --- VEIN TOKEN LOGIC ---
+      if (state.veinTokens > 0
+          && veinCfg != null
+          && withinWindow(state, now, veinCfg.tokenWindowMs)
+          && withinRange(state, loc, veinCfg.tokenRange)) {
+        // Repeat the last drop (only if it was an ITEM type)
+        ItemDropRule rule = findRuleByKey(state.currentDropKey);
+        if (rule != null && rule.type == ItemDropRule.DropType.ITEM) {
+          int amt = MiningUtil.applyFortune(toolClone, rule, 1);
+          drops.merge(rule.material, amt, Integer::sum);
+
+          // Calculate XP for this vein drop
+          if (rule.expDrop > 0) {
+            int exp = ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
+            expToDrop.put(rule.material, expToDrop.getOrDefault(rule.material, 0) + exp);
+          }
+
+          customDropOccurred = true;
+
+          state.veinTokens--;
+          if (debug) debugMessages.add(plugin.getMessages().parse(
+              "<light_purple>Vein drop: " + rule.material.name().toLowerCase() + " x" + amt +
+                  " (tokens left: " + state.veinTokens + ")</light_purple>"
+          ));
         }
-    }
+      } else {
+        // Normal random drop logic
+        List<ItemDropRule> rules = plugin.getRuleManager().getApplicableDrops(tool.getType(), y);
 
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        if (event.isCancelled()) return;
+        List<CommandExec> commandsToExecute = new ArrayList<>();
 
-        final Player player = event.getPlayer();
-        if (player.getGameMode() == GameMode.CREATIVE) return; // Skip creative mode
+        for (ItemDropRule rule : rules) {
+          double roll = ThreadLocalRandom.current().nextDouble();
+          boolean dropped = false;
+          int amount = 0;
 
-        final UUID uuid = player.getUniqueId();
-        final boolean debug = plugin.isDebug(uuid);
+          if (rule.type == ItemDropRule.DropType.COMMAND) {
+            // Command drops: purely percentage based, not affected by enchantments, no xp, no vein
+            if (roll < rule.chance) {
+              if (rule.commands != null) {
+                for (String raw : rule.commands) {
+                  if (raw == null) continue;
+                  String trimmed = raw.trim();
+                  ItemDropRule.ExecutionTarget parsedTarget = rule.executionTarget; // rule-level default
+                  String cmdText = trimmed;
 
-        final Material blockType = event.getBlock().getType();
-        final ItemStack tool = player.getInventory().getItemInMainHand();
-        if (tool == null || !MiningUtil.isPickaxe(tool.getType())) return;
-
-        // Only act if block is in blocks section
-        boolean isCustomBlock = plugin.getRuleManager().getGuaranteedDrop(blockType) != null;
-        if (!isCustomBlock) {
-            // Not a configured block, let vanilla drops occur
-            return;
-        }
-
-        final int y = event.getBlock().getY();
-        final org.bukkit.Location loc = event.getBlock().getLocation();
-        final org.bukkit.Location centerLoc = loc.clone().add(0.5, 0.5, 0.5);
-        final org.bukkit.World world = event.getBlock().getWorld();
-        final ItemStack toolClone = tool.clone();
-
-        final VeinConfig veinCfg = plugin.getRuleManager().getVeinConfig();
-        final PlayerVeinState state = plugin.getPlayerVeinState(uuid);
-        final double veinChanceBonus = veinCfg == null ? 0.0 : computeVeinChanceBonus(player, toolClone, veinCfg);
-
-        // Get guaranteed drop (e.g. stone -> cobblestone)
-        Material guaranteedDrop = plugin.getRuleManager().getGuaranteedDrop(blockType);
-
-        // Configurable flag: suppress block drop if a custom drop occurs
-        boolean suppressBlockDrop = plugin.getConfig().getBoolean("suppress_block_drop_on_custom_drop", false);
-
-        event.setDropItems(false);
-
-        if (!SchedulerUtils.runAsync(plugin, () -> {
-            if (!plugin.isEnabled()) {
-                return;
-            }
-
-            Map<Material, Integer> drops = new HashMap<>();
-            Map<Material, Integer> expToDrop = new HashMap<>();
-            List<Component> debugMessages = debug ? new ArrayList<>() : null;
-            long now = System.currentTimeMillis();
-
-            boolean customDropOccurred = false;
-
-            // --- VEIN TOKEN LOGIC ---
-            if (state.veinTokens > 0
-                    && veinCfg != null
-                    && withinWindow(state, now, veinCfg.tokenWindowMs)
-                    && withinRange(state, loc, veinCfg.tokenRange)) {
-                // Repeat the last drop (only if it was an ITEM type)
-                ItemDropRule rule = findRuleByKey(state.currentDropKey);
-                if (rule != null && rule.type == ItemDropRule.DropType.ITEM) {
-                    int amt = MiningUtil.applyFortune(toolClone, rule, 1);
-                    drops.merge(rule.material, amt, Integer::sum);
-
-                    // Calculate XP for this vein drop
-                    if (rule.expDrop > 0) {
-                        int exp = ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
-                        expToDrop.put(rule.material, expToDrop.getOrDefault(rule.material, 0) + exp);
+                  // Detect prefix: "player:" or "console:"
+                  int colon = trimmed.indexOf(':');
+                  if (colon > 0) {
+                    String prefix = trimmed.substring(0, colon).toLowerCase(Locale.ROOT);
+                    if ("player".equals(prefix) || "console".equals(prefix)) {
+                      cmdText = trimmed.substring(colon + 1).trim();
+                      parsedTarget = "player".equals(prefix) ? ItemDropRule.ExecutionTarget.PLAYER : ItemDropRule.ExecutionTarget.CONSOLE;
                     }
+                  }
 
-                    customDropOccurred = true;
-
-                    state.veinTokens--;
-                    if (debug) debugMessages.add(plugin.getMessages().parse(
-                            "<light_purple>Vein drop: " + rule.material.name().toLowerCase() + " x" + amt +
-                                    " (tokens left: " + state.veinTokens + ")</light_purple>"
-                    ));
+                  if (!cmdText.isEmpty()) {
+                    commandsToExecute.add(new CommandExec(cmdText, parsedTarget));
+                  }
                 }
-            } else {
-                // Normal random drop logic
-                List<ItemDropRule> rules = plugin.getRuleManager().getApplicableDrops(tool.getType(), y);
+              }
+              dropped = true;
+              customDropOccurred = true;
 
-                List<CommandExec> commandsToExecute = new ArrayList<>();
+              if (debug) {
+                debugMessages.add(plugin.getMessages().parse(
+                    "<gray>Command drop roll: <yellow>command</yellow> chance=<gold>" + rule.chance +
+                        "</gold>, roll=<blue>" + String.format("%.4f", roll) +
+                        "</blue> | <green>SUCCESS!</green>"
+                ));
+              }
+            } else if (debug) {
+              debugMessages.add(plugin.getMessages().parse(
+                  "<gray>Command drop roll: <yellow>command</yellow> chance=<gold>" + rule.chance +
+                      "</gold>, roll=<blue>" + String.format("%.4f", roll) +
+                      "</blue> | <red>fail</red>"
+              ));
+            }
+            // continue to next rule (no XP, no vein etc.)
+            continue;
+          }
 
-                for (ItemDropRule rule : rules) {
-                    double roll = ThreadLocalRandom.current().nextDouble();
-                    boolean dropped = false;
-                    int amount = 0;
+          if (roll < rule.chance) {
+            amount = MiningUtil.applyFortune(toolClone, rule, 1);
+            drops.merge(rule.material, amount, Integer::sum);
+            dropped = true;
+            customDropOccurred = true;
 
-                    if (rule.type == ItemDropRule.DropType.COMMAND) {
-                        // Command drops: purely percentage based, not affected by enchantments, no xp, no vein
-                        if (roll < rule.chance) {
-                            if (rule.commands != null) {
-                                for (String raw : rule.commands) {
-                                    if (raw == null) continue;
-                                    String trimmed = raw.trim();
-                                    ItemDropRule.ExecutionTarget parsedTarget = rule.executionTarget; // rule-level default
-                                    String cmdText = trimmed;
-
-                                    // Detect prefix: "player:" or "console:"
-                                    int colon = trimmed.indexOf(':');
-                                    if (colon > 0) {
-                                        String prefix = trimmed.substring(0, colon).toLowerCase(Locale.ROOT);
-                                        if ("player".equals(prefix) || "console".equals(prefix)) {
-                                            cmdText = trimmed.substring(colon + 1).trim();
-                                            parsedTarget = "player".equals(prefix) ? ItemDropRule.ExecutionTarget.PLAYER : ItemDropRule.ExecutionTarget.CONSOLE;
-                                        }
-                                    }
-
-                                    if (!cmdText.isEmpty()) {
-                                        commandsToExecute.add(new CommandExec(cmdText, parsedTarget));
-                                    }
-                                }
-                            }
-                            dropped = true;
-                            customDropOccurred = true;
-
-                            if (debug) {
-                                debugMessages.add(plugin.getMessages().parse(
-                                        "<gray>Command drop roll: <yellow>command</yellow> chance=<gold>" + rule.chance +
-                                                "</gold>, roll=<blue>" + String.format("%.4f", roll) +
-                                                "</blue> | <green>SUCCESS!</green>"
-                                ));
-                            }
-                        } else if (debug) {
-                            debugMessages.add(plugin.getMessages().parse(
-                                    "<gray>Command drop roll: <yellow>command</yellow> chance=<gold>" + rule.chance +
-                                            "</gold>, roll=<blue>" + String.format("%.4f", roll) +
-                                            "</blue> | <red>fail</red>"
-                            ));
-                        }
-                        // continue to next rule (no XP, no vein etc.)
-                        continue;
-                    }
-
-                    if (roll < rule.chance) {
-                        amount = MiningUtil.applyFortune(toolClone, rule, 1);
-                        drops.merge(rule.material, amount, Integer::sum);
-                        dropped = true;
-                        customDropOccurred = true;
-
-                        // Calculate XP for this drop
-                        if (rule.expDrop > 0) {
-                            int exp = ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
-                            expToDrop.put(rule.material, expToDrop.getOrDefault(rule.material, 0) + exp);
-                        }
-
-                        // Try to start a vein if configured and allowed
-                        if (veinCfg != null && rule.veinMaxSize > 0 && now >= state.cooldownUntil) {
-                            double veinChance = veinCfg.veinBaseChance;
-                            veinChance *= 1.0 + veinChanceBonus;
-                            veinChance = Math.max(0.0, Math.min(veinChance, 0.95));
-                            double veinRoll = ThreadLocalRandom.current().nextDouble();
-                            if (veinRoll < veinChance) {
-                                int veinSize = 1 + ThreadLocalRandom.current().nextInt(rule.veinMaxSize);
-                                state.veinTokens = veinSize;
-                                state.cooldownUntil = now + veinCfg.cooldownMs;
-                                state.currentDropKey = veinDropKey(rule);
-
-                                // Play vein start sound if valid
-                                try {
-                                    Sound veinSound = Sound.valueOf(veinCfg.veinStartSound);
-                                    SchedulerUtils.runSync(plugin, () ->
-                                            player.playSound(player.getLocation(), veinSound, veinCfg.veinStartSoundVolume, veinCfg.veinStartSoundPitch));
-                                } catch (IllegalArgumentException ignored) {}
-
-                                if (debug) debugMessages.add(plugin.getMessages().parse(
-                                        "<green>Started vein: " + rule.material.name().toLowerCase() +
-                                                " size: " + veinSize + " (chance=" + veinChance + ", roll=" + String.format("%.4f", veinRoll) + ")</green>"
-                                ));
-                            }
-                        }
-                    }
-
-                    if (debug) {
-                        debugMessages.add(plugin.getMessages().parse(
-                                "<gray>Drop roll for <yellow>" + (rule.type == ItemDropRule.DropType.ITEM ? rule.material.name().toLowerCase(Locale.ROOT) : "command") +
-                                        "</yellow>: chance=<gold>" + rule.chance +
-                                        "</gold>, roll=<blue>" + String.format("%.4f", roll) +
-                                        "</blue> | " + (dropped ? "<green>SUCCESS!</green>" : "<red>fail</red>") +
-                                        (dropped && rule.type == ItemDropRule.DropType.ITEM ? " <yellow>Amount: " + amount + "</yellow>" : "") +
-                                        " at Y=" + y + (rule.fortuneMultiplier ? " <green>[fortune]</green>" : "")
-                        ));
-                    }
-                }
-
-                // Execute queued commands on main thread
-                if (!commandsToExecute.isEmpty()) {
-                    SchedulerUtils.runSync(plugin, () -> {
-                        for (CommandExec ce : commandsToExecute) {
-                            String cmdWithPlaceholders = applyCommandPlaceholders(ce.command, player, loc);
-                            String cmd = cmdWithPlaceholders.startsWith("/") ? cmdWithPlaceholders.substring(1) : cmdWithPlaceholders;
-                            if (ce.target == ItemDropRule.ExecutionTarget.PLAYER) {
-                                Bukkit.dispatchCommand(player, cmd);
-                            } else {
-                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
-                            }
-                        }
-                    });
-                }
+            // Calculate XP for this drop
+            if (rule.expDrop > 0) {
+              int exp = ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
+              expToDrop.put(rule.material, expToDrop.getOrDefault(rule.material, 0) + exp);
             }
 
-            // Only add the guaranteed drop if allowed by config and custom drop did not occur
-            if (guaranteedDrop != null && (!suppressBlockDrop || !customDropOccurred)) {
-                drops.put(guaranteedDrop, 1);
-                if (debug) {
-                    debugMessages.add(plugin.getMessages().parse(
-                            "<gray>Guaranteed drop: <yellow>" + guaranteedDrop.name().toLowerCase(Locale.ROOT) +
-                                    "</yellow> for block <gold>" + blockType.name().toLowerCase(Locale.ROOT) +
-                                    "</gold> at Y=" + y
-                    ));
+            // Try to start a vein if configured and allowed
+            if (veinCfg != null && rule.veinMaxSize > 0 && now >= state.cooldownUntil) {
+              double veinChance = veinCfg.veinBaseChance;
+              veinChance *= 1.0 + veinChanceBonus;
+              veinChance = Math.max(0.0, Math.min(veinChance, 0.95));
+              double veinRoll = ThreadLocalRandom.current().nextDouble();
+              if (veinRoll < veinChance) {
+                int veinSize = 1 + ThreadLocalRandom.current().nextInt(rule.veinMaxSize);
+                state.veinTokens = veinSize;
+                state.cooldownUntil = now + veinCfg.cooldownMs;
+                state.currentDropKey = veinDropKey(rule);
+
+                // Play vein start sound if valid
+                try {
+                  Sound veinSound = Sound.valueOf(veinCfg.veinStartSound);
+                  SchedulerUtils.runSync(plugin, () ->
+                      player.playSound(player.getLocation(), veinSound, veinCfg.veinStartSoundVolume, veinCfg.veinStartSoundPitch));
+                } catch (IllegalArgumentException ignored) {
                 }
+
+                if (debug) debugMessages.add(plugin.getMessages().parse(
+                    "<green>Started vein: " + rule.material.name().toLowerCase() +
+                        " size: " + veinSize + " (chance=" + veinChance + ", roll=" + String.format("%.4f", veinRoll) + ")</green>"
+                ));
+              }
             }
+          }
 
-            // Update vein state
-            state.lastMineTime = now;
-            state.lastMinedBlock = loc;
+          if (debug) {
+            debugMessages.add(plugin.getMessages().parse(
+                "<gray>Drop roll for <yellow>" + (rule.type == ItemDropRule.DropType.ITEM ? rule.material.name().toLowerCase(Locale.ROOT) : "command") +
+                    "</yellow>: chance=<gold>" + rule.chance +
+                    "</gold>, roll=<blue>" + String.format("%.4f", roll) +
+                    "</blue> | " + (dropped ? "<green>SUCCESS!</green>" : "<red>fail</red>") +
+                    (dropped && rule.type == ItemDropRule.DropType.ITEM ? " <yellow>Amount: " + amount + "</yellow>" : "") +
+                    " at Y=" + y + (rule.fortuneMultiplier ? " <green>[fortune]</green>" : "")
+            ));
+          }
+        }
 
-            if (drops.isEmpty() && (debug && debugMessages != null && !debugMessages.isEmpty())) {
-                debugMessages.add(plugin.getMessages().parse("<red>No drops for this block at Y=" + y + "</red>"));
+        // Execute queued commands on main thread
+        if (!commandsToExecute.isEmpty()) {
+          SchedulerUtils.runSync(plugin, () -> {
+            for (CommandExec ce : commandsToExecute) {
+              String cmdWithPlaceholders = applyCommandPlaceholders(ce.command, player, loc);
+              String cmd = cmdWithPlaceholders.startsWith("/") ? cmdWithPlaceholders.substring(1) : cmdWithPlaceholders;
+              if (ce.target == ItemDropRule.ExecutionTarget.PLAYER) {
+                Bukkit.dispatchCommand(player, cmd);
+              } else {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+              }
             }
-
-            if (debug && debugMessages != null && !debugMessages.isEmpty()) {
-                SchedulerUtils.runSync(plugin, () -> {
-                    for (Component msg : debugMessages) player.sendMessage(msg);
-                });
-            }
-            if (drops.isEmpty()) return;
-
-            SchedulerUtils.runSync(plugin, () -> {
-                boolean autoPickup = plugin.isAutoPickup();
-                for (Map.Entry<Material, Integer> e : drops.entrySet()) {
-                    ItemStack stack = new ItemStack(e.getKey(), e.getValue());
-                    if (autoPickup) {
-                        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
-                        leftover.values().forEach(item -> world.dropItem(centerLoc, item));
-                    } else {
-                        world.dropItem(centerLoc, stack);
-                    }
-                }
-                // XP drop: sum all exp for all materials in this break
-                int totalExp = expToDrop.values().stream().mapToInt(Integer::intValue).sum();
-                if (totalExp > 0) {
-                    world.spawn(centerLoc, org.bukkit.entity.ExperienceOrb.class, orb -> orb.setExperience(totalExp));
-                }
-            });
-        })) {
-            plugin.getLogger().warning("Failed to schedule async mining evaluation while plugin is disabled.");
+          });
         }
-    }
+      }
 
-    // --- VEIN HELPERS ---
-
-    private boolean withinWindow(PlayerVeinState state, long now, long windowMs) {
-        return (now - state.lastMineTime) <= windowMs;
-    }
-
-    private boolean withinRange(PlayerVeinState state, org.bukkit.Location block, double maxRange) {
-        if (state.lastMinedBlock == null) return false;
-        return state.lastMinedBlock.getWorld().equals(block.getWorld()) &&
-                state.lastMinedBlock.distance(block) <= maxRange;
-    }
-
-    private double computeVeinChanceBonus(Player player, ItemStack tool, VeinConfig cfg) {
-        double total = 0.0;
-
-        // Tool enchantments
-        for (Map.Entry<org.bukkit.enchantments.Enchantment, Integer> ench : tool.getEnchantments().entrySet()) {
-            String key = ench.getKey().getKey().getKey().toLowerCase(Locale.ROOT);
-            Double mod = cfg.enchantModifiers.get(key);
-            if (mod != null) {
-                total += mod * ench.getValue();
-            }
+      // Only add the guaranteed drop if allowed by config and custom drop did not occur
+      if (guaranteedDrop != null && (!suppressBlockDrop || !customDropOccurred)) {
+        drops.put(guaranteedDrop, 1);
+        if (debug) {
+          debugMessages.add(plugin.getMessages().parse(
+              "<gray>Guaranteed drop: <yellow>" + guaranteedDrop.name().toLowerCase(Locale.ROOT) +
+                  "</yellow> for block <gold>" + blockType.name().toLowerCase(Locale.ROOT) +
+                  "</gold> at Y=" + y
+          ));
         }
+      }
 
-        // Player potion effects
-        if (player.hasPotionEffect(PotionEffectType.LUCK)) {
-            int level = player.getPotionEffect(PotionEffectType.LUCK).getAmplifier() + 1;
-            Double mod = cfg.enchantModifiers.get("luck");
-            if (mod != null) total += mod * level;
+      // Update vein state
+      state.lastMineTime = now;
+      state.lastMinedBlock = loc;
+
+      if (drops.isEmpty() && (debug && debugMessages != null && !debugMessages.isEmpty())) {
+        debugMessages.add(plugin.getMessages().parse("<red>No drops for this block at Y=" + y + "</red>"));
+      }
+
+      if (debug && debugMessages != null && !debugMessages.isEmpty()) {
+        SchedulerUtils.runSync(plugin, () -> {
+          for (Component msg : debugMessages) player.sendMessage(msg);
+        });
+      }
+      if (drops.isEmpty()) return;
+
+      SchedulerUtils.runSync(plugin, () -> {
+        boolean autoPickup = plugin.isAutoPickup();
+        for (Map.Entry<Material, Integer> e : drops.entrySet()) {
+          ItemStack stack = new ItemStack(e.getKey(), e.getValue());
+          if (autoPickup) {
+            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
+            leftover.values().forEach(item -> world.dropItem(centerLoc, item));
+          } else {
+            world.dropItem(centerLoc, stack);
+          }
         }
-        if (player.hasPotionEffect(PotionEffectType.UNLUCK)) {
-            int level = player.getPotionEffect(PotionEffectType.UNLUCK).getAmplifier() + 1;
-            Double mod = cfg.enchantModifiers.get("unluck");
-            if (mod != null) total += mod * level;
+        // XP drop: sum all exp for all materials in this break
+        int totalExp = expToDrop.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalExp > 0) {
+          world.spawn(centerLoc, org.bukkit.entity.ExperienceOrb.class, orb -> orb.setExperience(totalExp));
         }
-        return total;
+      });
+    })) {
+      plugin.getLogger().warning("Failed to schedule async mining evaluation while plugin is disabled.");
+    }
+  }
+
+  private boolean withinWindow(PlayerVeinState state, long now, long windowMs) {
+    return (now - state.lastMineTime) <= windowMs;
+  }
+
+  // --- VEIN HELPERS ---
+
+  private boolean withinRange(PlayerVeinState state, org.bukkit.Location block, double maxRange) {
+    if (state.lastMinedBlock == null) return false;
+    return state.lastMinedBlock.getWorld().equals(block.getWorld()) &&
+        state.lastMinedBlock.distance(block) <= maxRange;
+  }
+
+  private double computeVeinChanceBonus(Player player, ItemStack tool, VeinConfig cfg) {
+    double total = 0.0;
+
+    // Tool enchantments
+    for (Map.Entry<org.bukkit.enchantments.Enchantment, Integer> ench : tool.getEnchantments().entrySet()) {
+      String key = ench.getKey().getKey().getKey().toLowerCase(Locale.ROOT);
+      Double mod = cfg.enchantModifiers.get(key);
+      if (mod != null) {
+        total += mod * ench.getValue();
+      }
     }
 
-    // Used to uniquely identify a drop for a vein chain (only used for ITEM drops)
-    private String veinDropKey(ItemDropRule rule) {
-        if (rule.type == ItemDropRule.DropType.ITEM && rule.material != null) {
-            return "ITEM:" + rule.material.name() + ":" + rule.minY + ":" + rule.maxY;
-        } else if (rule.type == ItemDropRule.DropType.COMMAND) {
-            return "CMD:" + (rule.commands == null ? "" : String.join("|", rule.commands)) + ":" + rule.minY + ":" + rule.maxY;
-        } else {
-            return "UNKNOWN";
-        }
+    // Player potion effects
+    if (player.hasPotionEffect(PotionEffectType.LUCK)) {
+      int level = player.getPotionEffect(PotionEffectType.LUCK).getAmplifier() + 1;
+      Double mod = cfg.enchantModifiers.get("luck");
+      if (mod != null) total += mod * level;
     }
+    if (player.hasPotionEffect(PotionEffectType.UNLUCK)) {
+      int level = player.getPotionEffect(PotionEffectType.UNLUCK).getAmplifier() + 1;
+      Double mod = cfg.enchantModifiers.get("unluck");
+      if (mod != null) total += mod * level;
+    }
+    return total;
+  }
 
-    // Finds a rule by its unique key (for vein chaining)
-    private ItemDropRule findRuleByKey(String key) {
-        if (key == null) return null;
-        for (ItemDropRule rule : plugin.getRuleManager().getAllDropRules()) {
-            if (veinDropKey(rule).equals(key)) return rule;
-        }
-        return null;
+  // Used to uniquely identify a drop for a vein chain (only used for ITEM drops)
+  private String veinDropKey(ItemDropRule rule) {
+    if (rule.type == ItemDropRule.DropType.ITEM && rule.material != null) {
+      return "ITEM:" + rule.material.name() + ":" + rule.minY + ":" + rule.maxY;
+    } else if (rule.type == ItemDropRule.DropType.COMMAND) {
+      return "CMD:" + (rule.commands == null ? "" : String.join("|", rule.commands)) + ":" + rule.minY + ":" + rule.maxY;
+    } else {
+      return "UNKNOWN";
     }
+  }
 
-    private String applyCommandPlaceholders(String raw, Player player, org.bukkit.Location loc) {
-        if (raw == null) return "";
-        String result = raw;
-        result = result.replace("%player%", player.getName());
-        result = result.replace("%uuid%", player.getUniqueId().toString());
-        result = result.replace("%x%", String.valueOf(loc.getBlockX()));
-        result = result.replace("%y%", String.valueOf(loc.getBlockY()));
-        result = result.replace("%z%", String.valueOf(loc.getBlockZ()));
-        result = result.replace("%world%", loc.getWorld() == null ? "" : loc.getWorld().getName());
-        return result;
+  // Finds a rule by its unique key (for vein chaining)
+  private ItemDropRule findRuleByKey(String key) {
+    if (key == null) return null;
+    for (ItemDropRule rule : plugin.getRuleManager().getAllDropRules()) {
+      if (veinDropKey(rule).equals(key)) return rule;
     }
+    return null;
+  }
+
+  private String applyCommandPlaceholders(String raw, Player player, org.bukkit.Location loc) {
+    if (raw == null) return "";
+    String result = raw;
+    result = result.replace("%player%", player.getName());
+    result = result.replace("%uuid%", player.getUniqueId().toString());
+    result = result.replace("%x%", String.valueOf(loc.getBlockX()));
+    result = result.replace("%y%", String.valueOf(loc.getBlockY()));
+    result = result.replace("%z%", String.valueOf(loc.getBlockZ()));
+    result = result.replace("%world%", loc.getWorld() == null ? "" : loc.getWorld().getName());
+    return result;
+  }
+
+  private static class CommandExec {
+    final String command;
+    final ItemDropRule.ExecutionTarget target;
+
+    CommandExec(String command, ItemDropRule.ExecutionTarget target) {
+      this.command = command;
+      this.target = target;
+    }
+  }
 }

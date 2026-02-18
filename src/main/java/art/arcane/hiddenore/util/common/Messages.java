@@ -10,38 +10,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Messages {
-    private YamlConfiguration lang;
-    private final MiniMessage miniMessage = MiniMessage.miniMessage();
-    private String prefix;
+  private final MiniMessage miniMessage = MiniMessage.miniMessage();
+  private YamlConfiguration lang;
+  private String prefix;
 
-    public Messages(YamlConfiguration lang) {
-        this.lang = lang;
-        this.prefix = lang.getString("prefix", "");
-    }
+  public Messages(YamlConfiguration lang) {
+    this.lang = lang;
+    this.prefix = lang.getString("prefix", "");
+  }
 
-    public void reload(File langFile) {
-        this.lang = YamlConfiguration.loadConfiguration(langFile);
-        this.prefix = lang.getString("prefix", "");
-    }
+  public void reload(File langFile) {
+    this.lang = YamlConfiguration.loadConfiguration(langFile);
+    this.prefix = lang.getString("prefix", "");
+  }
 
-    public Component get(String key) {
-        String raw = lang.getString(key, "<red>Missing message: " + key + "</red>");
-        return parse(raw);
-    }
+  public Component get(String key) {
+    String raw = lang.getString(key, "<red>Missing message: " + key + "</red>");
+    return parse(raw);
+  }
 
-    public List<Component> getList(String key) {
-        List<String> lines = lang.getStringList(key);
-        List<Component> comps = new ArrayList<>();
-        for (String line : lines) {
-            comps.add(parse(line));
-        }
-        return comps;
+  public List<Component> getList(String key) {
+    List<String> lines = lang.getStringList(key);
+    List<Component> comps = new ArrayList<>();
+    for (String line : lines) {
+      comps.add(parse(line));
     }
+    return comps;
+  }
 
-    public Component parse(String raw) {
-        if (raw.contains("&")) {
-            raw = ChatColor.translateAlternateColorCodes('&', raw);
-        }
-        return miniMessage.deserialize(prefix + raw);
+  public Component parse(String raw) {
+    if (raw.contains("&")) {
+      raw = ChatColor.translateAlternateColorCodes('&', raw);
     }
+    return miniMessage.deserialize(prefix + raw);
+  }
 }

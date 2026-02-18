@@ -1,5 +1,4 @@
 
-import xyz.jpenilla.runpaper.task.RunServer
 import kotlin.system.exitProcess
 
 plugins {
@@ -19,7 +18,7 @@ val volmLibCoordinate: String = providers.gradleProperty("volmLibCoordinate")
 val authTokenProperty: String? = providers.gradleProperty("authToken").orNull
 val jitpackAuthToken: String? = authTokenProperty ?: providers.gradleProperty("jitpackAuthToken").orNull
 
-registerCustomOutputTaskUnix("PsychoLT", "/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/plugin-jars")
+registerCustomOutputTaskUnix("PsychoLT", "/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/consumers/plugin-consumers/dropins/plugins")
 
 tasks {
     jar { enabled = false }

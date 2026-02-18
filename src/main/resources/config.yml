@@ -57,7 +57,7 @@ drops:
     min_y: 0
     max_y: 320
     fortune_multiplier: true
-    tool_tiers: [WOODEN_PICKAXE, STONE_PICKAXE, COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ WOODEN_PICKAXE, STONE_PICKAXE, COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 20
     exp_drop: 2
 
@@ -66,7 +66,7 @@ drops:
     min_y: -16
     max_y: 112
     fortune_multiplier: true
-    tool_tiers: [COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 10
     exp_drop: 2
 
@@ -75,7 +75,7 @@ drops:
     min_y: -64
     max_y: 320
     fortune_multiplier: false
-    tool_tiers: [COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 12
     exp_drop: 0
 
@@ -84,7 +84,7 @@ drops:
     min_y: -64
     max_y: 32
     fortune_multiplier: false
-    tool_tiers: [IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 10
     exp_drop: 0
 
@@ -93,7 +93,7 @@ drops:
     min_y: -64
     max_y: 16
     fortune_multiplier: true
-    tool_tiers: [IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 8
     exp_drop: 1
 
@@ -102,7 +102,7 @@ drops:
     min_y: -64
     max_y: 64
     fortune_multiplier: true
-    tool_tiers: [COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 6
     exp_drop: 5
 
@@ -111,7 +111,7 @@ drops:
     min_y: -64
     max_y: 16
     fortune_multiplier: true
-    tool_tiers: [IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 8
     exp_drop: 7
 
@@ -120,7 +120,7 @@ drops:
     min_y: -16
     max_y: 320
     fortune_multiplier: true
-    tool_tiers: [IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE]
+    tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
     vein_max_size: 2
     exp_drop: 7
 

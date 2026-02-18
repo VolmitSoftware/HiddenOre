@@ -5,7 +5,7 @@ folia-supported: true
 api-version: ${apiVersion}
 load: STARTUP
 description: A unique mining feature which removes the need to generate ores, and allows economy changes on the fly.
-authors: [d15c07d, VolmitSoftware]
+authors: [ d15c07d, VolmitSoftware ]
 commands:
   hiddenore:
     description: HiddenOre base command.
