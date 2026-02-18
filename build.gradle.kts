@@ -4,11 +4,10 @@ import kotlin.system.exitProcess
 plugins {
     `java-library`
     alias(libs.plugins.shadow)
-    alias(libs.plugins.runPaper)
 }
 
 group = "art.arcane"
-version = "1.1.0-1.21.10-1.21.10"
+version = "1.1.0-1.21.11"
 val apiVersion = "1.21"
 val main = "art.arcane.hiddenore.HiddenOre"
 val lib = "art.arcane.hiddenore.libs"
@@ -31,11 +30,6 @@ tasks {
         relocate("org.bstats", "$lib.bstats")
     }
 
-    runServer {
-        group = "servers"
-        minecraftVersion("1.21.10")
-    }
-
     processResources {
         inputs.properties(
             "name" to rootProject.name,
@@ -52,6 +46,7 @@ tasks {
     compileJava {
         options.compilerArgs.add("-parameters")
         options.encoding = "UTF-8"
+        options.debugOptions.debugLevel = "none"
         options.release.set(21)
     }
 }
