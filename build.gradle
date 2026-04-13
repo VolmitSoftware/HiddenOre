@@ -54,7 +54,7 @@ tasks.named('compileJava', JavaCompile).configure {
     options.compilerArgs.add('-parameters')
     options.encoding = 'UTF-8'
     options.debugOptions.debugLevel = 'none'
-    options.release.set(21)
+    options.release.set(25)
 }
 
 repositories {
@@ -84,7 +84,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -93,17 +93,17 @@ configurations.configureEach {
     resolutionStrategy.cacheDynamicVersionsFor(0, 'seconds')
 }
 
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25)) {
     System.err.println()
     System.err.println('=========================================================================================================')
-    System.err.println('You must run gradle on Java 21 or newer. You are using ' + JavaVersion.current())
+    System.err.println('You must run gradle on Java 25 or newer. You are using ' + JavaVersion.current())
     System.err.println()
     System.err.println('=== For IDEs ===')
-    System.err.println('1. Configure the project for Java 21')
-    System.err.println('2. Configure the bundled gradle to use Java 21 in settings')
+    System.err.println('1. Configure the project for Java 25')
+    System.err.println('2. Configure the bundled gradle to use Java 25 in settings')
     System.err.println()
     System.err.println('=== For Command Line (gradlew) ===')
-    System.err.println('1. Install JDK 21 from https://www.oracle.com/java/technologies/downloads/#java21')
+    System.err.println('1. Install JDK 25 from https://adoptium.net/temurin/releases/?version=25')
     System.err.println('2. Set JAVA_HOME environment variable to the new jdk installation folder')
     System.err.println('3. Open a new command prompt window to get the new environment variables if need be.')
     System.err.println('=========================================================================================================')
