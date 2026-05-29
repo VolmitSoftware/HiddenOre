@@ -8,6 +8,7 @@ import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.common.SplashScreen;
 import art.arcane.hiddenore.util.project.ConfigWatcher;
 import art.arcane.hiddenore.vein.PlayerVeinState;
+import art.arcane.volmlib.integration.ReloadAware;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,11 +18,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
-public class HiddenOre extends JavaPlugin {
+public class HiddenOre extends JavaPlugin implements ReloadAware {
   private final Set<UUID> debugPlayers = new HashSet<>();
   private final HashMap<UUID, PlayerVeinState> veinStates = new HashMap<>();
+  private final AtomicBoolean alreadyDrained = new AtomicBoolean(false);
   private MiningRuleManager ruleManager;
   private GenerationRules generationRules;
   private Messages messages;
@@ -69,10 +72,25 @@ public class HiddenOre extends JavaPlugin {
 
   @Override
   public void onDisable() {
+    drain();
+  }
+
+  @Override
+  public void onPreUnload(ReloadAware.PreUnloadReason reason) {
+    getLogger().info("BileTools pre-unload hook fired (" + reason + "). Stopping HiddenOre config watcher.");
+    drain();
+  }
+
+  private void drain() {
+    if (!alreadyDrained.compareAndSet(false, true)) {
+      return;
+    }
     if (configWatcher != null) {
       configWatcher.stop();
       configWatcher = null;
     }
+    veinStates.clear();
+    debugPlayers.clear();
   }
 
   public MiningRuleManager getRuleManager() {
