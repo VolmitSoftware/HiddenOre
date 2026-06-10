@@ -104,7 +104,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     }
 
     if (!sender.hasPermission(ROOT_PERMISSION)) {
-      sender.sendMessage(plugin.getMessages().get("no_permission"));
+      HiddenOre.sendMessage(sender, plugin.getMessages().get("no_permission"));
       return true;
     }
 
@@ -122,7 +122,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     playFailureSound(sender);
     if (result.getMessage() == null || result.getMessage().trim().isEmpty()) {
       for (var line : plugin.getMessages().getList("usage")) {
-        sender.sendMessage(line);
+        HiddenOre.sendMessage(sender, line);
       }
     }
 
@@ -189,16 +189,10 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     }
 
     Component component = MINI_MESSAGE.deserialize(miniMessage);
-    try {
-      sender.getClass().getMethod("sendRichMessage", String.class).invoke(sender, miniMessage);
+    net.kyori.adventure.platform.bukkit.BukkitAudiences audiences = HiddenOre.audiences();
+    if (audiences != null) {
+      audiences.sender(sender).sendMessage(component);
       return;
-    } catch (Throwable ignored) {
-    }
-
-    try {
-      sender.getClass().getMethod("sendMessage", Component.class).invoke(sender, component);
-      return;
-    } catch (Throwable ignored) {
     }
 
     sender.sendMessage(LEGACY_SERIALIZER.serialize(component));

@@ -251,7 +251,7 @@ public class MiningListener implements Listener {
 
       if (debug && debugMessages != null && !debugMessages.isEmpty()) {
         SchedulerUtils.runSync(plugin, () -> {
-          for (Component msg : debugMessages) player.sendMessage(msg);
+          for (Component msg : debugMessages) HiddenOre.sendMessage(player, msg);
         });
       }
       if (drops.isEmpty()) return;

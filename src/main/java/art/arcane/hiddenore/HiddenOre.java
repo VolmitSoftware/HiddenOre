@@ -9,7 +9,10 @@ import art.arcane.hiddenore.util.common.SplashScreen;
 import art.arcane.hiddenore.util.project.ConfigWatcher;
 import art.arcane.hiddenore.vein.PlayerVeinState;
 import art.arcane.volmlib.integration.ReloadAware;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.text.Component;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 public class HiddenOre extends JavaPlugin implements ReloadAware {
+  private static volatile BukkitAudiences audiences;
   private final Set<UUID> debugPlayers = new HashSet<>();
   private final HashMap<UUID, PlayerVeinState> veinStates = new HashMap<>();
   private final AtomicBoolean alreadyDrained = new AtomicBoolean(false);
@@ -37,6 +41,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     String errorMsg = "";
 
     try {
+      audiences = BukkitAudiences.create(this);
       saveDefaultConfig();
       File langFile = new File(getDataFolder(), "language.yml");
       if (!langFile.exists()) {
@@ -91,6 +96,25 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     }
     veinStates.clear();
     debugPlayers.clear();
+    if (audiences != null) {
+      try {
+        audiences.close();
+      } catch (Throwable ex) {
+        getLogger().log(Level.WARNING, "Error closing Adventure audiences", ex);
+      }
+      audiences = null;
+    }
+  }
+
+  public static BukkitAudiences audiences() {
+    return audiences;
+  }
+
+  public static void sendMessage(CommandSender sender, Component component) {
+    BukkitAudiences a = audiences;
+    if (a != null && sender != null && component != null) {
+      a.sender(sender).sendMessage(component);
+    }
   }
 
   public MiningRuleManager getRuleManager() {

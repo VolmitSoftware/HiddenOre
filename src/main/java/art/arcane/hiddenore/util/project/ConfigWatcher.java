@@ -2,7 +2,6 @@ package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
-import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -127,13 +126,12 @@ public class ConfigWatcher implements Runnable {
     } catch (IllegalArgumentException ignored) {
       bukkitSound = org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
     }
-    Sound sound = Sound.sound(bukkitSound.key(), Sound.Source.MASTER, volume, pitch);
-
+    final org.bukkit.Sound playable = bukkitSound;
     Bukkit.getOnlinePlayers().stream()
         .filter(Player::isOp)
         .forEach(op -> {
-          op.sendMessage(plugin.getMessages().parse(msg));
-          op.playSound(sound);
+          HiddenOre.sendMessage(op, plugin.getMessages().parse(msg));
+          op.playSound(op.getLocation(), playable, volume, pitch);
         });
   }
 }
