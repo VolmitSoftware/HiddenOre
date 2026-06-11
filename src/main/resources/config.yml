@@ -32,99 +32,99 @@ blocks:
   deepslate:
     drop: cobbled_deepslate
 
+# Hidden veins are seeded from the world seed: every position in the world either
+# holds a vein block or it doesn't, deterministically. Mining a vein position pays
+# out exactly once, ever. Player-placed blocks never pay out.
+# NOTE: vein placement is derived from the order of the drops list below.
+# Reordering, inserting, or removing entries reshuffles all undiscovered veins.
 veins:
-  cooldown: 5s
-  vein_base_chance: 0.482
-  token_window: 20s
-  token_range: 8
-  enchant_modifiers:
-    fortune:
-      vein_chance_mult: 0.05
-    looting:
-      vein_chance_mult: 0.02
-    luck:
-      vein_chance_mult: 0.03
-    unluck:
-      vein_chance_mult: -0.05
-  vein_start_sound:
+  discovery_sound:
     sound: "BLOCK_BEACON_POWER_SELECT"
     volume: 1.0
     pitch: 1.0
 
 drops:
   - item: coal
-    chance: 0.0069
+    veins_per_chunk: 2.2
+    vein_min_size: 5
+    vein_max_size: 20
     min_y: 0
     max_y: 320
     fortune_multiplier: true
     tool_tiers: [ WOODEN_PICKAXE, STONE_PICKAXE, COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 20
     exp_drop: 2
 
   - item: raw_copper
-    chance: 0.0043
+    veins_per_chunk: 1.6
+    vein_min_size: 4
+    vein_max_size: 12
     min_y: -16
     max_y: 112
     fortune_multiplier: true
     tool_tiers: [ COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 10
     exp_drop: 2
 
   - item: raw_iron
-    chance: 0.0040
+    veins_per_chunk: 1.8
+    vein_min_size: 4
+    vein_max_size: 12
     min_y: -64
     max_y: 320
     fortune_multiplier: false
     tool_tiers: [ COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 12
     exp_drop: 0
 
   - item: raw_gold
-    chance: 0.0022
+    veins_per_chunk: 0.6
+    vein_min_size: 3
+    vein_max_size: 8
     min_y: -64
     max_y: 32
     fortune_multiplier: false
     tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 10
     exp_drop: 0
 
   - item: redstone
-    chance: 0.0020
+    veins_per_chunk: 0.9
+    vein_min_size: 4
+    vein_max_size: 8
     min_y: -64
     max_y: 16
     fortune_multiplier: true
     tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 8
     exp_drop: 1
 
   - item: lapis_lazuli
-    chance: 0.0011
+    veins_per_chunk: 0.5
+    vein_min_size: 3
+    vein_max_size: 6
     min_y: -64
     max_y: 64
     fortune_multiplier: true
     tool_tiers: [ COPPER_PICKAXE, IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 6
     exp_drop: 5
 
   - item: diamond
-    chance: 0.0008
+    veins_per_chunk: 0.5
+    vein_min_size: 3
+    vein_max_size: 8
     min_y: -64
     max_y: 16
     fortune_multiplier: true
     tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 8
     exp_drop: 7
 
   - item: emerald
-    chance: 0.0006
+    veins_per_chunk: 0.35
+    vein_min_size: 1
+    vein_max_size: 2
     min_y: -16
     max_y: 320
     fortune_multiplier: true
     tool_tiers: [ IRON_PICKAXE, GOLDEN_PICKAXE, DIAMOND_PICKAXE, NETHERITE_PICKAXE ]
-    vein_max_size: 2
     exp_drop: 7
 
-  # Example command drop (percentage chance only, not affected by enchantments/veins/XP)
+  # Example command drop (percentage chance only, rolled at break time)
   # You can specify whether you want the command to be executed by the player, or console using "player:" and "console:"
   # If you don't specify what it will run as, it will default to what you have execute_as set to
   - type: command

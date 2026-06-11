@@ -11,31 +11,31 @@ public class ItemDropRule {
   public final DropType type;
   public final Material material;
   public final List<String> commands;
-  public final ExecutionTarget executionTarget; // for command drops: CONSOLE or PLAYER
-  // Shared fields
+  public final ExecutionTarget executionTarget;
   public final double chance;
   public final int minY;
   public final int maxY;
   public final boolean fortuneMultiplier;
   public final Set<ToolTier> toolTiers;
+  public final double veinsPerChunk;
+  public final int veinMinSize;
   public final int veinMaxSize;
   public final int expDrop;
-  // Constructor for ITEM drop
-  public ItemDropRule(Material material, double chance, int minY, int maxY, boolean fortuneMultiplier, Set<ToolTier> toolTiers, int veinMaxSize, int expDrop) {
+
+  public ItemDropRule(Material material, double veinsPerChunk, int veinMinSize, int veinMaxSize, int minY, int maxY, boolean fortuneMultiplier, Set<ToolTier> toolTiers, int expDrop) {
     this.type = DropType.ITEM;
     this.material = material;
     this.commands = null;
     this.executionTarget = ExecutionTarget.CONSOLE;
-    this.chance = chance;
+    this.chance = 0.0;
     this.minY = minY;
     this.maxY = maxY;
     this.fortuneMultiplier = fortuneMultiplier;
     this.toolTiers = toolTiers;
-    this.veinMaxSize = veinMaxSize;
+    this.veinsPerChunk = veinsPerChunk;
+    this.veinMinSize = Math.max(1, veinMinSize);
+    this.veinMaxSize = Math.max(this.veinMinSize, veinMaxSize);
     this.expDrop = expDrop;
-  }
-  public ItemDropRule(List<String> commands, double chance, int minY, int maxY) {
-    this(commands, chance, minY, maxY, ExecutionTarget.CONSOLE);
   }
 
   public ItemDropRule(List<String> commands, double chance, int minY, int maxY, ExecutionTarget executionTarget) {
@@ -46,10 +46,12 @@ public class ItemDropRule {
     this.chance = chance;
     this.minY = minY;
     this.maxY = maxY;
-    this.fortuneMultiplier = false; // commands are not affected by enchantments
-    this.toolTiers = Collections.emptySet(); // not restricted by tool tier by default
-    this.veinMaxSize = 0; // commands do not start veins
-    this.expDrop = 0; // no xp for commands
+    this.fortuneMultiplier = false;
+    this.toolTiers = Collections.emptySet();
+    this.veinsPerChunk = 0.0;
+    this.veinMinSize = 0;
+    this.veinMaxSize = 0;
+    this.expDrop = 0;
   }
 
   public enum DropType {ITEM, COMMAND}

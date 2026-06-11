@@ -22,8 +22,8 @@ def shadowJarTask = tasks.named('shadowJar', com.github.jengelman.gradle.plugins
 
 registerCustomOutputTaskUnix('PsychoLT', '/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/consumers/plugin-consumers/dropins/plugins')
 
-tasks.named('jar').configure {
-    enabled = false
+tasks.named('jar', org.gradle.api.tasks.bundling.Jar).configure {
+    archiveClassifier.set('thin')
 }
 
 tasks.named('build').configure {
@@ -87,6 +87,8 @@ dependencies {
     implementation('net.kyori:adventure-platform-bukkit:4.4.1') {
         exclude group: 'net.md-5', module: 'bungeecord-chat'
     }
+    testImplementation('junit:junit:4.13.2')
+    testImplementation(libs.paper)
 }
 
 java {

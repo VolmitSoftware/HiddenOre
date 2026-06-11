@@ -1,14 +1,17 @@
 package art.arcane.hiddenore;
 
+import art.arcane.hiddenore.api.HiddenOreAPI;
 import art.arcane.hiddenore.generation.GenerationRules;
 import art.arcane.hiddenore.listeners.MiningListener;
+import art.arcane.hiddenore.listeners.PlacementListener;
 import art.arcane.hiddenore.rules.MiningRuleManager;
 import art.arcane.hiddenore.service.HiddenOreCommandService;
 import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.common.SplashScreen;
 import art.arcane.hiddenore.util.project.ConfigWatcher;
-import art.arcane.hiddenore.vein.PlayerVeinState;
+import art.arcane.hiddenore.vein.SeededVeinGenerator;
 import art.arcane.volmlib.integration.ReloadAware;
+import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bstats.bukkit.Metrics;
@@ -17,7 +20,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -27,13 +29,16 @@ import java.util.logging.Level;
 public class HiddenOre extends JavaPlugin implements ReloadAware {
   private static volatile BukkitAudiences audiences;
   private final Set<UUID> debugPlayers = new HashSet<>();
-  private final HashMap<UUID, PlayerVeinState> veinStates = new HashMap<>();
   private final AtomicBoolean alreadyDrained = new AtomicBoolean(false);
   private MiningRuleManager ruleManager;
   private GenerationRules generationRules;
   private Messages messages;
   private ConfigWatcher configWatcher;
   private HiddenOreCommandService commandService;
+  private SeededVeinGenerator veinGenerator;
+  private ChunkPositionSet placedBlocks;
+  private ChunkPositionSet consumedVeins;
+  private HiddenOreAPI api;
 
   @Override
   public void onEnable() {
@@ -47,8 +52,12 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       if (!langFile.exists()) {
         saveResource("language.yml", false);
       }
+      placedBlocks = new ChunkPositionSet(this, "placed_blocks");
+      consumedVeins = new ChunkPositionSet(this, "consumed_veins");
+      api = new HiddenOreAPI(this);
       reloadAll();
       getServer().getPluginManager().registerEvents(new MiningListener(this), this);
+      getServer().getPluginManager().registerEvents(new PlacementListener(this), this);
       commandService = new HiddenOreCommandService(this);
       commandService.register();
       configWatcher = new ConfigWatcher(this);
@@ -94,7 +103,6 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       configWatcher.stop();
       configWatcher = null;
     }
-    veinStates.clear();
     debugPlayers.clear();
     if (audiences != null) {
       try {
@@ -128,6 +136,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   public void reloadAll() {
     reloadConfig();
     ruleManager = new MiningRuleManager(this);
+    veinGenerator = new SeededVeinGenerator(this);
     if (generationRules != null) generationRules.reload();
     else generationRules = new GenerationRules(this);
     File langFile = new File(getDataFolder(), "language.yml");
@@ -158,7 +167,19 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     return getConfig().getBoolean("auto_pickup_drops", false);
   }
 
-  public PlayerVeinState getPlayerVeinState(UUID uuid) {
-    return veinStates.computeIfAbsent(uuid, k -> new PlayerVeinState());
+  public SeededVeinGenerator getVeinGenerator() {
+    return veinGenerator;
+  }
+
+  public ChunkPositionSet getPlacedBlocks() {
+    return placedBlocks;
+  }
+
+  public ChunkPositionSet getConsumedVeins() {
+    return consumedVeins;
+  }
+
+  public HiddenOreAPI getApi() {
+    return api;
   }
 }
