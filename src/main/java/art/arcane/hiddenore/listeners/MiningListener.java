@@ -64,7 +64,8 @@ public class MiningListener implements Listener {
 
     event.setDropItems(false);
 
-    boolean placed = plugin.getPlacedBlocks().remove(block);
+    VeinConfig veinConfig = plugin.getRuleManager().getVeinConfig();
+    boolean placed = plugin.getPlacedBlocks().remove(block) && !veinConfig.allowPlacedBlocks;
     List<ItemStack> drops = new ArrayList<>();
     int experience = 0;
     HiddenVein vein = null;
@@ -74,6 +75,31 @@ public class MiningListener implements Listener {
       if (debug) {
         HiddenOre.sendMessage(player, plugin.getMessages().parse("<red>player-placed " + blockType.name().toLowerCase(Locale.ROOT) + ", no hidden drops</red>"));
       }
+    } else if (veinConfig.generation == VeinConfig.GenerationMode.PURE_RANDOM) {
+      ToolTier tier = ToolTier.fromMaterial(tool.getType());
+      for (ItemDropRule rule : plugin.getRuleManager().getItemRules(y)) {
+        double roll = ThreadLocalRandom.current().nextDouble();
+        if (roll >= rule.pureRandomChance()) {
+          continue;
+        }
+        if (tier != null && rule.toolTiers.contains(tier)) {
+          int amount = MiningUtil.applyFortune(tool, rule, 1);
+          drops.add(new ItemStack(rule.material, amount));
+          if (rule.expDrop > 0) {
+            experience += ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
+          }
+          vein = new HiddenVein(block.getX(), y, block.getZ(), -1, rule.material, HiddenVein.oreDisplayFor(rule.material, y));
+          playDiscoverySound(player);
+          if (debug) {
+            HiddenOre.sendMessage(player, plugin.getMessages().parse("<green>random drop: " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + "</green>"));
+          }
+        } else if (debug) {
+          HiddenOre.sendMessage(player, plugin.getMessages().parse("<red>random drop " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
+        }
+        break;
+      }
+
+      commandFired = rollCommands(player, block, y, debug);
     } else {
       ChunkVeins veins = plugin.getVeinGenerator().get(world, block.getX() >> 4, block.getZ() >> 4);
       int packed = ChunkPositionSet.pack(block.getX() & 15, y, block.getZ() & 15, world.getMinHeight());

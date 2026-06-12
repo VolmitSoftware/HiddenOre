@@ -23,6 +23,9 @@ public class PlacementListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onBlockPlace(BlockPlaceEvent event) {
+    if (plugin.getRuleManager().getVeinConfig().allowPlacedBlocks) {
+      return;
+    }
     Block block = event.getBlockPlaced();
     if (plugin.getRuleManager().getGuaranteedDrop(block.getType()) != null) {
       plugin.getPlacedBlocks().add(block);

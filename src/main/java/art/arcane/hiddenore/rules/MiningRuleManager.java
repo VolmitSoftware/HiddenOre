@@ -147,6 +147,16 @@ public class MiningRuleManager {
     return result;
   }
 
+  public List<ItemDropRule> getItemRules(int y) {
+    List<ItemDropRule> result = new ArrayList<>();
+    for (ItemDropRule rule : dropRules) {
+      if (rule.type == ItemDropRule.DropType.ITEM && y >= rule.minY && y <= rule.maxY) {
+        result.add(rule);
+      }
+    }
+    return result;
+  }
+
   public List<ItemDropRule> getAllDropRules() {
     return new ArrayList<>(dropRules);
   }

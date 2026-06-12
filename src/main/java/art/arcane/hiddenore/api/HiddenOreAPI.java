@@ -3,6 +3,7 @@ package art.arcane.hiddenore.api;
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.vein.ChunkVeins;
 import art.arcane.hiddenore.vein.VeinBlock;
+import art.arcane.hiddenore.vein.VeinConfig;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,8 +24,12 @@ public final class HiddenOreAPI {
     return plugin.getRuleManager().getGuaranteedDrop(material) != null;
   }
 
+  public boolean isSeeded() {
+    return plugin.getRuleManager().getVeinConfig().generation == VeinConfig.GenerationMode.SEEDED;
+  }
+
   public HiddenVein veinAt(Block block) {
-    if (!isManagedBase(block.getType())) {
+    if (!isSeeded() || !isManagedBase(block.getType())) {
       return null;
     }
     World world = block.getWorld();
@@ -43,6 +48,9 @@ public final class HiddenOreAPI {
   }
 
   public List<HiddenVein> veinSiblings(Block block) {
+    if (!isSeeded()) {
+      return List.of();
+    }
     World world = block.getWorld();
     int chunkX = block.getX() >> 4;
     int chunkZ = block.getZ() >> 4;
@@ -79,7 +87,7 @@ public final class HiddenOreAPI {
 
   public List<HiddenVein> veinsNear(Location center, int radius) {
     World world = center.getWorld();
-    if (world == null || radius <= 0) {
+    if (!isSeeded() || world == null || radius <= 0) {
       return List.of();
     }
 

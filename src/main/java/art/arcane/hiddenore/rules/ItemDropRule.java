@@ -54,6 +54,18 @@ public class ItemDropRule {
     this.expDrop = 0;
   }
 
+  public double pureRandomChance() {
+    if (type != DropType.ITEM || veinsPerChunk <= 0) {
+      return 0.0;
+    }
+    int yRange = maxY - minY + 1;
+    if (yRange <= 0) {
+      return 0.0;
+    }
+    double expectedBlocksPerChunk = veinsPerChunk * (veinMinSize + veinMaxSize) / 2.0;
+    return expectedBlocksPerChunk / (256.0 * yRange);
+  }
+
   public enum DropType {ITEM, COMMAND}
 
   public enum ExecutionTarget {CONSOLE, PLAYER}

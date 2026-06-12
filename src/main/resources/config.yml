@@ -32,12 +32,22 @@ blocks:
   deepslate:
     drop: cobbled_deepslate
 
-# Hidden veins are seeded from the world seed: every position in the world either
-# holds a vein block or it doesn't, deterministically. Mining a vein position pays
-# out exactly once, ever. Player-placed blocks never pay out.
-# NOTE: vein placement is derived from the order of the drops list below.
+# In seeded mode, hidden veins are derived from the world seed: every position in the
+# world either holds a vein block or it doesn't, deterministically, and mining a vein
+# position pays out exactly once, ever.
+# NOTE: in seeded mode vein placement is derived from the order of the drops list below.
 # Reordering, inserting, or removing entries reshuffles all undiscovered veins.
 veins:
+  # seeded      - veins exist at fixed positions before being mined, so other plugins
+  #               can detect and outline them, and each position pays out once, ever.
+  # pure_random - nothing is pre-placed; every eligible block break rolls fresh odds
+  #               tuned to the same per-chunk statistics (veins_per_chunk and vein
+  #               sizes below). Vein detection always comes up empty in this mode.
+  generation: seeded
+  # Whether blocks placed by players can yield hidden drops. When false, player-placed
+  # blocks are tracked (surviving pistons and restarts) and never pay out, closing the
+  # place-and-remine exploit.
+  allow_placed_blocks: true
   discovery_sound:
     sound: "BLOCK_BEACON_POWER_SELECT"
     volume: 1.0
