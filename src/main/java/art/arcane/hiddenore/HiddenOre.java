@@ -12,6 +12,7 @@ import art.arcane.hiddenore.util.project.ConfigWatcher;
 import art.arcane.hiddenore.vein.SeededVeinGenerator;
 import art.arcane.volmlib.integration.ReloadAware;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
+import io.github.slimjar.app.builder.SpigotApplicationBuilder;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bstats.bukkit.Metrics;
@@ -39,6 +40,14 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   private ChunkPositionSet placedBlocks;
   private ChunkPositionSet consumedVeins;
   private HiddenOreAPI api;
+
+  public HiddenOre() {
+    getLogger().info("Loading dependencies...");
+    new SpigotApplicationBuilder(this)
+      .remap(true)
+      .build();
+    getLogger().info("Dependencies loaded.");
+  }
 
   @Override
   public void onEnable() {
