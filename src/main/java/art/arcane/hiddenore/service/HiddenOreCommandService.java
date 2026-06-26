@@ -188,13 +188,13 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
       return;
     }
 
-    Component component = MINI_MESSAGE.deserialize(miniMessage);
-    net.kyori.adventure.platform.bukkit.BukkitAudiences audiences = HiddenOre.audiences();
-    if (audiences != null) {
-      audiences.sender(sender).sendMessage(component);
+    try {
+      sender.getClass().getMethod("sendRichMessage", String.class).invoke(sender, miniMessage);
       return;
+    } catch (Throwable ignored) {
     }
 
+    Component component = MINI_MESSAGE.deserialize(miniMessage);
     sender.sendMessage(LEGACY_SERIALIZER.serialize(component));
   }
 
