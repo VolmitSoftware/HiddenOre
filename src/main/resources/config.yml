@@ -47,12 +47,14 @@ veins:
   # Whether blocks placed by players can yield hidden drops. When false, player-placed
   # blocks are tracked (surviving pistons and restarts) and never pay out, closing the
   # place-and-remine exploit.
-  allow_placed_blocks: true
+  allow_placed_blocks: false
   discovery_sound:
     sound: "BLOCK_BEACON_POWER_SELECT"
     volume: 1.0
     pitch: 1.0
 
+# Safety limits: up to 64 veins per chunk and 256 blocks per vein for one rule,
+# up to 1,024 worst-case target blocks across all item rules, and exp_drop up to 1,000.
 drops:
   - item: coal
     veins_per_chunk: 2.2

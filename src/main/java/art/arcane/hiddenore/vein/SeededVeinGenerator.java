@@ -1,6 +1,5 @@
 package art.arcane.hiddenore.vein;
 
-import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.rules.ItemDropRule;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
 import org.bukkit.World;
@@ -21,11 +20,11 @@ public final class SeededVeinGenerator {
       {0, 0, 1}, {0, 0, -1}
   };
 
-  private final HiddenOre plugin;
+  private final List<ItemDropRule> rules;
   private final Map<UUID, Map<Long, ChunkVeins>> cache = new HashMap<>();
 
-  public SeededVeinGenerator(HiddenOre plugin) {
-    this.plugin = plugin;
+  public SeededVeinGenerator(List<ItemDropRule> rules) {
+    this.rules = List.copyOf(rules);
   }
 
   public ChunkVeins get(World world, int chunkX, int chunkZ) {
@@ -42,10 +41,20 @@ public final class SeededVeinGenerator {
       if (cached != null) {
         return cached;
       }
-      ChunkVeins computed = compute(world.getSeed(), world.getMinHeight(), world.getMaxHeight(), chunkX, chunkZ, plugin.getRuleManager().getAllDropRules());
+      ChunkVeins computed = compute(world.getSeed(), world.getMinHeight(), world.getMaxHeight(), chunkX, chunkZ);
       worldCache.put(chunkKey, computed);
       return computed;
     }
+  }
+
+  public void clearWorld(UUID worldId) {
+    synchronized (cache) {
+      cache.remove(worldId);
+    }
+  }
+
+  ChunkVeins compute(long worldSeed, int minHeight, int maxHeight, int chunkX, int chunkZ) {
+    return compute(worldSeed, minHeight, maxHeight, chunkX, chunkZ, rules);
   }
 
   public static ChunkVeins compute(long worldSeed, int minHeight, int maxHeight, int chunkX, int chunkZ, List<ItemDropRule> rules) {

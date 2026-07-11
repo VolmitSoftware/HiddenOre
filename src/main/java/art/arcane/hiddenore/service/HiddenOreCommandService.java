@@ -16,7 +16,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.SoundCategory;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 
 public final class HiddenOreCommandService implements CommandExecutor, TabCompleter {
   private static final String ROOT_COMMAND = "hiddenore";
@@ -121,7 +126,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
 
     playFailureSound(sender);
     if (result.getMessage() == null || result.getMessage().trim().isEmpty()) {
-      for (var line : plugin.getMessages().getList("usage")) {
+      for (Component line : plugin.getMessages().getList("usage")) {
         HiddenOre.sendMessage(sender, line);
       }
     }
@@ -157,7 +162,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     try {
       return getDirector().execute(new DirectorInvocation(new BukkitDirectorSender(sender), label, Arrays.asList(args)));
     } catch (Throwable e) {
-      plugin.getLogger().warning("Director command execution failed: " + e.getClass().getSimpleName() + " " + e.getMessage());
+      plugin.getLogger().log(Level.SEVERE, "Director command execution failed", e);
       return DirectorExecutionResult.notHandled();
     }
   }
@@ -166,7 +171,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     try {
       return getDirector().tabComplete(new DirectorInvocation(new BukkitDirectorSender(sender), alias, Arrays.asList(args)));
     } catch (Throwable e) {
-      plugin.getLogger().warning("Director tab completion failed: " + e.getClass().getSimpleName() + " " + e.getMessage());
+      plugin.getLogger().log(Level.SEVERE, "Director tab completion failed", e);
       return List.of();
     }
   }

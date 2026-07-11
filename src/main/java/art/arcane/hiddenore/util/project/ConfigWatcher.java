@@ -2,17 +2,27 @@ package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.HashSet;
+import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
-public class ConfigWatcher implements Runnable {
+public final class ConfigWatcher implements Runnable {
+  private static final long RELOAD_DEBOUNCE_MILLIS = 250L;
+
   private final HiddenOre plugin;
   private final Set<String> watchedFiles;
   private final Path dir;
@@ -23,9 +33,7 @@ public class ConfigWatcher implements Runnable {
   public ConfigWatcher(HiddenOre plugin) {
     this.plugin = plugin;
     this.dir = plugin.getDataFolder().toPath();
-    this.watchedFiles = new HashSet<>();
-    watchedFiles.add("config.yml");
-    watchedFiles.add("language.yml");
+    this.watchedFiles = Set.of("config.yml", "language.yml");
   }
 
   public synchronized void start() {
@@ -47,13 +55,25 @@ public class ConfigWatcher implements Runnable {
     if (watcher != null) {
       try {
         watcher.close();
-      } catch (IOException ignored) {
+      } catch (IOException exception) {
+        plugin.getLogger().log(Level.WARNING, "Failed to close the HiddenOre config watcher", exception);
       }
     }
 
     Thread watcherThread = thread;
     if (watcherThread != null) {
       watcherThread.interrupt();
+      if (watcherThread != Thread.currentThread()) {
+        try {
+          watcherThread.join(1000L);
+        } catch (InterruptedException exception) {
+          Thread.currentThread().interrupt();
+          plugin.getLogger().log(Level.WARNING, "Interrupted while stopping the HiddenOre config watcher", exception);
+        }
+        if (watcherThread.isAlive()) {
+          plugin.getLogger().warning("HiddenOre config watcher did not stop within one second");
+        }
+      }
     }
   }
 
@@ -61,38 +81,44 @@ public class ConfigWatcher implements Runnable {
   public void run() {
     try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
       watchService = watcher;
-      dir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
+      dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
 
       while (running && plugin.isEnabled()) {
         WatchKey key;
         try {
           key = watcher.take();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
           Thread.currentThread().interrupt();
+          if (running) {
+            plugin.getLogger().log(Level.WARNING, "HiddenOre config watcher was interrupted unexpectedly", exception);
+          }
           break;
         }
-        boolean shouldReload = false;
-
-        for (WatchEvent<?> event : key.pollEvents()) {
-          WatchEvent.Kind<?> kind = event.kind();
-          if (kind != StandardWatchEventKinds.ENTRY_MODIFY) continue;
-          Path changed = (Path) event.context();
-          if (watchedFiles.contains(changed.getFileName().toString())) {
-            shouldReload = true;
+        boolean shouldReload = containsWatchedChange(key);
+        if (!key.reset()) {
+          break;
+        }
+        if (shouldReload) {
+          awaitQuietPeriod(watcher);
+          if (running && plugin.isEnabled()) {
+            if (!SchedulerUtils.runGlobal(plugin, this::reloadAndNotifyOps)) {
+              plugin.getLogger().warning("Failed to schedule config reload");
+            }
           }
         }
-
-        if (shouldReload && plugin.isEnabled()) {
-          SchedulerUtils.runSync(plugin, this::reloadAndNotifyOps);
-        }
-
-        if (!key.reset()) break;
       }
-    } catch (ClosedWatchServiceException ignored) {
-      // Shutdown path.
-    } catch (IOException e) {
+    } catch (ClosedWatchServiceException exception) {
       if (running) {
-        plugin.getLogger().warning("ConfigWatcher stopped: " + e.getMessage());
+        plugin.getLogger().log(Level.SEVERE, "HiddenOre config watcher closed unexpectedly", exception);
+      }
+    } catch (InterruptedException exception) {
+      Thread.currentThread().interrupt();
+      if (running) {
+        plugin.getLogger().log(Level.WARNING, "HiddenOre config watcher was interrupted unexpectedly", exception);
+      }
+    } catch (IOException exception) {
+      if (running) {
+        plugin.getLogger().log(Level.SEVERE, "HiddenOre config watcher stopped unexpectedly", exception);
       }
     } finally {
       watchService = null;
@@ -102,36 +128,77 @@ public class ConfigWatcher implements Runnable {
   }
 
   private void reloadAndNotifyOps() {
-    if (!plugin.isEnabled()) {
+    if (!running || plugin.isDraining() || !plugin.isEnabled()) {
       return;
     }
 
-    plugin.reloadConfig();
-    // Reload language
-    File langFile = new File(plugin.getDataFolder(), "language.yml");
-    plugin.getMessages().reload(langFile);
-    // Drop/vein/other manager reloads
-    plugin.getRuleManager().reload();
-
-    // Get configurable message and sound
-    YamlConfiguration lang = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "language.yml"));
-    String msg = lang.getString("config_reloaded_message", "<green>Config updated and reloaded!</green>");
-    String soundStr = lang.getString("config_reloaded_sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
-    float volume = (float) lang.getDouble("config_reloaded_sound_volume", 1.0);
-    float pitch = (float) lang.getDouble("config_reloaded_sound_pitch", 1.6);
-
-    org.bukkit.Sound bukkitSound;
-    try {
-      bukkitSound = org.bukkit.Sound.valueOf(soundStr);
-    } catch (IllegalArgumentException ignored) {
-      bukkitSound = org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+    Path configFile = dir.resolve("config.yml");
+    Path languageFile = dir.resolve("language.yml");
+    if (!Files.isRegularFile(configFile) || !Files.isRegularFile(languageFile)) {
+      plugin.getLogger().warning("Config reload skipped because config.yml or language.yml is missing");
+      return;
     }
-    final org.bukkit.Sound playable = bukkitSound;
-    Bukkit.getOnlinePlayers().stream()
-        .filter(Player::isOp)
-        .forEach(op -> {
-          HiddenOre.sendMessage(op, plugin.getMessages().parse(msg));
-          op.playSound(op.getLocation(), playable, volume, pitch);
-        });
+
+    try {
+      plugin.reloadAll();
+    } catch (RuntimeException exception) {
+      plugin.getLogger().log(Level.SEVERE, "Config reload failed; the previous runtime configuration remains active", exception);
+      return;
+    }
+
+    HiddenOre.RuntimeState runtime = plugin.getRuntimeState();
+    HiddenOre.ReloadNotification notification = runtime.reloadNotification();
+    Component message = notification.message();
+    for (Player player : Bukkit.getOnlinePlayers()) {
+      if (!SchedulerUtils.runEntity(plugin, player, () -> notifyOperator(player, message, notification.sound(),
+          notification.volume(), notification.pitch()))) {
+        plugin.getLogger().warning("Failed to schedule a config reload notification for an online player");
+      }
+    }
+  }
+
+  private boolean containsWatchedChange(WatchKey key) {
+    boolean watched = false;
+    for (WatchEvent<?> event : key.pollEvents()) {
+      if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
+        watched = true;
+        continue;
+      }
+      if (!(event.context() instanceof Path changed)) {
+        continue;
+      }
+      if (watchedFiles.contains(changed.getFileName().toString())) {
+        watched = true;
+      }
+    }
+    return watched;
+  }
+
+  private void awaitQuietPeriod(WatchService watcher) throws InterruptedException {
+    long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(RELOAD_DEBOUNCE_MILLIS);
+    while (running) {
+      long remaining = deadline - System.nanoTime();
+      if (remaining <= 0L) {
+        return;
+      }
+      WatchKey key = watcher.poll(remaining, TimeUnit.NANOSECONDS);
+      if (key == null) {
+        return;
+      }
+      if (containsWatchedChange(key)) {
+        deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(RELOAD_DEBOUNCE_MILLIS);
+      }
+      if (!key.reset()) {
+        return;
+      }
+    }
+  }
+
+  private void notifyOperator(Player player, Component message, Sound sound, float volume, float pitch) {
+    if (!player.isOp()) {
+      return;
+    }
+    HiddenOre.sendMessage(player, message);
+    player.playSound(player.getLocation(), sound, volume, pitch);
   }
 }

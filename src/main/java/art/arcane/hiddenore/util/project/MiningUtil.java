@@ -5,7 +5,12 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
-public class MiningUtil {
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class MiningUtil {
+  private MiningUtil() {
+  }
+
   public static boolean isPickaxe(Material mat) {
     return ToolTier.fromMaterial(mat) != null;
   }
@@ -15,19 +20,15 @@ public class MiningUtil {
       return baseAmount;
     }
     int fortune = tool.getEnchantmentLevel(Enchantment.FORTUNE);
-    if (fortune <= 0) return baseAmount;
-
-    // Vanilla-like fortune logic for ores
-    int bonus = 0;
-    for (int i = 0; i < fortune; ++i) {
-      if (Math.random() < 1.0 / (fortune + 2)) {
-        bonus++;
-      }
+    if (fortune <= 0) {
+      return baseAmount;
     }
-    return baseAmount + bonus;
+
+    int roll = ThreadLocalRandom.current().nextInt(fortune + 2);
+    return applyFortuneRoll(baseAmount, roll);
   }
 
-  public static boolean hasSilkTouch(ItemStack tool) {
-    return tool != null && tool.getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0;
+  static int applyFortuneRoll(int baseAmount, int roll) {
+    return baseAmount * Math.max(1, roll);
   }
 }

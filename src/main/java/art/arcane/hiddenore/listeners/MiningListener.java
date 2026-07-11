@@ -4,7 +4,10 @@ import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.api.HiddenVein;
 import art.arcane.hiddenore.api.event.HiddenOreDropsEvent;
 import art.arcane.hiddenore.rules.ItemDropRule;
+import art.arcane.hiddenore.rules.MiningRuleManager;
+import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.project.MiningUtil;
+import art.arcane.hiddenore.util.project.SoundResolver;
 import art.arcane.hiddenore.util.project.ToolTier;
 import art.arcane.hiddenore.vein.ChunkVeins;
 import art.arcane.hiddenore.vein.VeinBlock;
@@ -18,28 +21,41 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MiningListener implements Listener {
   private final HiddenOre plugin;
+  private final Map<BreakKey, BreakPreparation> pendingBreaks = new ConcurrentHashMap<>();
+  private final Map<BlockDropItemEvent, DropPreparation> pendingDrops = new ConcurrentHashMap<>();
 
   public MiningListener(HiddenOre plugin) {
     this.plugin = plugin;
   }
 
-  @EventHandler(ignoreCancelled = true)
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onBlockBreak(BlockBreakEvent event) {
+    if (plugin.isDraining()) {
+      return;
+    }
+
     Player player = event.getPlayer();
     if (player.getGameMode() == GameMode.CREATIVE) {
       return;
@@ -50,34 +66,92 @@ public class MiningListener implements Listener {
       return;
     }
 
+    HiddenOre.RuntimeState runtime = plugin.getRuntimeState();
+    MiningRuleManager rules = runtime.ruleManager();
+    if (rules.getGuaranteedDrop(event.getBlock().getType()) == null) {
+      return;
+    }
+
+    event.setExpToDrop(0);
+    if (!event.isDropItems()) {
+      return;
+    }
+
+    pendingBreaks.put(breakKey(player, event.getBlock()), new BreakPreparation(runtime, snapshotTool(tool)));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
+  public void onBlockBreakFinal(BlockBreakEvent event) {
+    if (!shouldDiscardBreakPreparation(event.isCancelled(), event.isDropItems(), event.getBlock().getType().isAir())) {
+      return;
+    }
+    pendingBreaks.remove(breakKey(event.getPlayer(), event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void prepareBlockDrop(BlockDropItemEvent event) {
+    BreakKey key = breakKey(event.getPlayer(), event.getBlockState());
+    BreakPreparation preparation = pendingBreaks.remove(key);
+    if (plugin.isDraining() || preparation == null) {
+      return;
+    }
+
+    event.getItems().clear();
+    boolean trackedPlacement = plugin.getPlacedBlocks().contains(event.getBlock());
+    pendingDrops.put(event, new DropPreparation(preparation.runtime(), preparation.tool(), trackedPlacement));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
+  public void commitBlockDrop(BlockDropItemEvent event) {
+    BreakKey key = breakKey(event.getPlayer(), event.getBlockState());
+    pendingBreaks.remove(key);
+    DropPreparation preparation = pendingDrops.remove(event);
     Block block = event.getBlock();
-    Material blockType = block.getType();
-    Material guaranteedDrop = plugin.getRuleManager().getGuaranteedDrop(blockType);
+    try {
+      if (!event.isCancelled() && preparation != null) {
+        processAcceptedDrop(event, preparation);
+      }
+    } finally {
+      plugin.getPlacedBlocks().remove(block);
+    }
+  }
+
+  private void processAcceptedDrop(BlockDropItemEvent event, DropPreparation preparation) {
+    Player player = event.getPlayer();
+    BlockState blockState = event.getBlockState();
+    Material blockType = blockState.getType();
+    HiddenOre.RuntimeState runtime = preparation.runtime();
+    MiningRuleManager rules = runtime.ruleManager();
+    Messages messages = runtime.messages();
+    Material guaranteedDrop = rules.getGuaranteedDrop(blockType);
     if (guaranteedDrop == null) {
       return;
     }
 
+    ItemStack tool = preparation.tool();
+    Block block = event.getBlock();
     boolean debug = plugin.isDebug(player.getUniqueId());
-    World world = block.getWorld();
-    Location centerLoc = block.getLocation().add(0.5, 0.5, 0.5);
-    int y = block.getY();
+    World world = blockState.getWorld();
+    Location blockLocation = blockState.getLocation();
+    Location centerLoc = blockLocation.clone().add(0.5, 0.5, 0.5);
+    int blockX = blockState.getX();
+    int y = blockState.getY();
+    int blockZ = blockState.getZ();
 
-    event.setDropItems(false);
-
-    VeinConfig veinConfig = plugin.getRuleManager().getVeinConfig();
-    boolean placed = plugin.getPlacedBlocks().remove(block) && !veinConfig.allowPlacedBlocks;
+    VeinConfig veinConfig = rules.getVeinConfig();
+    boolean placed = blocksHiddenRewards(veinConfig.allowPlacedBlocks, preparation.trackedPlacement());
     List<ItemStack> drops = new ArrayList<>();
     int experience = 0;
     HiddenVein vein = null;
-    boolean commandFired = false;
+    List<CommandExec> commandsToExecute = List.of();
 
     if (placed) {
       if (debug) {
-        HiddenOre.sendMessage(player, plugin.getMessages().parse("<red>player-placed " + blockType.name().toLowerCase(Locale.ROOT) + ", no hidden drops</red>"));
+        HiddenOre.sendMessage(player, messages.parse("<red>player-placed " + blockType.name().toLowerCase(Locale.ROOT) + ", no hidden drops</red>"));
       }
     } else if (veinConfig.generation == VeinConfig.GenerationMode.PURE_RANDOM) {
       ToolTier tier = ToolTier.fromMaterial(tool.getType());
-      for (ItemDropRule rule : plugin.getRuleManager().getItemRules(y)) {
+      for (ItemDropRule rule : rules.getItemRules(y)) {
         double roll = ThreadLocalRandom.current().nextDouble();
         if (roll >= rule.pureRandomChance()) {
           continue;
@@ -86,23 +160,23 @@ public class MiningListener implements Listener {
           int amount = MiningUtil.applyFortune(tool, rule, 1);
           drops.add(new ItemStack(rule.material, amount));
           if (rule.expDrop > 0) {
-            experience += ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
+            experience += rollInclusiveExperience(rule.expDrop);
           }
-          vein = new HiddenVein(block.getX(), y, block.getZ(), -1, rule.material, HiddenVein.oreDisplayFor(rule.material, y));
-          playDiscoverySound(player);
+          vein = new HiddenVein(blockX, y, blockZ, -1, rule.material, HiddenVein.oreDisplayFor(rule.material, y));
+          playDiscoverySound(player, veinConfig);
           if (debug) {
-            HiddenOre.sendMessage(player, plugin.getMessages().parse("<green>random drop: " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + "</green>"));
+            HiddenOre.sendMessage(player, messages.parse("<green>random drop: " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + "</green>"));
           }
         } else if (debug) {
-          HiddenOre.sendMessage(player, plugin.getMessages().parse("<red>random drop " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
+          HiddenOre.sendMessage(player, messages.parse("<red>random drop " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
         }
         break;
       }
 
-      commandFired = rollCommands(player, block, y, debug);
+      commandsToExecute = rollCommands(player, rules, messages, y, debug);
     } else {
-      ChunkVeins veins = plugin.getVeinGenerator().get(world, block.getX() >> 4, block.getZ() >> 4);
-      int packed = ChunkPositionSet.pack(block.getX() & 15, y, block.getZ() & 15, world.getMinHeight());
+      ChunkVeins veins = runtime.veinGenerator().get(world, blockX >> 4, blockZ >> 4);
+      int packed = ChunkPositionSet.pack(blockX & 15, y, blockZ & 15, world.getMinHeight());
       VeinBlock veinBlock = veins.get(packed);
 
       if (veinBlock != null && !plugin.getConsumedVeins().contains(block)) {
@@ -115,31 +189,32 @@ public class MiningListener implements Listener {
           int amount = MiningUtil.applyFortune(tool, rule, 1);
           drops.add(new ItemStack(rule.material, amount));
           if (rule.expDrop > 0) {
-            experience += ThreadLocalRandom.current().nextInt(rule.expDrop + 1);
+            experience += rollInclusiveExperience(rule.expDrop);
           }
-          vein = new HiddenVein(block.getX(), y, block.getZ(), veinBlock.veinId(), rule.material, HiddenVein.oreDisplayFor(rule.material, y));
+          vein = new HiddenVein(blockX, y, blockZ, veinBlock.veinId(), rule.material, HiddenVein.oreDisplayFor(rule.material, y));
           if (firstOfVein) {
-            playDiscoverySound(player);
+            playDiscoverySound(player, veinConfig);
           }
           if (debug) {
-            HiddenOre.sendMessage(player, plugin.getMessages().parse("<green>vein " + veinBlock.veinId() + ": " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + (firstOfVein ? " (discovered)" : "") + "</green>"));
+            HiddenOre.sendMessage(player, messages.parse("<green>vein " + veinBlock.veinId() + ": " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + (firstOfVein ? " (discovered)" : "") + "</green>"));
           }
         } else if (debug) {
-          HiddenOre.sendMessage(player, plugin.getMessages().parse("<red>vein " + veinBlock.veinId() + ": " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
+          HiddenOre.sendMessage(player, messages.parse("<red>vein " + veinBlock.veinId() + ": " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
         }
       }
 
-      commandFired = rollCommands(player, block, y, debug);
+      commandsToExecute = rollCommands(player, rules, messages, y, debug);
     }
 
-    boolean suppressBlockDrop = plugin.getConfig().getBoolean("suppress_block_drop_on_custom_drop", false);
-    boolean customDrop = !drops.isEmpty() || commandFired;
-    if (!suppressBlockDrop || !customDrop) {
+    boolean customDrop = !drops.isEmpty() || !commandsToExecute.isEmpty();
+    if (!runtime.suppressBlockDrop() || !customDrop) {
       drops.add(new ItemStack(guaranteedDrop, 1));
     }
 
-    HiddenOreDropsEvent dropsEvent = new HiddenOreDropsEvent(player, block, blockType, tool.clone(), vein, drops, experience, plugin.isAutoPickup());
+    HiddenOreDropsEvent dropsEvent = new HiddenOreDropsEvent(player, block, blockType, tool.clone(), vein, drops, experience, runtime.autoPickup());
     Bukkit.getPluginManager().callEvent(dropsEvent);
+
+    executeCommands(player, blockLocation, commandsToExecute);
 
     for (ItemStack stack : dropsEvent.getDrops()) {
       if (stack == null || stack.getType().isAir() || stack.getAmount() <= 0) {
@@ -159,6 +234,25 @@ public class MiningListener implements Listener {
     }
   }
 
+  static boolean blocksHiddenRewards(boolean allowPlacedBlocks, boolean trackedPlacement) {
+    return !allowPlacedBlocks && trackedPlacement;
+  }
+
+  static boolean shouldDiscardBreakPreparation(boolean cancelled, boolean dropItems, boolean blockAir) {
+    return cancelled || !dropItems || blockAir;
+  }
+
+  static int rollInclusiveExperience(int maximum) {
+    if (maximum <= 0) {
+      return 0;
+    }
+    return (int) ThreadLocalRandom.current().nextLong((long) maximum + 1L);
+  }
+
+  static ItemStack snapshotTool(ItemStack tool) {
+    return tool.clone();
+  }
+
   private boolean isFirstOfVein(Block block, ChunkVeins veins, VeinBlock veinBlock, int packed) {
     int[] consumed = plugin.getConsumedVeins().snapshot(block.getChunk());
     if (consumed.length == 0) {
@@ -172,18 +266,14 @@ public class MiningListener implements Listener {
     return true;
   }
 
-  private void playDiscoverySound(Player player) {
-    VeinConfig veinConfig = plugin.getRuleManager().getVeinConfig();
-    try {
-      Sound sound = Sound.valueOf(veinConfig.discoverySound);
-      player.playSound(player.getLocation(), sound, veinConfig.discoveryVolume, veinConfig.discoveryPitch);
-    } catch (IllegalArgumentException ignored) {
-    }
+  private void playDiscoverySound(Player player, VeinConfig veinConfig) {
+    Sound sound = SoundResolver.resolve(veinConfig.discoverySound, Sound.BLOCK_BEACON_POWER_SELECT);
+    player.playSound(player.getLocation(), sound, veinConfig.discoveryVolume, veinConfig.discoveryPitch);
   }
 
-  private boolean rollCommands(Player player, Block block, int y, boolean debug) {
+  private List<CommandExec> rollCommands(Player player, MiningRuleManager rules, Messages messages, int y, boolean debug) {
     List<CommandExec> commandsToExecute = new ArrayList<>();
-    for (ItemDropRule rule : plugin.getRuleManager().getCommandRules(y)) {
+    for (ItemDropRule rule : rules.getCommandRules(y)) {
       double roll = ThreadLocalRandom.current().nextDouble();
       boolean success = roll < rule.chance;
       if (success && rule.commands != null) {
@@ -208,27 +298,66 @@ public class MiningListener implements Listener {
         }
       }
       if (debug) {
-        HiddenOre.sendMessage(player, plugin.getMessages().parse("<gray>command roll: chance=" + rule.chance + ", roll=" + String.format("%.4f", roll) + " -> " + (success ? "<green>hit</green>" : "<red>miss</red>") + "</gray>"));
+        HiddenOre.sendMessage(player, messages.parse("<gray>command roll: chance=" + rule.chance + ", roll=" + String.format("%.4f", roll) + " -> " + (success ? "<green>hit</green>" : "<red>miss</red>") + "</gray>"));
       }
     }
 
-    if (commandsToExecute.isEmpty()) {
-      return false;
+    return List.copyOf(commandsToExecute);
+  }
+
+  private void executeCommands(Player player, Location location, List<CommandExec> commands) {
+    List<CommandExec> resolvedCommands = new ArrayList<>(commands.size());
+    for (CommandExec execution : commands) {
+      String resolved = applyCommandPlaceholders(execution.command, player, location);
+      String command = resolved.startsWith("/") ? resolved.substring(1) : resolved;
+      resolvedCommands.add(new CommandExec(command, execution.target));
     }
 
-    Location loc = block.getLocation();
-    SchedulerUtils.runSync(plugin, () -> {
-      for (CommandExec exec : commandsToExecute) {
-        String cmdWithPlaceholders = applyCommandPlaceholders(exec.command, player, loc);
-        String cmd = cmdWithPlaceholders.startsWith("/") ? cmdWithPlaceholders.substring(1) : cmdWithPlaceholders;
-        if (exec.target == ItemDropRule.ExecutionTarget.PLAYER) {
-          Bukkit.dispatchCommand(player, cmd);
-        } else {
-          Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+    scheduleCommandGroup(player, List.copyOf(resolvedCommands), 0);
+  }
+
+  private void scheduleCommandGroup(Player player, List<CommandExec> commands, int startIndex) {
+    int groupStart = startIndex;
+    while (groupStart < commands.size()) {
+      int groupEnd = commandGroupEnd(commands, groupStart);
+      int scheduledStart = groupStart;
+      int scheduledEnd = groupEnd;
+      int continuationIndex = groupEnd;
+      ItemDropRule.ExecutionTarget target = commands.get(groupStart).target;
+      Runnable task = () -> {
+        CommandSender sender = target == ItemDropRule.ExecutionTarget.PLAYER ? player : Bukkit.getConsoleSender();
+        try {
+          dispatchCommands(sender, commands, scheduledStart, scheduledEnd);
+        } finally {
+          scheduleCommandGroup(player, commands, continuationIndex);
         }
+      };
+
+      boolean scheduled = target == ItemDropRule.ExecutionTarget.PLAYER
+          ? SchedulerUtils.runEntity(plugin, player, task)
+          : SchedulerUtils.runGlobal(plugin, task);
+      if (scheduled) {
+        return;
       }
-    });
-    return true;
+
+      plugin.getLogger().warning("Failed to schedule " + target.name().toLowerCase(Locale.ROOT) + " command rewards for " + player.getName());
+      groupStart = groupEnd;
+    }
+  }
+
+  static int commandGroupEnd(List<CommandExec> commands, int startIndex) {
+    ItemDropRule.ExecutionTarget target = commands.get(startIndex).target;
+    int endIndex = startIndex + 1;
+    while (endIndex < commands.size() && commands.get(endIndex).target == target) {
+      endIndex++;
+    }
+    return endIndex;
+  }
+
+  private void dispatchCommands(CommandSender sender, List<CommandExec> commands, int startIndex, int endIndex) {
+    for (int index = startIndex; index < endIndex; index++) {
+      Bukkit.dispatchCommand(sender, commands.get(index).command);
+    }
   }
 
   private String applyCommandPlaceholders(String raw, Player player, Location loc) {
@@ -245,7 +374,24 @@ public class MiningListener implements Listener {
     return result;
   }
 
-  private static class CommandExec {
+  private BreakKey breakKey(Player player, Block block) {
+    return new BreakKey(player.getUniqueId(), block.getWorld().getUID(), block.getX(), block.getY(), block.getZ());
+  }
+
+  private BreakKey breakKey(Player player, BlockState blockState) {
+    return new BreakKey(player.getUniqueId(), blockState.getWorld().getUID(), blockState.getX(), blockState.getY(), blockState.getZ());
+  }
+
+  private record BreakKey(UUID playerId, UUID worldId, int x, int y, int z) {
+  }
+
+  private record BreakPreparation(HiddenOre.RuntimeState runtime, ItemStack tool) {
+  }
+
+  private record DropPreparation(HiddenOre.RuntimeState runtime, ItemStack tool, boolean trackedPlacement) {
+  }
+
+  static final class CommandExec {
     final String command;
     final ItemDropRule.ExecutionTarget target;
 

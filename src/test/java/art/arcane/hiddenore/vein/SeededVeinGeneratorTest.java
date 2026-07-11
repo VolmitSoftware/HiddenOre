@@ -6,6 +6,7 @@ import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
 import org.bukkit.Material;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,5 +93,18 @@ public class SeededVeinGeneratorTest {
     ChunkVeins veins = SeededVeinGenerator.compute(7L, MIN_HEIGHT, MAX_HEIGHT, 0, 0, List.of());
     assertTrue(veins.isEmpty());
     assertFalse(veins.blocks().iterator().hasNext());
+  }
+
+  @Test
+  public void test_constructor_mutatingCallerList_doesNotChangeGeneratedVeins() {
+    List<ItemDropRule> mutableRules = new ArrayList<>(rules());
+    SeededVeinGenerator generator = new SeededVeinGenerator(mutableRules);
+    ChunkVeins expected = generator.compute(1234567L, MIN_HEIGHT, MAX_HEIGHT, 0, 0);
+
+    mutableRules.clear();
+
+    ChunkVeins actual = generator.compute(1234567L, MIN_HEIGHT, MAX_HEIGHT, 0, 0);
+    assertFalse(expected.isEmpty());
+    assertEquals(flatten(expected), flatten(actual));
   }
 }
