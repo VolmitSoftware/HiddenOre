@@ -32,7 +32,7 @@ Player-placed managed blocks are tracked regardless of the current policy and bl
 
 - Existing chunks are not modified retroactively.
 - Disabling the option stops replacement but does not restore previously removed ores.
-- World-specific exceptions override the global replacement policy.
+- World-specific exceptions override the global replacement policy and use fully qualified keys such as `minecraft:the_nether`.
 - Iris dimensions can remove their own terrain, deposit, and object ores with `hideOresForHiddenOre`.
 
 HiddenOre does not perform packet obfuscation. Servers that leave physical ores enabled still expose those physical blocks to ordinary x-ray clients.

@@ -16,11 +16,11 @@ ore-removal:
     NETHER_GOLD_ORE: false
     NETHER_QUARTZ_ORE: false
     ANCIENT_DEBRIS: false
-  # Exceptions for specific worlds
+  # Exceptions for specific worlds, keyed by their fully qualified world key
   exceptions:
-    world_the_end:
+    "minecraft:the_end":
       default: false
-    world_nether:
+    "minecraft:the_nether":
       default: false
       NETHER_GOLD_ORE: true
       NETHER_QUARTZ_ORE: true

@@ -1,6 +1,7 @@
 package art.arcane.hiddenore.generation;
 
 import art.arcane.hiddenore.HiddenOre;
+import art.arcane.volmlib.util.bukkit.WorldIdentity;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -90,7 +91,7 @@ public final class GenerationRules extends BlockPopulator implements Listener {
       return;
     }
 
-    Map<Material, Material> blocks = activePolicy.worldExceptions().getOrDefault(world.getName(), activePolicy.defaults());
+    Map<Material, Material> blocks = activePolicy.worldExceptions().getOrDefault(WorldIdentity.serialize(world), activePolicy.defaults());
     if (blocks.isEmpty()) {
       return;
     }
@@ -167,7 +168,13 @@ public final class GenerationRules extends BlockPopulator implements Listener {
       if (worldSection == null) {
         throw invalid(path, "expected a configuration section");
       }
-      worldExceptions.put(world, parseReplacements(worldSection, path));
+      String worldKey;
+      try {
+        worldKey = WorldIdentity.parse(world).toString();
+      } catch (IllegalArgumentException exception) {
+        throw invalid(path, exception.getMessage());
+      }
+      worldExceptions.put(worldKey, parseReplacements(worldSection, path));
     }
     return Map.copyOf(worldExceptions);
   }
