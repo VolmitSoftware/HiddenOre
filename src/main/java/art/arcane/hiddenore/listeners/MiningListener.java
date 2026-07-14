@@ -13,6 +13,7 @@ import art.arcane.hiddenore.vein.ChunkVeins;
 import art.arcane.hiddenore.vein.VeinBlock;
 import art.arcane.hiddenore.vein.VeinConfig;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
+import art.arcane.volmlib.util.scheduling.FoliaScheduler;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -333,8 +334,9 @@ public class MiningListener implements Listener {
         }
       };
 
+      Runnable retired = () -> salvageConsoleGroups(player, commands, scheduledStart);
       boolean scheduled = target == ItemDropRule.ExecutionTarget.PLAYER
-          ? SchedulerUtils.runEntity(plugin, player, task)
+          ? FoliaScheduler.runEntity(plugin, player, task, 0L, retired)
           : SchedulerUtils.runGlobal(plugin, task);
       if (scheduled) {
         return;
@@ -343,6 +345,38 @@ public class MiningListener implements Listener {
       plugin.getLogger().warning("Failed to schedule " + target.name().toLowerCase(Locale.ROOT) + " command rewards for " + player.getName());
       groupStart = groupEnd;
     }
+  }
+
+  private void salvageConsoleGroups(Player player, List<CommandExec> commands, int startIndex) {
+    ConsoleSalvage salvage = salvageConsoleCommands(commands, startIndex);
+    plugin.getLogger().info("skipped " + salvage.skippedPlayerGroups() + " player reward groups for " + player.getName() + ": offline");
+    List<CommandExec> consoleCommands = salvage.commands();
+    if (consoleCommands.isEmpty()) {
+      return;
+    }
+    Runnable task = () -> dispatchCommands(Bukkit.getConsoleSender(), consoleCommands, 0, consoleCommands.size());
+    if (!SchedulerUtils.runGlobal(plugin, task)) {
+      plugin.getLogger().warning("Failed to schedule salvaged console command rewards for " + player.getName());
+    }
+  }
+
+  static ConsoleSalvage salvageConsoleCommands(List<CommandExec> commands, int startIndex) {
+    List<CommandExec> console = new ArrayList<>();
+    int skippedPlayerGroups = 0;
+    int index = startIndex;
+    while (index < commands.size()) {
+      int groupEnd = commandGroupEnd(commands, index);
+      if (commands.get(index).target == ItemDropRule.ExecutionTarget.PLAYER) {
+        skippedPlayerGroups++;
+      } else {
+        console.addAll(commands.subList(index, groupEnd));
+      }
+      index = groupEnd;
+    }
+    return new ConsoleSalvage(List.copyOf(console), skippedPlayerGroups);
+  }
+
+  record ConsoleSalvage(List<CommandExec> commands, int skippedPlayerGroups) {
   }
 
   static int commandGroupEnd(List<CommandExec> commands, int startIndex) {

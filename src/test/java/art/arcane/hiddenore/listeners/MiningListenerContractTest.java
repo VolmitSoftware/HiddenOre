@@ -101,6 +101,66 @@ public class MiningListenerContractTest {
   }
 
   @Test
+  public void consoleSalvage_skipsPlayerGroupsAndKeepsConsoleOrder() {
+    List<MiningListener.CommandExec> commands = List.of(
+        command("player-one", ItemDropRule.ExecutionTarget.PLAYER),
+        command("console-one", ItemDropRule.ExecutionTarget.CONSOLE),
+        command("console-two", ItemDropRule.ExecutionTarget.CONSOLE),
+        command("player-two", ItemDropRule.ExecutionTarget.PLAYER),
+        command("player-three", ItemDropRule.ExecutionTarget.PLAYER),
+        command("console-three", ItemDropRule.ExecutionTarget.CONSOLE)
+    );
+
+    MiningListener.ConsoleSalvage salvage = MiningListener.salvageConsoleCommands(commands, 0);
+
+    assertEquals(2, salvage.skippedPlayerGroups());
+    assertEquals(3, salvage.commands().size());
+    assertEquals("console-one", salvage.commands().get(0).command);
+    assertEquals("console-two", salvage.commands().get(1).command);
+    assertEquals("console-three", salvage.commands().get(2).command);
+  }
+
+  @Test
+  public void consoleSalvage_respectsStartIndexWithoutRerunningEarlierGroups() {
+    List<MiningListener.CommandExec> commands = List.of(
+        command("console-one", ItemDropRule.ExecutionTarget.CONSOLE),
+        command("player-one", ItemDropRule.ExecutionTarget.PLAYER),
+        command("console-two", ItemDropRule.ExecutionTarget.CONSOLE)
+    );
+
+    MiningListener.ConsoleSalvage salvage = MiningListener.salvageConsoleCommands(commands, 1);
+
+    assertEquals(1, salvage.skippedPlayerGroups());
+    assertEquals(1, salvage.commands().size());
+    assertEquals("console-two", salvage.commands().get(0).command);
+  }
+
+  @Test
+  public void consoleSalvage_returnsEmptyWhenOnlyPlayerGroupsRemain() {
+    List<MiningListener.CommandExec> commands = List.of(
+        command("player-one", ItemDropRule.ExecutionTarget.PLAYER),
+        command("player-two", ItemDropRule.ExecutionTarget.PLAYER)
+    );
+
+    MiningListener.ConsoleSalvage salvage = MiningListener.salvageConsoleCommands(commands, 0);
+
+    assertEquals(1, salvage.skippedPlayerGroups());
+    assertTrue(salvage.commands().isEmpty());
+  }
+
+  @Test
+  public void consoleSalvage_handlesExhaustedChain() {
+    List<MiningListener.CommandExec> commands = List.of(
+        command("player-one", ItemDropRule.ExecutionTarget.PLAYER)
+    );
+
+    MiningListener.ConsoleSalvage salvage = MiningListener.salvageConsoleCommands(commands, 1);
+
+    assertEquals(0, salvage.skippedPlayerGroups());
+    assertTrue(salvage.commands().isEmpty());
+  }
+
+  @Test
   public void experienceRoll_acceptsMaximumIntegerWithoutOverflow() {
     assertEquals(0, MiningListener.rollInclusiveExperience(0));
     assertEquals(0, MiningListener.rollInclusiveExperience(-1));
