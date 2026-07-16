@@ -169,13 +169,29 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     YamlConfiguration config = loadYaml(configFile, "config.yml");
     YamlConfiguration langConfig = loadYaml(langFile, "language.yml");
 
-    MiningRuleManager nextRuleManager = new MiningRuleManager(config);
-    Messages nextMessages = new Messages(langConfig);
+    MiningRuleManager nextRuleManager;
+    boolean autoPickup;
+    boolean suppressBlockDrop;
+    GenerationRules.GenerationPolicy generationPolicy;
+    try {
+      nextRuleManager = new MiningRuleManager(config);
+      autoPickup = optionalBoolean(config, "auto_pickup_drops", false);
+      suppressBlockDrop = optionalBoolean(config, "suppress_block_drop_on_custom_drop", false);
+      generationPolicy = GenerationRules.parsePolicy(config);
+    } catch (IllegalArgumentException exception) {
+      throw invalidConfiguration(configFile, exception);
+    }
+
+    Messages nextMessages;
+    ReloadNotification reloadNotification;
+    try {
+      nextMessages = new Messages(langConfig);
+      reloadNotification = parseReloadNotification(langConfig, nextMessages);
+    } catch (IllegalArgumentException exception) {
+      throw invalidConfiguration(langFile, exception);
+    }
+
     SeededVeinGenerator nextVeinGenerator = new SeededVeinGenerator(nextRuleManager.getAllDropRules());
-    boolean autoPickup = optionalBoolean(config, "auto_pickup_drops", false);
-    boolean suppressBlockDrop = optionalBoolean(config, "suppress_block_drop_on_custom_drop", false);
-    GenerationRules.GenerationPolicy generationPolicy = GenerationRules.parsePolicy(config);
-    ReloadNotification reloadNotification = parseReloadNotification(langConfig, nextMessages);
 
     runtimeState = new RuntimeState(nextRuleManager, nextMessages, nextVeinGenerator, generationPolicy,
         reloadNotification, autoPickup, suppressBlockDrop);
@@ -245,8 +261,14 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       configuration.load(file);
       return configuration;
     } catch (IOException | InvalidConfigurationException exception) {
-      throw new IllegalArgumentException("Failed to load " + name, exception);
+      throw new IllegalArgumentException("Failed to load HiddenOre configuration file '" + file.getAbsolutePath()
+          + "' (" + name + "): " + exception.getMessage(), exception);
     }
+  }
+
+  private IllegalArgumentException invalidConfiguration(File file, IllegalArgumentException cause) {
+    return new IllegalArgumentException("Invalid HiddenOre configuration file '" + file.getAbsolutePath()
+        + "': " + cause.getMessage(), cause);
   }
 
   private boolean optionalBoolean(YamlConfiguration configuration, String path, boolean defaultValue) {

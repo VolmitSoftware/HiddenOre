@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class MiningRuleManager {
+  private static final String REQUIRED_BLOCKS = "expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}";
   static final double MAX_VEINS_PER_CHUNK = 64.0;
   static final int MAX_VEIN_SIZE = 256;
   static final long MAX_GENERATION_BLOCK_TARGETS_PER_CHUNK = 1024L;
@@ -65,15 +66,15 @@ public final class MiningRuleManager {
   private static Map<Material, Material> parseGuaranteedDrops(FileConfiguration config) {
     Object rawBlocks = config.get("blocks");
     if (rawBlocks == null) {
-      throw invalid("blocks", "expected a non-empty configuration section");
+      throw invalid("blocks", REQUIRED_BLOCKS);
     }
 
     ConfigurationSection blocks = config.getConfigurationSection("blocks");
     if (blocks == null) {
-      throw invalid("blocks", "expected a non-empty configuration section");
+      throw invalid("blocks", REQUIRED_BLOCKS);
     }
     if (blocks.getKeys(false).isEmpty()) {
-      throw invalid("blocks", "expected a non-empty configuration section");
+      throw invalid("blocks", REQUIRED_BLOCKS);
     }
 
     Map<Material, Material> parsedDrops = new LinkedHashMap<>();

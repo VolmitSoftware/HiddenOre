@@ -85,11 +85,11 @@ public class MiningRuleManagerTest {
   @Test
   public void constructor_rejectsMissingOrMalformedCoreSections() {
     YamlConfiguration missingBlocks = new YamlConfiguration();
-    assertInvalid("blocks: expected a non-empty configuration section", missingBlocks);
+    assertInvalid("blocks: expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}", missingBlocks);
 
     YamlConfiguration emptyBlocks = new YamlConfiguration();
     emptyBlocks.createSection("blocks");
-    assertInvalid("blocks: expected a non-empty configuration section", emptyBlocks);
+    assertInvalid("blocks: expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}", emptyBlocks);
 
     YamlConfiguration missingDrops = validConfig();
     missingDrops.set("drops", null);
@@ -193,7 +193,7 @@ public class MiningRuleManagerTest {
   public void constructor_rejectsMissingOrNonSectionBlockEntries() {
     YamlConfiguration scalarBlocks = new YamlConfiguration();
     scalarBlocks.set("blocks", "stone");
-    assertInvalid("blocks: expected a non-empty configuration section", scalarBlocks);
+    assertInvalid("blocks: expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}", scalarBlocks);
 
     YamlConfiguration scalarBlockEntry = new YamlConfiguration();
     scalarBlockEntry.set("blocks.stone", "cobblestone");
