@@ -1,0 +1,58 @@
+"locale": "it_IT"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Non hai il permesso di usare questo comando.</red>"
+"reloaded": "<gold>La configurazione e le traduzioni del plugin sono state ricaricate.</gold>"
+"reload_failed": "<red>Ricaricamento non riuscito. La configurazione precedente è ancora attiva; controlla la console.</red>"
+"player_only": "<red>Questo comando può essere usato solo da un giocatore.</red>"
+"debug_enabled": "<green>Modalità di debug attivata.</green>"
+"debug_disabled": "<red>Modalità di debug disattivata.</red>"
+"config_reloaded_message": "<green>Configurazione aggiornata e ricaricata.</green>"
+"usage":
+  - "<aqua>HiddenOre di VolmitSoftware</aqua>"
+  - "<yellow>Utilizzo: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Debug: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Blocco piazzato da un giocatore: {block}; nessun drop nascosto.</red>"
+  "random_drop": "<green>Drop casuale: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Drop casuale {material} perso perché il livello dello strumento è troppo basso.</red>"
+  "vein_drop": "<green>Vena mineraria {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Vena mineraria {vein}: {material} x{amount} (scoperta)</green>"
+  "vein_drop_lost": "<red>Vena mineraria {vein}: {material} perso perché il livello dello strumento è troppo basso.</red>"
+  "command_hit": "<gray>Verifica comando: chance={chance}, roll={roll} -> <green>successo</green></gray>"
+  "command_miss": "<gray>Verifica comando: chance={chance}, roll={roll} -> <red>fallimento</red></gray>"
+"command":
+  "description":
+    "root": "Gruppo di comandi HiddenOre"
+    "reload": "Ricarica la configurazione e i file di lingua di HiddenOre"
+    "debug": "Attiva o disattiva la tua modalità di debug dei minerali"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Torna al gruppo di comandi principale"
+      "back": "Indietro"
+      "previous":
+        "hover": "Pagina precedente"
+      "next":
+        "hover": "Pagina successiva"
+      "page": "Pagina"
+    "no_subcommands": "Nessun sottocomando in questa pagina."
+    "no_description": "Nessuna descrizione fornita"
+    "aliases": "Alias"
+    "command_group": "Gruppo di comandi. Fai clic per aprire."
+    "no_parameters": "Nessun parametro. Fai clic per precompilare il comando."
+    "parameters": "Parametri"
+    "parameter":
+      "required": "obbligatorio"
+      "optional": "facoltativo"
+      "default": "predefinito"
+  "runtime":
+    "error":
+      "invalid_origin": "Questo comando non può essere eseguito da questa origine."
+      "unknown_parameter": "Chiave di parametro sconosciuta: {key}"
+      "unexpected_argument": "Argomento imprevisto \"{argument}\". I parametri opzionali devono essere specificati con una chiave, ad es. seed=123"
+      "conversion_failed": "Impossibile convertire \"{value}\" in {type} per {parameter}"
+      "default_parse_failed": "Impossibile analizzare il valore predefinito del parametro {parameter}"
+      "missing_argument": "Argomento mancante \"{parameter}\" ({type})"
+      "execution_failed": "Impossibile eseguire il comando {command}: {reason}"
+    "usage": "Utilizzo: {usage}"

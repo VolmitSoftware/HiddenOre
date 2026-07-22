@@ -185,8 +185,9 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     Messages nextMessages;
     ReloadNotification reloadNotification;
     try {
-      nextMessages = new Messages(langConfig);
-      reloadNotification = parseReloadNotification(langConfig, nextMessages);
+      nextMessages = new Messages();
+      nextMessages.reload(langConfig, langFile.getAbsolutePath());
+      reloadNotification = parseReloadNotification(langConfig);
     } catch (IllegalArgumentException exception) {
       throw invalidConfiguration(langFile, exception);
     }
@@ -282,13 +283,12 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     return (Boolean) value;
   }
 
-  private ReloadNotification parseReloadNotification(YamlConfiguration configuration, Messages messages) {
-    String rawMessage = optionalString(configuration, "config_reloaded_message", "<green>Config updated and reloaded!</green>");
+  private ReloadNotification parseReloadNotification(YamlConfiguration configuration) {
     String soundName = optionalString(configuration, "config_reloaded_sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
     float volume = finiteFloat(configuration, "config_reloaded_sound_volume", 1.0f, 0.0f, Float.MAX_VALUE);
     float pitch = finiteFloat(configuration, "config_reloaded_sound_pitch", 1.6f, 0.5f, 2.0f);
     Sound sound = SoundResolver.resolve(soundName, Sound.ENTITY_EXPERIENCE_ORB_PICKUP);
-    return new ReloadNotification(messages.parseConfigured("config_reloaded_message", rawMessage), sound, volume, pitch);
+    return new ReloadNotification(sound, volume, pitch);
   }
 
   private String optionalString(YamlConfiguration configuration, String path, String defaultValue) {
@@ -326,6 +326,6 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
                              boolean suppressBlockDrop) {
   }
 
-  public record ReloadNotification(Component message, Sound sound, float volume, float pitch) {
+  public record ReloadNotification(Sound sound, float volume, float pitch) {
   }
 }

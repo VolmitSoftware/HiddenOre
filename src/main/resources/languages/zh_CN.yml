@@ -1,0 +1,58 @@
+"locale": "zh_CN"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>你没有使用此命令的权限。</red>"
+"reloaded": "<gold>插件配置和翻译已重新加载。</gold>"
+"reload_failed": "<red>重新加载失败。之前的配置仍处于活动状态；请检查控制台。</red>"
+"player_only": "<red>此命令只能由玩家使用。</red>"
+"debug_enabled": "<green>调试模式已启用。</green>"
+"debug_disabled": "<red>调试模式已禁用。</red>"
+"config_reloaded_message": "<green>配置已更新并重新加载。</green>"
+"usage":
+  - "<aqua>VolmitSoftware 制作的 HiddenOre</aqua>"
+  - "<yellow>用法：<white>/hiddenore reload</white></yellow>"
+  - "<yellow>调试：<white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>{block} 由玩家放置；不会产生隐藏掉落。</red>"
+  "random_drop": "<green>随机掉落：{material} x{amount}</green>"
+  "random_drop_lost": "<red>工具等级过低，随机掉落 {material} 已丢失。</red>"
+  "vein_drop": "<green>矿脉 {vein}：{material} x{amount}</green>"
+  "vein_drop_discovered": "<green>矿脉 {vein}：{material} x{amount}(已发现)</green>"
+  "vein_drop_lost": "<red>矿脉 {vein}：工具等级过低，{material} 已丢失。</red>"
+  "command_hit": "<gray>命令判定：chance={chance}，roll={roll} -> <green>命中</green></gray>"
+  "command_miss": "<gray>命令判定：chance={chance}，roll={roll} -> <red>未命中</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre 命令组"
+    "reload": "重新加载 HiddenOre 配置和语言文件"
+    "debug": "切换自己的矿石调试模式"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "返回上级命令组"
+      "back": "返回"
+      "previous":
+        "hover": "上一页"
+      "next":
+        "hover": "下一页"
+      "page": "页"
+    "no_subcommands": "此页面没有子命令。"
+    "no_description": "未提供说明"
+    "aliases": "别名"
+    "command_group": "命令组。点击打开。"
+    "no_parameters": "无参数。点击预填命令。"
+    "parameters": "参数"
+    "parameter":
+      "required": "必填"
+      "optional": "可选"
+      "default": "默认"
+  "runtime":
+    "error":
+      "invalid_origin": "无法从此来源运行该命令。"
+      "unknown_parameter": "未知参数键: {key}"
+      "unexpected_argument": "意外参数 \"{argument}\"。可选参数必须使用键指定，例如 seed=123"
+      "conversion_failed": "无法将 \"{value}\" 转换为 {parameter} 所需的 {type}"
+      "default_parse_failed": "无法解析参数 {parameter} 的默认值"
+      "missing_argument": "缺少参数 \"{parameter}\" ({type})"
+      "execution_failed": "执行命令 {command} 失败: {reason}"
+    "usage": "用法: {usage}"

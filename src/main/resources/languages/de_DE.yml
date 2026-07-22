@@ -1,0 +1,58 @@
+"locale": "de_DE"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Du hast keine Berechtigung, diesen Befehl zu verwenden.</red>"
+"reloaded": "<gold>Plugin-Konfiguration und Übersetzungen wurden neu geladen.</gold>"
+"reload_failed": "<red>Neuladen fehlgeschlagen. Die vorherige Konfiguration bleibt aktiv; prüfe die Konsole.</red>"
+"player_only": "<red>Dieser Befehl kann nur von einem Spieler verwendet werden.</red>"
+"debug_enabled": "<green>Debug-Modus aktiviert.</green>"
+"debug_disabled": "<red>Debug-Modus deaktiviert.</red>"
+"config_reloaded_message": "<green>Konfiguration aktualisiert und neu geladen.</green>"
+"usage":
+  - "<aqua>HiddenOre von VolmitSoftware</aqua>"
+  - "<yellow>Verwendung: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Debug: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Vom Spieler platziert: {block}; keine versteckten Drops.</red>"
+  "random_drop": "<green>Zufälliger Drop: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Zufälliger Drop {material} verloren, weil die Werkzeugstufe zu niedrig ist.</red>"
+  "vein_drop": "<green>Erzader {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Erzader {vein}: {material} x{amount} (entdeckt)</green>"
+  "vein_drop_lost": "<red>Erzader {vein}: {material} verloren, weil die Werkzeugstufe zu niedrig ist.</red>"
+  "command_hit": "<gray>Befehlsprüfung: chance={chance}, roll={roll} -> <green>Treffer</green></gray>"
+  "command_miss": "<gray>Befehlsprüfung: chance={chance}, roll={roll} -> <red>Fehlschlag</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre-Befehlsgruppe"
+    "reload": "HiddenOre-Konfiguration und Sprachdateien neu laden"
+    "debug": "Erz-Debug-Modus für dich umschalten"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Zur übergeordneten Befehlsgruppe zurückkehren"
+      "back": "Zurück"
+      "previous":
+        "hover": "Vorherige Seite"
+      "next":
+        "hover": "Nächste Seite"
+      "page": "Seite"
+    "no_subcommands": "Auf dieser Seite gibt es keine Unterbefehle."
+    "no_description": "Keine Beschreibung vorhanden"
+    "aliases": "Aliase"
+    "command_group": "Befehlsgruppe. Zum Öffnen klicken."
+    "no_parameters": "Keine Parameter. Klicken, um den Befehl vorab auszufüllen."
+    "parameters": "Parameter"
+    "parameter":
+      "required": "erforderlich"
+      "optional": "optional"
+      "default": "Standard"
+  "runtime":
+    "error":
+      "invalid_origin": "Dieser Befehl kann von diesem Ursprung aus nicht ausgeführt werden."
+      "unknown_parameter": "Unbekannter Parameterschlüssel: {key}"
+      "unexpected_argument": "Unerwartetes Argument \"{argument}\". Optionale Parameter müssen als Schlüssel angegeben werden, z. B. seed=123"
+      "conversion_failed": "\"{value}\" kann für {parameter} nicht in {type} konvertiert werden"
+      "default_parse_failed": "Der Standardwert für Parameter {parameter} kann nicht gelesen werden"
+      "missing_argument": "Fehlendes Argument \"{parameter}\" ({type})"
+      "execution_failed": "Befehl {command} konnte nicht ausgeführt werden: {reason}"
+    "usage": "Verwendung: {usage}"

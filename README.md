@@ -2,6 +2,10 @@
 
 HiddenOre is a mining economy and anti-xray plugin for Minecraft servers. It replaces visible ore distribution with configurable rewards hidden behind ordinary blocks, while keeping reward discovery deterministic and compatible with mining integrations such as Adapt.
 
+## Language and localization
+
+Canonical English is defined in the typed Java catalog at `src/main/java/art/arcane/hiddenore/util/common/Messages.java`; HiddenOre does not ship a separate English translation bundle. Complete bundles are included for German, Spanish, Finnish, French, Hebrew, Italian, Japanese, Korean, Lithuanian, Dutch, Polish, Portuguese, Russian, Turkish, Vietnamese, Simplified Chinese, and Traditional Chinese. Set `locale` in `language.yml` to select one. Message entries in that file are optional sparse server overrides; omitted entries resolve from the selected bundle and then code-owned English. Sound settings remain in the same file.
+
 ## Requirements
 
 - Java 25
@@ -91,4 +95,4 @@ Normal disable and BileTools hot unload serialize against reloads, reject queued
 ./gradlew build
 ```
 
-The shaded plugin jar is produced under `build/libs`. Deployment into a server plugin directory is intentionally left to the server operator.
+The unclassified jar under `build/libs` is the thin compile-facing artifact. The deployable shaded plugin jar uses the `plugin` classifier. Custom development output tasks continue to copy and rename the shaded artifact as `HiddenOre.jar`; deployment into a server plugin directory is intentionally left to the server operator.

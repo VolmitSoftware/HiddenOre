@@ -1,0 +1,58 @@
+"locale": "fi_FI"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Sinulla ei ole oikeutta käyttää tätä komentoa.</red>"
+"reloaded": "<gold>Pluginin asetukset ja käännökset ladattiin uudelleen.</gold>"
+"reload_failed": "<red>Uudelleenlataus epäonnistui. Edellinen kokoonpano on yhä käytössä; tarkista konsoli.</red>"
+"player_only": "<red>Vain pelaaja voi käyttää tätä komentoa.</red>"
+"debug_enabled": "<green>Virheenkorjaustila käytössä.</green>"
+"debug_disabled": "<red>Virheenkorjaustila pois käytöstä.</red>"
+"config_reloaded_message": "<green>Asetukset päivitettiin ja ladattiin uudelleen.</green>"
+"usage":
+  - "<aqua>HiddenOre, tekijä VolmitSoftware</aqua>"
+  - "<yellow>Käyttö: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Virheenkorjaus: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Pelaajan asettama {block}; ei piilotettuja pudotuksia.</red>"
+  "random_drop": "<green>Satunnainen pudotus: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Satunnainen pudotus {material} menetettiin, koska työkalutaso on liian alhainen.</red>"
+  "vein_drop": "<green>Malmisuoni {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Malmisuoni {vein}: {material} x{amount} (löydetty)</green>"
+  "vein_drop_lost": "<red>Malmisuoni {vein}: {material} menetettiin, koska työkalutaso on liian alhainen.</red>"
+  "command_hit": "<gray>Komentotarkistus: chance={chance}, roll={roll} -> <green>osuma</green></gray>"
+  "command_miss": "<gray>Komentotarkistus: chance={chance}, roll={roll} -> <red>ohi</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre-komentoryhmä"
+    "reload": "HiddenOre: lataa asetukset ja kielitiedostot uudelleen"
+    "debug": "Vaihda oma malmien virheenkorjaustila"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Palaa ylempään komentoryhmään"
+      "back": "Takaisin"
+      "previous":
+        "hover": "Edellinen sivu"
+      "next":
+        "hover": "Seuraava sivu"
+      "page": "Sivu"
+    "no_subcommands": "Tällä sivulla ei ole alikomentoja."
+    "no_description": "Kuvausta ei ole annettu"
+    "aliases": "Aliakset"
+    "command_group": "Komentoryhmä. Avaa napsauttamalla."
+    "no_parameters": "Ei parametreja. Esitäytä komento napsauttamalla."
+    "parameters": "Parametrit"
+    "parameter":
+      "required": "pakollinen"
+      "optional": "valinnainen"
+      "default": "oletus"
+  "runtime":
+    "error":
+      "invalid_origin": "Tätä komentoa ei voi suorittaa tästä lähteestä."
+      "unknown_parameter": "Tuntematon parametriavain: {key}"
+      "unexpected_argument": "Odottamaton argumentti \"{argument}\". Valinnaiset parametrit on annettava avaimella, esim. seed=123"
+      "conversion_failed": "Arvoa \"{value}\" ei voi muuntaa tyypiksi {type} parametrille {parameter}"
+      "default_parse_failed": "Parametrin {parameter} oletusarvoa ei voi jäsentää"
+      "missing_argument": "Puuttuva argumentti \"{parameter}\" ({type})"
+      "execution_failed": "Komennon {command} suoritus epäonnistui: {reason}"
+    "usage": "Käyttö: {usage}"

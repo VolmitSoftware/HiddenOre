@@ -1,0 +1,58 @@
+"locale": "zh_TW"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>你沒有使用此指令的權限。</red>"
+"reloaded": "<gold>外掛設定和翻譯已重新載入。</gold>"
+"reload_failed": "<red>重新載入失敗。先前的設定仍然有效；請檢查主控台。</red>"
+"player_only": "<red>此指令只能由玩家使用。</red>"
+"debug_enabled": "<green>除錯模式已啟用。</green>"
+"debug_disabled": "<red>除錯模式已停用。</red>"
+"config_reloaded_message": "<green>設定已更新並重新載入。</green>"
+"usage":
+  - "<aqua>VolmitSoftware 製作的 HiddenOre</aqua>"
+  - "<yellow>用法：<white>/hiddenore reload</white></yellow>"
+  - "<yellow>除錯：<white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>{block} 由玩家放置；不會產生隱藏掉落。</red>"
+  "random_drop": "<green>隨機掉落：{material} x{amount}</green>"
+  "random_drop_lost": "<red>工具等級太低，隨機掉落 {material} 已遺失。</red>"
+  "vein_drop": "<green>礦脈 {vein}：{material} x{amount}</green>"
+  "vein_drop_discovered": "<green>礦脈 {vein}：{material} x{amount}(已發現)</green>"
+  "vein_drop_lost": "<red>礦脈 {vein}：工具等級太低，{material} 已遺失。</red>"
+  "command_hit": "<gray>指令判定：chance={chance}，roll={roll} -> <green>命中</green></gray>"
+  "command_miss": "<gray>指令判定：chance={chance}，roll={roll} -> <red>未命中</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre 指令群組"
+    "reload": "重新載入 HiddenOre 設定和語言檔案"
+    "debug": "切換自己的礦石除錯模式"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "返回上層命令群組"
+      "back": "返回"
+      "previous":
+        "hover": "上一頁"
+      "next":
+        "hover": "下一頁"
+      "page": "頁面"
+    "no_subcommands": "此頁面沒有子命令。"
+    "no_description": "未提供說明"
+    "aliases": "別名"
+    "command_group": "命令群組。點擊以開啟。"
+    "no_parameters": "無參數。點擊以預先填入命令。"
+    "parameters": "參數"
+    "parameter":
+      "required": "必填"
+      "optional": "選填"
+      "default": "預設"
+  "runtime":
+    "error":
+      "invalid_origin": "無法從此來源執行該指令。"
+      "unknown_parameter": "未知參數鍵: {key}"
+      "unexpected_argument": "意外參數 \"{argument}\"。選用參數必須使用鍵指定，例如 seed=123"
+      "conversion_failed": "無法將 \"{value}\" 轉換為 {parameter} 所需的 {type}"
+      "default_parse_failed": "無法解析參數 {parameter} 的預設值"
+      "missing_argument": "缺少參數 \"{parameter}\" ({type})"
+      "execution_failed": "執行指令 {command} 失敗: {reason}"
+    "usage": "用法: {usage}"

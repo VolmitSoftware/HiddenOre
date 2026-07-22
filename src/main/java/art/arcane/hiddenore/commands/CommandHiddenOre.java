@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 
 import java.util.logging.Level;
 
-@Director(name = "hiddenore", description = "HiddenOre command root")
+@Director(name = "hiddenore", description = "HiddenOre command root", descriptionKey = "command.description.root")
 public final class CommandHiddenOre {
   private final HiddenOre plugin;
 
@@ -19,47 +19,47 @@ public final class CommandHiddenOre {
     this.plugin = plugin;
   }
 
-  @Director(name = "reload", description = "Reload HiddenOre configuration and language files")
+  @Director(name = "reload", description = "Reload HiddenOre configuration and language files", descriptionKey = "command.description.reload")
   public void reload(@Param(name = "sender", contextual = true) CommandSender sender) {
     Messages messages = plugin.getMessages();
     if (!sender.hasPermission("hiddenore.admin")) {
-      HiddenOre.sendMessage(sender, messages.get("no_permission"));
+      HiddenOre.sendMessage(sender, messages.component(Messages.NO_PERMISSION));
       return;
     }
 
     if (!SchedulerUtils.runGlobal(plugin, () -> reloadAndRespond(sender, messages))) {
-      HiddenOre.sendMessage(sender, messages.get("reload_failed"));
+      HiddenOre.sendMessage(sender, messages.component(Messages.RELOAD_FAILED));
     }
   }
 
-  @Director(name = "debug", description = "Toggle ore debug mode for yourself")
+  @Director(name = "debug", description = "Toggle ore debug mode for yourself", descriptionKey = "command.description.debug")
   public void debug(@Param(name = "sender", contextual = true) CommandSender sender) {
     Messages messages = plugin.getMessages();
     if (!sender.hasPermission("hiddenore.admin")) {
-      HiddenOre.sendMessage(sender, messages.get("no_permission"));
+      HiddenOre.sendMessage(sender, messages.component(Messages.NO_PERMISSION));
       return;
     }
 
     if (!(sender instanceof Player player)) {
-      HiddenOre.sendMessage(sender, messages.get("player_only"));
+      HiddenOre.sendMessage(sender, messages.component(Messages.PLAYER_ONLY));
       return;
     }
 
     boolean nowDebug = plugin.toggleDebug(player.getUniqueId());
     if (nowDebug) {
-      HiddenOre.sendMessage(player, messages.parse("<green>Debug mode enabled.</green>"));
+      HiddenOre.sendMessage(player, messages.component(Messages.DEBUG_ENABLED));
     } else {
-      HiddenOre.sendMessage(player, messages.parse("<red>Debug mode disabled.</red>"));
+      HiddenOre.sendMessage(player, messages.component(Messages.DEBUG_DISABLED));
     }
   }
 
   private void reloadAndRespond(CommandSender sender, Messages previousMessages) {
     try {
       plugin.reloadAll();
-      sendScheduled(sender, plugin.getMessages().get("reloaded"));
+      sendScheduled(sender, plugin.getMessages().component(Messages.RELOADED));
     } catch (RuntimeException exception) {
       plugin.getLogger().log(Level.SEVERE, "HiddenOre reload failed; the previous runtime configuration remains active", exception);
-      sendScheduled(sender, previousMessages.get("reload_failed"));
+      sendScheduled(sender, previousMessages.component(Messages.RELOAD_FAILED));
     }
   }
 

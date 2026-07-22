@@ -1,0 +1,58 @@
+"locale": "he_IL"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>אין לך הרשאה להשתמש בפקודה זו.</red>"
+"reloaded": "<gold>הגדרות התוסף והתרגומים נטענו מחדש.</gold>"
+"reload_failed": "<red>הטעינה מחדש נכשלה. ההגדרות הקודמות עדיין פעילות; יש לבדוק את המסוף.</red>"
+"player_only": "<red>רק שחקן יכול להשתמש בפקודה זו.</red>"
+"debug_enabled": "<green>מצב ניפוי השגיאות הופעל.</green>"
+"debug_disabled": "<red>מצב ניפוי השגיאות הושבת.</red>"
+"config_reloaded_message": "<green>ההגדרות עודכנו ונטענו מחדש.</green>"
+"usage":
+  - "<aqua>HiddenOre מאת VolmitSoftware</aqua>"
+  - "<yellow>שימוש: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>ניפוי שגיאות: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>הבלוק {block} הונח בידי שחקן; אין נפילות נסתרות.</red>"
+  "random_drop": "<green>נפילה אקראית: {material} x{amount}</green>"
+  "random_drop_lost": "<red>הנפילה האקראית {material} אבדה כי דרגת הכלי נמוכה מדי.</red>"
+  "vein_drop": "<green>עורק עפרה {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>עורק עפרה {vein}: {material} x{amount} (התגלה)</green>"
+  "vein_drop_lost": "<red>עורק עפרה {vein}: {material} אבד כי דרגת הכלי נמוכה מדי.</red>"
+  "command_hit": "<gray>בדיקת פקודה: chance={chance}, roll={roll} -> <green>הצלחה</green></gray>"
+  "command_miss": "<gray>בדיקת פקודה: chance={chance}, roll={roll} -> <red>כישלון</red></gray>"
+"command":
+  "description":
+    "root": "קבוצת הפקודות של HiddenOre"
+    "reload": "טעינה מחדש של הגדרות HiddenOre וקובצי השפה"
+    "debug": "הפעלה או השבתה של מצב ניפוי העפרות שלך"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "חזרה לקבוצת פקודות האב"
+      "back": "חזרה"
+      "previous":
+        "hover": "העמוד הקודם"
+      "next":
+        "hover": "העמוד הבא"
+      "page": "עמוד"
+    "no_subcommands": "אין פקודות משנה בעמוד זה."
+    "no_description": "לא סופק תיאור"
+    "aliases": "כינויים"
+    "command_group": "קבוצת פקודות. לחצו כדי לפתוח."
+    "no_parameters": "אין פרמטרים. לחצו כדי למלא את הפקודה מראש."
+    "parameters": "פרמטרים"
+    "parameter":
+      "required": "נדרש"
+      "optional": "אופציונלי"
+      "default": "ברירת מחדל"
+  "runtime":
+    "error":
+      "invalid_origin": "לא ניתן להריץ פקודה זו ממקור זה."
+      "unknown_parameter": "מפתח פרמטר לא ידוע: {key}"
+      "unexpected_argument": "ארגומנט לא צפוי \"{argument}\". פרמטרים אופציונליים חייבים להינתן עם מפתח, לדוגמה seed=123"
+      "conversion_failed": "לא ניתן להמיר את \"{value}\" ל-{type} עבור {parameter}"
+      "default_parse_failed": "לא ניתן לנתח את ערך ברירת המחדל של הפרמטר {parameter}"
+      "missing_argument": "חסר ארגומנט \"{parameter}\" ({type})"
+      "execution_failed": "הפעלת הפקודה {command} נכשלה: {reason}"
+    "usage": "שימוש: {usage}"

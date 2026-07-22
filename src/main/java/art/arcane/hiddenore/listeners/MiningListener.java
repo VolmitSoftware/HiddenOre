@@ -13,6 +13,7 @@ import art.arcane.hiddenore.vein.ChunkVeins;
 import art.arcane.hiddenore.vein.VeinBlock;
 import art.arcane.hiddenore.vein.VeinConfig;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
+import art.arcane.volmlib.util.localization.MessageArgs;
 import art.arcane.volmlib.util.scheduling.FoliaScheduler;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import org.bukkit.Bukkit;
@@ -148,7 +149,12 @@ public class MiningListener implements Listener {
 
     if (placed) {
       if (debug) {
-        HiddenOre.sendMessage(player, messages.parse("<red>player-placed " + blockType.name().toLowerCase(Locale.ROOT) + ", no hidden drops</red>"));
+        HiddenOre.sendMessage(player, messages.component(
+            Messages.DEBUG_PLAYER_PLACED,
+            MessageArgs.builder()
+                .untrusted("block", blockType.name().toLowerCase(Locale.ROOT))
+                .build()
+        ));
       }
     } else if (veinConfig.generation == VeinConfig.GenerationMode.PURE_RANDOM) {
       ToolTier tier = ToolTier.fromMaterial(tool.getType());
@@ -166,10 +172,21 @@ public class MiningListener implements Listener {
           vein = new HiddenVein(blockX, y, blockZ, -1, rule.material, HiddenVein.oreDisplayFor(rule.material, y));
           playDiscoverySound(player, veinConfig);
           if (debug) {
-            HiddenOre.sendMessage(player, messages.parse("<green>random drop: " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + "</green>"));
+            HiddenOre.sendMessage(player, messages.component(
+                Messages.DEBUG_RANDOM_DROP,
+                MessageArgs.builder()
+                    .untrusted("material", rule.material.name().toLowerCase(Locale.ROOT))
+                    .untrusted("amount", amount)
+                    .build()
+            ));
           }
         } else if (debug) {
-          HiddenOre.sendMessage(player, messages.parse("<red>random drop " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
+          HiddenOre.sendMessage(player, messages.component(
+              Messages.DEBUG_RANDOM_DROP_LOST,
+              MessageArgs.builder()
+                  .untrusted("material", rule.material.name().toLowerCase(Locale.ROOT))
+                  .build()
+          ));
         }
         break;
       }
@@ -197,10 +214,23 @@ public class MiningListener implements Listener {
             playDiscoverySound(player, veinConfig);
           }
           if (debug) {
-            HiddenOre.sendMessage(player, messages.parse("<green>vein " + veinBlock.veinId() + ": " + rule.material.name().toLowerCase(Locale.ROOT) + " x" + amount + (firstOfVein ? " (discovered)" : "") + "</green>"));
+            HiddenOre.sendMessage(player, messages.component(
+                firstOfVein ? Messages.DEBUG_VEIN_DROP_DISCOVERED : Messages.DEBUG_VEIN_DROP,
+                MessageArgs.builder()
+                    .untrusted("vein", veinBlock.veinId())
+                    .untrusted("material", rule.material.name().toLowerCase(Locale.ROOT))
+                    .untrusted("amount", amount)
+                    .build()
+            ));
           }
         } else if (debug) {
-          HiddenOre.sendMessage(player, messages.parse("<red>vein " + veinBlock.veinId() + ": " + rule.material.name().toLowerCase(Locale.ROOT) + " lost, tool tier too low</red>"));
+          HiddenOre.sendMessage(player, messages.component(
+              Messages.DEBUG_VEIN_DROP_LOST,
+              MessageArgs.builder()
+                  .untrusted("vein", veinBlock.veinId())
+                  .untrusted("material", rule.material.name().toLowerCase(Locale.ROOT))
+                  .build()
+          ));
         }
       }
 
@@ -299,7 +329,13 @@ public class MiningListener implements Listener {
         }
       }
       if (debug) {
-        HiddenOre.sendMessage(player, messages.parse("<gray>command roll: chance=" + rule.chance + ", roll=" + String.format("%.4f", roll) + " -> " + (success ? "<green>hit</green>" : "<red>miss</red>") + "</gray>"));
+        HiddenOre.sendMessage(player, messages.component(
+            success ? Messages.DEBUG_COMMAND_HIT : Messages.DEBUG_COMMAND_MISS,
+            MessageArgs.builder()
+                .untrusted("chance", rule.chance)
+                .untrusted("roll", String.format(Locale.ROOT, "%.4f", roll))
+                .build()
+        ));
       }
     }
 

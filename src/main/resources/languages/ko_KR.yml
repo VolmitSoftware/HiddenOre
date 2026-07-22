@@ -1,0 +1,58 @@
+"locale": "ko_KR"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>이 명령어를 사용할 권한이 없습니다.</red>"
+"reloaded": "<gold>플러그인 설정과 번역을 다시 불러왔습니다.</gold>"
+"reload_failed": "<red>다시 불러오지 못했습니다. 이전 설정이 계속 활성화되어 있습니다. 콘솔을 확인하세요.</red>"
+"player_only": "<red>이 명령어는 플레이어만 사용할 수 있습니다.</red>"
+"debug_enabled": "<green>디버그 모드를 활성화했습니다.</green>"
+"debug_disabled": "<red>디버그 모드를 비활성화했습니다.</red>"
+"config_reloaded_message": "<green>설정을 업데이트하고 다시 불러왔습니다.</green>"
+"usage":
+  - "<aqua>VolmitSoftware의 HiddenOre</aqua>"
+  - "<yellow>사용법: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>디버그: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>플레이어가 설치한 {block}: 숨겨진 드롭 없음.</red>"
+  "random_drop": "<green>무작위 드롭: {material} x{amount}</green>"
+  "random_drop_lost": "<red>도구 등급이 너무 낮아 무작위 드롭 {material}을 잃었습니다.</red>"
+  "vein_drop": "<green>광맥 {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>광맥 {vein}: {material} x{amount} (발견됨)</green>"
+  "vein_drop_lost": "<red>광맥 {vein}: 도구 등급이 너무 낮아 {material}을 잃었습니다.</red>"
+  "command_hit": "<gray>명령어 판정: chance={chance}, roll={roll} -> <green>성공</green></gray>"
+  "command_miss": "<gray>명령어 판정: chance={chance}, roll={roll} -> <red>실패</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre 명령어 그룹"
+    "reload": "HiddenOre 설정과 언어 파일 다시 불러오기"
+    "debug": "내 광물 디버그 모드 전환"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "상위 명령어 그룹으로 돌아가기"
+      "back": "뒤로"
+      "previous":
+        "hover": "이전 페이지"
+      "next":
+        "hover": "다음 페이지"
+      "page": "페이지"
+    "no_subcommands": "이 페이지에는 하위 명령어가 없습니다."
+    "no_description": "설명이 없습니다"
+    "aliases": "별칭"
+    "command_group": "명령어 그룹입니다. 클릭하여 엽니다."
+    "no_parameters": "매개변수가 없습니다. 클릭하여 명령어를 미리 입력합니다."
+    "parameters": "매개변수"
+    "parameter":
+      "required": "필수"
+      "optional": "선택 사항"
+      "default": "기본값"
+  "runtime":
+    "error":
+      "invalid_origin": "이 실행 위치에서는 이 명령어를 실행할 수 없습니다."
+      "unknown_parameter": "알 수 없는 매개변수 키: {key}"
+      "unexpected_argument": "예상하지 못한 인수 \"{argument}\". 선택적 매개변수는 키와 함께 지정해야 합니다. 예: seed=123"
+      "conversion_failed": "\"{value}\" 값을 {parameter}용 {type} 형식으로 변환할 수 없습니다"
+      "default_parse_failed": "매개변수 {parameter}의 기본값을 분석할 수 없습니다"
+      "missing_argument": "인수 \"{parameter}\" ({type})가 필요합니다"
+      "execution_failed": "명령어 {command} 실행에 실패했습니다: {reason}"
+    "usage": "사용법: {usage}"

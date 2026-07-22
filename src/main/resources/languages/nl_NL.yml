@@ -1,0 +1,58 @@
+"locale": "nl_NL"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Je hebt geen toestemming om deze opdracht te gebruiken.</red>"
+"reloaded": "<gold>Pluginconfiguratie en vertalingen zijn opnieuw geladen.</gold>"
+"reload_failed": "<red>Opnieuw laden mislukt. De vorige configuratie blijft actief; controleer de console.</red>"
+"player_only": "<red>Deze opdracht kan alleen door een speler worden gebruikt.</red>"
+"debug_enabled": "<green>Debugmodus ingeschakeld.</green>"
+"debug_disabled": "<red>Debugmodus uitgeschakeld.</red>"
+"config_reloaded_message": "<green>Configuratie bijgewerkt en opnieuw geladen.</green>"
+"usage":
+  - "<aqua>HiddenOre door VolmitSoftware</aqua>"
+  - "<yellow>Gebruik: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Debug: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Door speler geplaatst: {block}; geen verborgen drops.</red>"
+  "random_drop": "<green>Willekeurige drop: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Willekeurige drop {material} verloren omdat het gereedschapsniveau te laag is.</red>"
+  "vein_drop": "<green>Ertsader {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Ertsader {vein}: {material} x{amount} (ontdekt)</green>"
+  "vein_drop_lost": "<red>Ertsader {vein}: {material} verloren omdat het gereedschapsniveau te laag is.</red>"
+  "command_hit": "<gray>Opdrachtcontrole: chance={chance}, roll={roll} -> <green>raak</green></gray>"
+  "command_miss": "<gray>Opdrachtcontrole: chance={chance}, roll={roll} -> <red>mis</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre-opdrachtgroep"
+    "reload": "HiddenOre-configuratie en taalbestanden opnieuw laden"
+    "debug": "Je eigen erts-debugmodus omschakelen"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Terug naar de bovenliggende opdrachtgroep"
+      "back": "Terug"
+      "previous":
+        "hover": "Vorige pagina"
+      "next":
+        "hover": "Volgende pagina"
+      "page": "Pagina"
+    "no_subcommands": "Geen subopdrachten op deze pagina."
+    "no_description": "Geen beschrijving opgegeven"
+    "aliases": "Aliassen"
+    "command_group": "Opdrachtgroep. Klik om te openen."
+    "no_parameters": "Geen parameters. Klik om de opdracht vooraf in te vullen."
+    "parameters": "Parameters"
+    "parameter":
+      "required": "verplicht"
+      "optional": "optioneel"
+      "default": "standaard"
+  "runtime":
+    "error":
+      "invalid_origin": "Deze opdracht kan niet vanuit deze bron worden uitgevoerd."
+      "unknown_parameter": "Onbekende parametersleutel: {key}"
+      "unexpected_argument": "Onverwacht argument \"{argument}\". Optionele parameters moeten met een sleutel worden opgegeven, bijv. seed=123"
+      "conversion_failed": "Kan \"{value}\" voor {parameter} niet naar {type} converteren"
+      "default_parse_failed": "Kan de standaardwaarde voor parameter {parameter} niet verwerken"
+      "missing_argument": "Ontbrekend argument \"{parameter}\" ({type})"
+      "execution_failed": "Opdracht {command} kon niet worden uitgevoerd: {reason}"
+    "usage": "Gebruik: {usage}"

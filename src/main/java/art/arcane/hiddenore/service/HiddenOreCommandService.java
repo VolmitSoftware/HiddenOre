@@ -2,6 +2,8 @@ package art.arcane.hiddenore.service;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.commands.CommandHiddenOre;
+import art.arcane.hiddenore.util.common.Messages;
+import art.arcane.volmlib.util.director.DirectorEngineOptions;
 import art.arcane.volmlib.util.director.compat.DirectorEngineFactory;
 import art.arcane.volmlib.util.director.context.DirectorContextRegistry;
 import art.arcane.volmlib.util.director.help.DirectorMiniMenu;
@@ -13,8 +15,6 @@ import art.arcane.volmlib.util.director.theme.DirectorProduct;
 import art.arcane.volmlib.util.director.theme.DirectorTheme;
 import art.arcane.volmlib.util.director.theme.DirectorThemes;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.SoundCategory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -33,8 +33,6 @@ import java.util.logging.Level;
 public final class HiddenOreCommandService implements CommandExecutor, TabCompleter {
   private static final String ROOT_COMMAND = "hiddenore";
   private static final String ROOT_PERMISSION = "hiddenore.admin";
-  private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-  private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacySection();
 
   private final HiddenOre plugin;
   private final DirectorTheme theme;
@@ -70,11 +68,10 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
 
       director = DirectorEngineFactory.create(
           new CommandHiddenOre(plugin),
-          null,
-          buildDirectorContexts(),
-          null,
-          null,
-          null
+          DirectorEngineOptions.builder()
+              .contexts(buildDirectorContexts())
+              .textResolver((key, arguments) -> plugin.getMessages().directorText(key, arguments))
+              .build()
       );
 
       return director;
@@ -109,7 +106,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     }
 
     if (!sender.hasPermission(ROOT_PERMISSION)) {
-      HiddenOre.sendMessage(sender, plugin.getMessages().get("no_permission"));
+      HiddenOre.sendMessage(sender, plugin.getMessages().component(Messages.NO_PERMISSION));
       return true;
     }
 
@@ -125,10 +122,8 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     }
 
     playFailureSound(sender);
-    if (result.getMessage() == null || result.getMessage().trim().isEmpty()) {
-      for (Component line : plugin.getMessages().getList("usage")) {
-        HiddenOre.sendMessage(sender, line);
-      }
+    for (Component line : plugin.getMessages().components(Messages.USAGE)) {
+      HiddenOre.sendMessage(sender, line);
     }
 
     return true;
@@ -151,9 +146,8 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     }
 
     DirectorMiniMenu.Theme helpTheme = DirectorMiniMenu.Theme.fromDirectorTheme(theme);
-    for (String line : DirectorMiniMenu.render(page.get(), helpTheme)) {
-      sendRich(sender, line);
-    }
+    Messages messages = plugin.getMessages();
+    DirectorMiniMenu.deliver(sender, DirectorMiniMenu.render(page.get(), helpTheme, messages.directorResolver()));
 
     return true;
   }
@@ -186,21 +180,6 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     if (sender instanceof Player player) {
       player.playSound(player.getLocation(), theme.getErrorSound(), SoundCategory.MASTER, 0.8f, 0.9f);
     }
-  }
-
-  private void sendRich(CommandSender sender, String miniMessage) {
-    if (miniMessage == null || miniMessage.trim().isEmpty()) {
-      return;
-    }
-
-    try {
-      sender.getClass().getMethod("sendRichMessage", String.class).invoke(sender, miniMessage);
-      return;
-    } catch (Throwable ignored) {
-    }
-
-    Component component = MINI_MESSAGE.deserialize(miniMessage);
-    sender.sendMessage(LEGACY_SERIALIZER.serialize(component));
   }
 
   private record BukkitDirectorSender(

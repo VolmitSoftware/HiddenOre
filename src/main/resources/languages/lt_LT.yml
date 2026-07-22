@@ -1,0 +1,58 @@
+"locale": "lt_LT"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Neturite leidimo naudoti šią komandą.</red>"
+"reloaded": "<gold>Įskiepio konfigūracija ir vertimai įkelti iš naujo.</gold>"
+"reload_failed": "<red>Nepavyko įkelti iš naujo. Ankstesnė konfigūracija tebėra aktyvi; patikrinkite konsolę.</red>"
+"player_only": "<red>Šią komandą gali naudoti tik žaidėjas.</red>"
+"debug_enabled": "<green>Derinimo režimas įjungtas.</green>"
+"debug_disabled": "<red>Derinimo režimas išjungtas.</red>"
+"config_reloaded_message": "<green>Konfigūracija atnaujinta ir įkelta iš naujo.</green>"
+"usage":
+  - "<aqua>HiddenOre, sukūrė VolmitSoftware</aqua>"
+  - "<yellow>Naudojimas: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Derinimas: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Žaidėjo padėtas {block}; paslėptų iškritimų nėra.</red>"
+  "random_drop": "<green>Atsitiktinis iškritimas: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Atsitiktinis iškritimas {material} prarastas, nes įrankio lygis per žemas.</red>"
+  "vein_drop": "<green>Rūdos gysla {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Rūdos gysla {vein}: {material} x{amount} (atrasta)</green>"
+  "vein_drop_lost": "<red>Rūdos gysla {vein}: {material} prarastas, nes įrankio lygis per žemas.</red>"
+  "command_hit": "<gray>Komandos patikra: chance={chance}, roll={roll} -> <green>pavyko</green></gray>"
+  "command_miss": "<gray>Komandos patikra: chance={chance}, roll={roll} -> <red>nepavyko</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre komandų grupė"
+    "reload": "Iš naujo įkelti HiddenOre konfigūraciją ir kalbos failus"
+    "debug": "Perjungti savo rūdos derinimo režimą"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Grįžti į pirminę komandų grupę"
+      "back": "Atgal"
+      "previous":
+        "hover": "Ankstesnis puslapis"
+      "next":
+        "hover": "Kitas puslapis"
+      "page": "Puslapis"
+    "no_subcommands": "Šiame puslapyje nėra antrinių komandų."
+    "no_description": "Aprašymas nepateiktas"
+    "aliases": "Slapyvardžiai"
+    "command_group": "Komandų grupė. Spustelėkite, kad atidarytumėte."
+    "no_parameters": "Parametrų nėra. Spustelėkite, kad iš anksto užpildytumėte komandą."
+    "parameters": "Parametrai"
+    "parameter":
+      "required": "privalomas"
+      "optional": "pasirenkamas"
+      "default": "numatytasis"
+  "runtime":
+    "error":
+      "invalid_origin": "Šios komandos negalima vykdyti iš šio šaltinio."
+      "unknown_parameter": "Nežinomas parametro raktas: {key}"
+      "unexpected_argument": "Netikėtas argumentas \"{argument}\". Pasirenkami parametrai turi būti nurodyti su raktu, pvz. seed=123"
+      "conversion_failed": "Reikšmės \"{value}\" nepavyko konvertuoti į {type} parametrui {parameter}"
+      "default_parse_failed": "Nepavyko nuskaityti parametro {parameter} numatytosios reikšmės"
+      "missing_argument": "Trūksta argumento \"{parameter}\" ({type})"
+      "execution_failed": "Nepavyko įvykdyti komandos {command}: {reason}"
+    "usage": "Naudojimas: {usage}"

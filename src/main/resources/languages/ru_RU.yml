@@ -1,0 +1,58 @@
+"locale": "ru_RU"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>У вас нет разрешения на использование этой команды.</red>"
+"reloaded": "<gold>Конфигурация и переводы плагина перезагружены.</gold>"
+"reload_failed": "<red>Перезагрузка не удалась. Предыдущая конфигурация всё ещё активна; проверьте консоль.</red>"
+"player_only": "<red>Эту команду может использовать только игрок.</red>"
+"debug_enabled": "<green>Режим отладки включён.</green>"
+"debug_disabled": "<red>Режим отладки выключен.</red>"
+"config_reloaded_message": "<green>Конфигурация обновлена и перезагружена.</green>"
+"usage":
+  - "<aqua>HiddenOre от VolmitSoftware</aqua>"
+  - "<yellow>Использование: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Отладка: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Блок {block} установлен игроком; скрытых выпадений нет.</red>"
+  "random_drop": "<green>Случайное выпадение: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Случайное выпадение {material} потеряно, потому что уровень инструмента слишком низкий.</red>"
+  "vein_drop": "<green>Рудная жила {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Рудная жила {vein}: {material} x{amount} (обнаружено)</green>"
+  "vein_drop_lost": "<red>Рудная жила {vein}: {material} потеряно, потому что уровень инструмента слишком низкий.</red>"
+  "command_hit": "<gray>Проверка команды: chance={chance}, roll={roll} -> <green>успех</green></gray>"
+  "command_miss": "<gray>Проверка команды: chance={chance}, roll={roll} -> <red>неудача</red></gray>"
+"command":
+  "description":
+    "root": "Группа команд HiddenOre"
+    "reload": "Перезагрузить конфигурацию и языковые файлы HiddenOre"
+    "debug": "Переключить свой режим отладки руды"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Вернуться к родительской группе команд"
+      "back": "Назад"
+      "previous":
+        "hover": "Предыдущая страница"
+      "next":
+        "hover": "Следующая страница"
+      "page": "Страница"
+    "no_subcommands": "На этой странице нет подкоманд."
+    "no_description": "Описание не указано"
+    "aliases": "Псевдонимы"
+    "command_group": "Группа команд. Нажмите, чтобы открыть."
+    "no_parameters": "Параметров нет. Нажмите, чтобы предварительно заполнить команду."
+    "parameters": "Параметры"
+    "parameter":
+      "required": "обязательный"
+      "optional": "необязательный"
+      "default": "по умолчанию"
+  "runtime":
+    "error":
+      "invalid_origin": "Эту команду нельзя выполнить из данного источника."
+      "unknown_parameter": "Неизвестный ключ параметра: {key}"
+      "unexpected_argument": "Неожиданный аргумент \"{argument}\". Необязательные параметры должны задаваться с ключом, например seed=123"
+      "conversion_failed": "Невозможно преобразовать \"{value}\" в {type} для {parameter}"
+      "default_parse_failed": "Невозможно разобрать значение по умолчанию параметра {parameter}"
+      "missing_argument": "Отсутствует аргумент \"{parameter}\" ({type})"
+      "execution_failed": "Не удалось выполнить команду {command}: {reason}"
+    "usage": "Использование: {usage}"

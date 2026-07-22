@@ -1,0 +1,58 @@
+"locale": "fr_FR"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Vous n'avez pas la permission d'utiliser cette commande.</red>"
+"reloaded": "<gold>La configuration et les traductions du plugin ont été rechargées.</gold>"
+"reload_failed": "<red>Échec du rechargement. La configuration précédente reste active ; consultez la console.</red>"
+"player_only": "<red>Cette commande ne peut être utilisée que par un joueur.</red>"
+"debug_enabled": "<green>Mode de débogage activé.</green>"
+"debug_disabled": "<red>Mode de débogage désactivé.</red>"
+"config_reloaded_message": "<green>Configuration mise à jour et rechargée.</green>"
+"usage":
+  - "<aqua>HiddenOre par VolmitSoftware</aqua>"
+  - "<yellow>Utilisation : <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Débogage : <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Bloc placé par un joueur : {block} ; aucun drop caché.</red>"
+  "random_drop": "<green>Drop aléatoire : {material} x{amount}</green>"
+  "random_drop_lost": "<red>Drop aléatoire {material} perdu car le niveau de l'outil est trop faible.</red>"
+  "vein_drop": "<green>Filon {vein} : {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Filon {vein} : {material} x{amount} (découvert)</green>"
+  "vein_drop_lost": "<red>Filon {vein} : {material} perdu car le niveau de l'outil est trop faible.</red>"
+  "command_hit": "<gray>Test de commande : chance={chance}, roll={roll} -> <green>réussite</green></gray>"
+  "command_miss": "<gray>Test de commande : chance={chance}, roll={roll} -> <red>échec</red></gray>"
+"command":
+  "description":
+    "root": "Groupe de commandes HiddenOre"
+    "reload": "Recharger la configuration et les fichiers de langue de HiddenOre"
+    "debug": "Activer ou désactiver votre mode de débogage des minerais"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Revenir au groupe de commandes parent"
+      "back": "Retour"
+      "previous":
+        "hover": "Page précédente"
+      "next":
+        "hover": "Page suivante"
+      "page": "Page"
+    "no_subcommands": "Aucune sous-commande sur cette page."
+    "no_description": "Aucune description fournie"
+    "aliases": "Alias"
+    "command_group": "Groupe de commandes. Cliquez pour ouvrir."
+    "no_parameters": "Aucun paramètre. Cliquez pour préremplir la commande."
+    "parameters": "Paramètres"
+    "parameter":
+      "required": "requis"
+      "optional": "facultatif"
+      "default": "par défaut"
+  "runtime":
+    "error":
+      "invalid_origin": "Cette commande ne peut pas être exécutée depuis cette origine."
+      "unknown_parameter": "Clé de paramètre inconnue : {key}"
+      "unexpected_argument": "Argument inattendu \"{argument}\". Les paramètres facultatifs doivent être nommés, par ex. seed=123"
+      "conversion_failed": "Impossible de convertir \"{value}\" en {type} pour {parameter}"
+      "default_parse_failed": "Impossible d'analyser la valeur par défaut du paramètre {parameter}"
+      "missing_argument": "Argument manquant \"{parameter}\" ({type})"
+      "execution_failed": "Échec de l'exécution de la commande {command} : {reason}"
+    "usage": "Utilisation: {usage}"

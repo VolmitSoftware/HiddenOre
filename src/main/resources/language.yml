@@ -1,13 +1,4 @@
-prefix: "<green>[HiddenOre]</green> "
-no_permission: "<red>You do not have permission to use this command.</red>"
-reloaded: "<gold>Plugin config & messages reloaded.</gold>"
-reload_failed: "<red>Reload failed. The previous configuration is still active; check the console.</red>"
-player_only: "<red>This command can only be used by a player.</red>"
-config_reloaded_message: "<green>Config updated and reloaded!</green>"
+locale: en_US
 config_reloaded_sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
 config_reloaded_sound_volume: 1.0
 config_reloaded_sound_pitch: 1.6
-usage:
-  - "<aqua>HiddenOre by VolmitSoftware</aqua>"
-  - "<yellow>Usage: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Debug: <white>/hiddenore debug</white></yellow>"

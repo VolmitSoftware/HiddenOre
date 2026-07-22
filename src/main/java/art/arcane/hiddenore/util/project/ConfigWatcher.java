@@ -1,6 +1,7 @@
 package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
+import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -148,7 +149,7 @@ public final class ConfigWatcher implements Runnable {
 
     HiddenOre.RuntimeState runtime = plugin.getRuntimeState();
     HiddenOre.ReloadNotification notification = runtime.reloadNotification();
-    Component message = notification.message();
+    Component message = runtime.messages().component(Messages.CONFIG_RELOADED_MESSAGE);
     for (Player player : Bukkit.getOnlinePlayers()) {
       if (!SchedulerUtils.runEntity(plugin, player, () -> notifyOperator(player, message, notification.sound(),
           notification.volume(), notification.pitch()))) {

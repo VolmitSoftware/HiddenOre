@@ -1,0 +1,58 @@
+"locale": "tr_TR"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Bu komutu kullanma izniniz yok.</red>"
+"reloaded": "<gold>Eklenti yapılandırması ve çevirileri yeniden yüklendi.</gold>"
+"reload_failed": "<red>Yeniden yükleme başarısız. Önceki yapılandırma hâlâ etkin; konsolu kontrol edin.</red>"
+"player_only": "<red>Bu komut yalnızca bir oyuncu tarafından kullanılabilir.</red>"
+"debug_enabled": "<green>Hata ayıklama modu etkinleştirildi.</green>"
+"debug_disabled": "<red>Hata ayıklama modu devre dışı bırakıldı.</red>"
+"config_reloaded_message": "<green>Yapılandırma güncellendi ve yeniden yüklendi.</green>"
+"usage":
+  - "<aqua>VolmitSoftware tarafından HiddenOre</aqua>"
+  - "<yellow>Kullanım: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Hata ayıklama: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Oyuncu tarafından yerleştirilen {block}; gizli düşüş yok.</red>"
+  "random_drop": "<green>Rastgele düşüş: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Alet seviyesi çok düşük olduğu için rastgele düşüş {material} kaybedildi.</red>"
+  "vein_drop": "<green>Maden damarı {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Maden damarı {vein}: {material} x{amount} (keşfedildi)</green>"
+  "vein_drop_lost": "<red>Maden damarı {vein}: alet seviyesi çok düşük olduğu için {material} kaybedildi.</red>"
+  "command_hit": "<gray>Komut denetimi: chance={chance}, roll={roll} -> <green>başarılı</green></gray>"
+  "command_miss": "<gray>Komut denetimi: chance={chance}, roll={roll} -> <red>başarısız</red></gray>"
+"command":
+  "description":
+    "root": "HiddenOre komut grubu"
+    "reload": "HiddenOre yapılandırmasını ve dil dosyalarını yeniden yükle"
+    "debug": "Kendi maden hata ayıklama modunu değiştir"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Üst komut grubuna dön"
+      "back": "Geri"
+      "previous":
+        "hover": "Önceki sayfa"
+      "next":
+        "hover": "Sonraki sayfa"
+      "page": "Sayfa"
+    "no_subcommands": "Bu sayfada alt komut yok."
+    "no_description": "Açıklama sağlanmadı"
+    "aliases": "Takma adlar"
+    "command_group": "Komut grubu. Açmak için tıklayın."
+    "no_parameters": "Parametre yok. Komutu önceden doldurmak için tıklayın."
+    "parameters": "Parametreler"
+    "parameter":
+      "required": "gerekli"
+      "optional": "isteğe bağlı"
+      "default": "varsayılan"
+  "runtime":
+    "error":
+      "invalid_origin": "Bu komut bu kaynaktan çalıştırılamaz."
+      "unknown_parameter": "Bilinmeyen parametre anahtarı: {key}"
+      "unexpected_argument": "Beklenmeyen bağımsız değişken \"{argument}\". İsteğe bağlı parametreler anahtarla belirtilmelidir, ör. seed=123"
+      "conversion_failed": "\"{value}\", {parameter} için {type} türüne dönüştürülemiyor"
+      "default_parse_failed": "{parameter} parametresinin varsayılan değeri ayrıştırılamıyor"
+      "missing_argument": "Eksik bağımsız değişken \"{parameter}\" ({type})"
+      "execution_failed": "{command} komutu çalıştırılamadı: {reason}"
+    "usage": "Kullanım: {usage}"

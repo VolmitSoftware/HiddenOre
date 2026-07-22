@@ -1,0 +1,58 @@
+"locale": "pl_PL"
+"prefix": "<green>[HiddenOre]</green> "
+"no_permission": "<red>Nie masz uprawnień do użycia tej komendy.</red>"
+"reloaded": "<gold>Konfiguracja i tłumaczenia wtyczki zostały przeładowane.</gold>"
+"reload_failed": "<red>Przeładowanie nie powiodło się. Poprzednia konfiguracja nadal jest aktywna; sprawdź konsolę.</red>"
+"player_only": "<red>Tej komendy może użyć tylko gracz.</red>"
+"debug_enabled": "<green>Tryb debugowania włączony.</green>"
+"debug_disabled": "<red>Tryb debugowania wyłączony.</red>"
+"config_reloaded_message": "<green>Konfiguracja zaktualizowana i przeładowana.</green>"
+"usage":
+  - "<aqua>HiddenOre autorstwa VolmitSoftware</aqua>"
+  - "<yellow>Użycie: <white>/hiddenore reload</white></yellow>"
+  - "<yellow>Debugowanie: <white>/hiddenore debug</white></yellow>"
+"debug":
+  "player_placed": "<red>Blok {block} umieszczony przez gracza; brak ukrytych dropów.</red>"
+  "random_drop": "<green>Losowy drop: {material} x{amount}</green>"
+  "random_drop_lost": "<red>Losowy drop {material} utracony, ponieważ poziom narzędzia jest za niski.</red>"
+  "vein_drop": "<green>Żyła rudy {vein}: {material} x{amount}</green>"
+  "vein_drop_discovered": "<green>Żyła rudy {vein}: {material} x{amount} (odkryta)</green>"
+  "vein_drop_lost": "<red>Żyła rudy {vein}: utracono {material}, ponieważ poziom narzędzia jest za niski.</red>"
+  "command_hit": "<gray>Test komendy: chance={chance}, roll={roll} -> <green>trafienie</green></gray>"
+  "command_miss": "<gray>Test komendy: chance={chance}, roll={roll} -> <red>pudło</red></gray>"
+"command":
+  "description":
+    "root": "Grupa komend HiddenOre"
+    "reload": "Przeładuj konfigurację i pliki językowe HiddenOre"
+    "debug": "Przełącz własny tryb debugowania rud"
+"director":
+  "help":
+    "navigation":
+      "parent":
+        "hover": "Wróć do nadrzędnej grupy poleceń"
+      "back": "Wstecz"
+      "previous":
+        "hover": "Poprzednia strona"
+      "next":
+        "hover": "Następna strona"
+      "page": "Strona"
+    "no_subcommands": "Na tej stronie nie ma podpoleceń."
+    "no_description": "Nie podano opisu"
+    "aliases": "Aliasy"
+    "command_group": "Grupa poleceń. Kliknij, aby otworzyć."
+    "no_parameters": "Brak parametrów. Kliknij, aby wstępnie uzupełnić polecenie."
+    "parameters": "Parametry"
+    "parameter":
+      "required": "wymagany"
+      "optional": "opcjonalny"
+      "default": "domyślny"
+  "runtime":
+    "error":
+      "invalid_origin": "Tego polecenia nie można wykonać z tego źródła."
+      "unknown_parameter": "Nieznany klucz parametru: {key}"
+      "unexpected_argument": "Nieoczekiwany argument \"{argument}\". Parametry opcjonalne muszą mieć klucz, np. seed=123"
+      "conversion_failed": "Nie można przekonwertować \"{value}\" na {type} dla {parameter}"
+      "default_parse_failed": "Nie można odczytać wartości domyślnej parametru {parameter}"
+      "missing_argument": "Brak argumentu \"{parameter}\" ({type})"
+      "execution_failed": "Nie udało się wykonać polecenia {command}: {reason}"
+    "usage": "Użycie: {usage}"
