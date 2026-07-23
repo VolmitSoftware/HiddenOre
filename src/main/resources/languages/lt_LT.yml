@@ -7,10 +7,6 @@
 "debug_enabled": "<green>Derinimo režimas įjungtas.</green>"
 "debug_disabled": "<red>Derinimo režimas išjungtas.</red>"
 "config_reloaded_message": "<green>Konfigūracija atnaujinta ir įkelta iš naujo.</green>"
-"usage":
-  - "<aqua>HiddenOre, sukūrė VolmitSoftware</aqua>"
-  - "<yellow>Naudojimas: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Derinimas: <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>Žaidėjo padėtas {block}; paslėptų iškritimų nėra.</red>"
   "random_drop": "<green>Atsitiktinis iškritimas: {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "Puslapis"
     "no_subcommands": "Šiame puslapyje nėra antrinių komandų."
     "no_description": "Aprašymas nepateiktas"
-    "aliases": "Slapyvardžiai"
     "command_group": "Komandų grupė. Spustelėkite, kad atidarytumėte."
+    "category": "Komandų kategorija"
     "no_parameters": "Parametrų nėra. Spustelėkite, kad iš anksto užpildytumėte komandą."
-    "parameters": "Parametrai"
+    "parameters_hover": "Užveskite pelės žymeklį ant parametrų, kad sužinotumėte daugiau."
     "parameter":
-      "required": "privalomas"
-      "optional": "pasirenkamas"
-      "default": "numatytasis"
+      "required": "Šis parametras yra privalomas."
+      "optional": "Šis parametras yra neprivalomas."
+      "default": "Jei nenurodyta, numatytoji reikšmė yra \"{value}\"."
+      "type": "Šio parametro tipas yra {type}."
   "runtime":
     "error":
       "invalid_origin": "Šios komandos negalima vykdyti iš šio šaltinio."

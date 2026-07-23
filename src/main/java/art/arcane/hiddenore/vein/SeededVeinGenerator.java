@@ -1,6 +1,7 @@
 package art.arcane.hiddenore.vein;
 
 import art.arcane.hiddenore.rules.ItemDropRule;
+import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
 import org.bukkit.World;
 
@@ -41,9 +42,20 @@ public final class SeededVeinGenerator {
       if (cached != null) {
         return cached;
       }
+      HiddenOreTelemetry.countVeinChunkCompute();
       ChunkVeins computed = compute(world.getSeed(), world.getMinHeight(), world.getMaxHeight(), chunkX, chunkZ);
       worldCache.put(chunkKey, computed);
       return computed;
+    }
+  }
+
+  public int cachedChunkCount() {
+    synchronized (cache) {
+      int total = 0;
+      for (Map<Long, ChunkVeins> worldCache : cache.values()) {
+        total += worldCache.size();
+      }
+      return total;
     }
   }
 

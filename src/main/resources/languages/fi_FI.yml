@@ -7,10 +7,6 @@
 "debug_enabled": "<green>Virheenkorjaustila käytössä.</green>"
 "debug_disabled": "<red>Virheenkorjaustila pois käytöstä.</red>"
 "config_reloaded_message": "<green>Asetukset päivitettiin ja ladattiin uudelleen.</green>"
-"usage":
-  - "<aqua>HiddenOre, tekijä VolmitSoftware</aqua>"
-  - "<yellow>Käyttö: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Virheenkorjaus: <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>Pelaajan asettama {block}; ei piilotettuja pudotuksia.</red>"
   "random_drop": "<green>Satunnainen pudotus: {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "Sivu"
     "no_subcommands": "Tällä sivulla ei ole alikomentoja."
     "no_description": "Kuvausta ei ole annettu"
-    "aliases": "Aliakset"
     "command_group": "Komentoryhmä. Avaa napsauttamalla."
+    "category": "Komentokategoria"
     "no_parameters": "Ei parametreja. Esitäytä komento napsauttamalla."
-    "parameters": "Parametrit"
+    "parameters_hover": "Vie hiiri parametrien päälle saadaksesi lisätietoja."
     "parameter":
-      "required": "pakollinen"
-      "optional": "valinnainen"
-      "default": "oletus"
+      "required": "Tämä parametri on pakollinen."
+      "optional": "Tämä parametri on valinnainen."
+      "default": "Oletusarvo on \"{value}\", jos sitä ei määritetä."
+      "type": "Tämän parametrin tyyppi on {type}."
   "runtime":
     "error":
       "invalid_origin": "Tätä komentoa ei voi suorittaa tästä lähteestä."

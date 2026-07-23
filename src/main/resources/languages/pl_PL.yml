@@ -7,10 +7,6 @@
 "debug_enabled": "<green>Tryb debugowania włączony.</green>"
 "debug_disabled": "<red>Tryb debugowania wyłączony.</red>"
 "config_reloaded_message": "<green>Konfiguracja zaktualizowana i przeładowana.</green>"
-"usage":
-  - "<aqua>HiddenOre autorstwa VolmitSoftware</aqua>"
-  - "<yellow>Użycie: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Debugowanie: <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>Blok {block} umieszczony przez gracza; brak ukrytych dropów.</red>"
   "random_drop": "<green>Losowy drop: {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "Strona"
     "no_subcommands": "Na tej stronie nie ma podpoleceń."
     "no_description": "Nie podano opisu"
-    "aliases": "Aliasy"
     "command_group": "Grupa poleceń. Kliknij, aby otworzyć."
+    "category": "Kategoria poleceń"
     "no_parameters": "Brak parametrów. Kliknij, aby wstępnie uzupełnić polecenie."
-    "parameters": "Parametry"
+    "parameters_hover": "Najedź kursorem na parametry, aby dowiedzieć się więcej."
     "parameter":
-      "required": "wymagany"
-      "optional": "opcjonalny"
-      "default": "domyślny"
+      "required": "Ten parametr jest wymagany."
+      "optional": "Ten parametr jest opcjonalny."
+      "default": "Domyślnie \"{value}\", jeśli nie określono."
+      "type": "Ten parametr jest typu {type}."
   "runtime":
     "error":
       "invalid_origin": "Tego polecenia nie można wykonać z tego źródła."

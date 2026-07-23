@@ -7,10 +7,6 @@
 "debug_enabled": "<green>מצב ניפוי השגיאות הופעל.</green>"
 "debug_disabled": "<red>מצב ניפוי השגיאות הושבת.</red>"
 "config_reloaded_message": "<green>ההגדרות עודכנו ונטענו מחדש.</green>"
-"usage":
-  - "<aqua>HiddenOre מאת VolmitSoftware</aqua>"
-  - "<yellow>שימוש: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>ניפוי שגיאות: <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>הבלוק {block} הונח בידי שחקן; אין נפילות נסתרות.</red>"
   "random_drop": "<green>נפילה אקראית: {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "עמוד"
     "no_subcommands": "אין פקודות משנה בעמוד זה."
     "no_description": "לא סופק תיאור"
-    "aliases": "כינויים"
     "command_group": "קבוצת פקודות. לחצו כדי לפתוח."
+    "category": "קטגוריית פקודות"
     "no_parameters": "אין פרמטרים. לחצו כדי למלא את הפקודה מראש."
-    "parameters": "פרמטרים"
+    "parameters_hover": "רחפו מעל הפרמטרים כדי ללמוד עוד."
     "parameter":
-      "required": "נדרש"
-      "optional": "אופציונלי"
-      "default": "ברירת מחדל"
+      "required": "פרמטר זה הוא חובה."
+      "optional": "פרמטר זה הוא אופציונלי."
+      "default": "ברירת המחדל היא \"{value}\" אם לא הוגדר."
+      "type": "פרמטר זה הוא מסוג {type}."
   "runtime":
     "error":
       "invalid_origin": "לא ניתן להריץ פקודה זו ממקור זה."

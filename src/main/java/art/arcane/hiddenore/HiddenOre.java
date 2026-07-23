@@ -7,6 +7,8 @@ import art.arcane.hiddenore.listeners.PlacementListener;
 import art.arcane.hiddenore.listeners.WorldLifecycleListener;
 import art.arcane.hiddenore.rules.MiningRuleManager;
 import art.arcane.hiddenore.service.HiddenOreCommandService;
+import art.arcane.hiddenore.service.HiddenOreIntegrationService;
+import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.common.SplashScreen;
 import art.arcane.hiddenore.util.project.ConfigWatcher;
@@ -37,6 +39,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   private GenerationRules generationRules;
   private ConfigWatcher configWatcher;
   private HiddenOreCommandService commandService;
+  private HiddenOreIntegrationService integrationService;
   private ChunkPositionSet placedBlocks;
   private ChunkPositionSet consumedVeins;
   private HiddenOreAPI api;
@@ -72,6 +75,8 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       getServer().getPluginManager().registerEvents(new WorldLifecycleListener(this), this);
       commandService = new HiddenOreCommandService(this);
       commandService.register();
+      integrationService = new HiddenOreIntegrationService(this);
+      integrationService.register();
       configWatcher = new ConfigWatcher(this);
       configWatcher.start();
       SplashScreen.print(this, true, "");
@@ -121,6 +126,10 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       return;
     }
     draining = true;
+    if (integrationService != null) {
+      integrationService.unregister();
+      integrationService = null;
+    }
     if (configWatcher != null) {
       configWatcher.stop();
       configWatcher = null;
@@ -196,6 +205,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
 
     runtimeState = new RuntimeState(nextRuleManager, nextMessages, nextVeinGenerator, generationPolicy,
         reloadNotification, autoPickup, suppressBlockDrop);
+    HiddenOreTelemetry.countConfigReload();
   }
 
   public boolean isDebug(UUID uuid) {
@@ -250,6 +260,14 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       throw new IllegalStateException("HiddenOre runtime is not available");
     }
     return current;
+  }
+
+  public RuntimeState runtimeStateOrNull() {
+    return runtimeState;
+  }
+
+  public GenerationRules getGenerationRules() {
+    return generationRules;
   }
 
   public boolean isDraining() {

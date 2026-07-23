@@ -14,7 +14,6 @@ import art.arcane.volmlib.util.director.runtime.DirectorSender;
 import art.arcane.volmlib.util.director.theme.DirectorProduct;
 import art.arcane.volmlib.util.director.theme.DirectorTheme;
 import art.arcane.volmlib.util.director.theme.DirectorThemes;
-import net.kyori.adventure.text.Component;
 import org.bukkit.SoundCategory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -122,11 +121,19 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
     }
 
     playFailureSound(sender);
-    for (Component line : plugin.getMessages().components(Messages.USAGE)) {
-      HiddenOre.sendMessage(sender, line);
-    }
+    sendRootHelp(sender);
 
     return true;
+  }
+
+  private void sendRootHelp(CommandSender sender) {
+    Optional<DirectorMiniMenu.DirectorHelpPage> page = DirectorMiniMenu.resolveHelp(getDirector(), List.of(), 8);
+    if (page.isEmpty()) {
+      return;
+    }
+
+    DirectorMiniMenu.Theme helpTheme = DirectorMiniMenu.Theme.fromDirectorTheme(theme);
+    DirectorMiniMenu.deliver(sender, DirectorMiniMenu.render(page.get(), helpTheme, plugin.getMessages().directorResolver()));
   }
 
   @Nullable

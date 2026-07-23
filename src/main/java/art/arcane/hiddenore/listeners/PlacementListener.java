@@ -2,6 +2,7 @@ package art.arcane.hiddenore.listeners;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.rules.MiningRuleManager;
+import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -33,6 +34,7 @@ public final class PlacementListener implements Listener {
     MiningRuleManager rules = plugin.getRuntimeState().ruleManager();
     Block block = event.getBlockPlaced();
     if (shouldTrackPlacement(rules.getGuaranteedDrop(block.getType()))) {
+      HiddenOreTelemetry.countPdcWrite();
       plugin.getPlacedBlocks().add(block);
     }
   }
@@ -42,6 +44,7 @@ public final class PlacementListener implements Listener {
     if (!shouldCleanupWithoutDropEvent(event.isDropItems(), event.getBlock().getType().isAir())) {
       return;
     }
+    HiddenOreTelemetry.countPdcWrite();
     plugin.getPlacedBlocks().remove(event.getBlock());
   }
 
@@ -80,11 +83,13 @@ public final class PlacementListener implements Listener {
     ChunkPositionSet placed = plugin.getPlacedBlocks();
     List<Block> tracked = new ArrayList<>(moved.size());
     for (Block block : moved) {
+      HiddenOreTelemetry.countPdcWrite();
       if (placed.remove(block)) {
         tracked.add(block);
       }
     }
     for (Block block : tracked) {
+      HiddenOreTelemetry.countPdcWrite();
       placed.add(block.getRelative(direction));
     }
   }

@@ -7,10 +7,6 @@
 "debug_enabled": "<green>Режим отладки включён.</green>"
 "debug_disabled": "<red>Режим отладки выключен.</red>"
 "config_reloaded_message": "<green>Конфигурация обновлена и перезагружена.</green>"
-"usage":
-  - "<aqua>HiddenOre от VolmitSoftware</aqua>"
-  - "<yellow>Использование: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Отладка: <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>Блок {block} установлен игроком; скрытых выпадений нет.</red>"
   "random_drop": "<green>Случайное выпадение: {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "Страница"
     "no_subcommands": "На этой странице нет подкоманд."
     "no_description": "Описание не указано"
-    "aliases": "Псевдонимы"
     "command_group": "Группа команд. Нажмите, чтобы открыть."
+    "category": "Категория команд"
     "no_parameters": "Параметров нет. Нажмите, чтобы предварительно заполнить команду."
-    "parameters": "Параметры"
+    "parameters_hover": "Наведите курсор на параметры, чтобы узнать больше."
     "parameter":
-      "required": "обязательный"
-      "optional": "необязательный"
-      "default": "по умолчанию"
+      "required": "Этот параметр является обязательным."
+      "optional": "Этот параметр является необязательным."
+      "default": "Если не задан, используется значение \"{value}\"."
+      "type": "Этот параметр имеет тип {type}."
   "runtime":
     "error":
       "invalid_origin": "Эту команду нельзя выполнить из данного источника."

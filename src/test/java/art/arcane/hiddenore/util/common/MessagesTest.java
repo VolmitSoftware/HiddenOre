@@ -36,8 +36,6 @@ public class MessagesTest {
     assertEquals("<green>[HiddenOre]</green> ", Messages.PREFIX.english());
     assertTrue(Messages.NO_PERMISSION.english().contains("You do not have permission"));
     assertEquals("[HiddenOre] You do not have permission to use this command.", text(messages.component(Messages.NO_PERMISSION)));
-    assertEquals(3, messages.components(Messages.USAGE).size());
-    assertThrows(UnsupportedOperationException.class, () -> messages.components(Messages.USAGE).clear());
   }
 
   @Test
@@ -78,10 +76,6 @@ public class MessagesTest {
     language.set("locale", "de_DE");
     language.set("prefix", "<gold>[Erz]</gold> ");
     language.set("no_permission", "<red>Keine Berechtigung.</red>");
-    language.set(
-        "usage",
-        List.of("<aqua>Hilfe</aqua>", "<yellow>Neu laden</yellow>", "<yellow>Debuggen</yellow>")
-    );
     language.set("director.help.navigation.page", "Seite");
     language.set("command.description.reload", "HiddenOre-Konfiguration neu laden");
 
@@ -91,10 +85,6 @@ public class MessagesTest {
 
     assertTrue(result.applied());
     assertEquals("[Erz] Keine Berechtigung.", text(messages.component(Messages.NO_PERMISSION)));
-    assertEquals(
-        List.of("[Erz] Hilfe", "[Erz] Neu laden", "[Erz] Debuggen"),
-        texts(messages.components(Messages.USAGE))
-    );
     DirectorTextResolver resolver = messages.directorResolver();
     assertEquals("Seite", resolver.resolve(DirectorHelpMessages.PAGE));
     assertEquals("HiddenOre-Konfiguration neu laden", resolver.resolve(Messages.COMMAND_RELOAD_DESCRIPTION));
@@ -135,7 +125,7 @@ public class MessagesTest {
     );
 
     YamlConfiguration wrongShape = new YamlConfiguration();
-    wrongShape.set("usage", "Not a list");
+    wrongShape.set("reloaded", List.of("Not", "a", "string"));
     IllegalArgumentException shapeException = assertThrows(
         IllegalArgumentException.class,
         () -> messages.reload(wrongShape, "language.yml")
@@ -143,7 +133,7 @@ public class MessagesTest {
 
     assertTrue(malformedException.getMessage().contains("invalid MiniMessage"));
     assertEquals("[HiddenOre] Dernière bonne version.", text(messages.component(Messages.RELOADED)));
-    assertTrue(shapeException.getMessage().contains("expected a non-empty list"));
+    assertTrue(shapeException.getMessage().contains("expected a non-empty message string"));
     assertEquals("[HiddenOre] Dernière bonne version.", text(messages.component(Messages.RELOADED)));
   }
 

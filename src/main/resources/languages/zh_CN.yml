@@ -7,10 +7,6 @@
 "debug_enabled": "<green>调试模式已启用。</green>"
 "debug_disabled": "<red>调试模式已禁用。</red>"
 "config_reloaded_message": "<green>配置已更新并重新加载。</green>"
-"usage":
-  - "<aqua>VolmitSoftware 制作的 HiddenOre</aqua>"
-  - "<yellow>用法：<white>/hiddenore reload</white></yellow>"
-  - "<yellow>调试：<white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>{block} 由玩家放置；不会产生隐藏掉落。</red>"
   "random_drop": "<green>随机掉落：{material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "页"
     "no_subcommands": "此页面没有子命令。"
     "no_description": "未提供说明"
-    "aliases": "别名"
     "command_group": "命令组。点击打开。"
+    "category": "命令类别"
     "no_parameters": "无参数。点击预填命令。"
-    "parameters": "参数"
+    "parameters_hover": "将鼠标悬停在参数上以了解更多。"
     "parameter":
-      "required": "必填"
-      "optional": "可选"
-      "default": "默认"
+      "required": "此参数为必填项。"
+      "optional": "此参数为可选项。"
+      "default": "未指定时默认为 \"{value}\"。"
+      "type": "此参数的类型为 {type}。"
   "runtime":
     "error":
       "invalid_origin": "无法从此来源运行该命令。"

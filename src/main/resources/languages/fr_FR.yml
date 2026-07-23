@@ -7,10 +7,6 @@
 "debug_enabled": "<green>Mode de débogage activé.</green>"
 "debug_disabled": "<red>Mode de débogage désactivé.</red>"
 "config_reloaded_message": "<green>Configuration mise à jour et rechargée.</green>"
-"usage":
-  - "<aqua>HiddenOre par VolmitSoftware</aqua>"
-  - "<yellow>Utilisation : <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Débogage : <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>Bloc placé par un joueur : {block} ; aucun drop caché.</red>"
   "random_drop": "<green>Drop aléatoire : {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "Page"
     "no_subcommands": "Aucune sous-commande sur cette page."
     "no_description": "Aucune description fournie"
-    "aliases": "Alias"
     "command_group": "Groupe de commandes. Cliquez pour ouvrir."
+    "category": "Catégorie de commandes"
     "no_parameters": "Aucun paramètre. Cliquez pour préremplir la commande."
-    "parameters": "Paramètres"
+    "parameters_hover": "Survolez les paramètres pour en savoir plus."
     "parameter":
-      "required": "requis"
-      "optional": "facultatif"
-      "default": "par défaut"
+      "required": "Ce paramètre est obligatoire."
+      "optional": "Ce paramètre est facultatif."
+      "default": "Vaut \"{value}\" par défaut si non défini."
+      "type": "Ce paramètre est de type {type}."
   "runtime":
     "error":
       "invalid_origin": "Cette commande ne peut pas être exécutée depuis cette origine."

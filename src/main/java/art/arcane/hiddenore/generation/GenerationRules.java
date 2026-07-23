@@ -1,6 +1,7 @@
 package art.arcane.hiddenore.generation;
 
 import art.arcane.hiddenore.HiddenOre;
+import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.volmlib.util.bukkit.WorldIdentity;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -109,6 +110,7 @@ public final class GenerationRules extends BlockPopulator implements Listener {
     int xMax = xCenter + region.getBuffer() + 16;
     int zMax = zCenter + region.getBuffer() + 16;
 
+    long replaced = 0L;
     for (int cX = -buffer; cX <= buffer; cX++) {
       for (int cZ = -buffer; cZ <= buffer; cZ++) {
         int bX = (cX + centerX) << 4;
@@ -124,12 +126,14 @@ public final class GenerationRules extends BlockPopulator implements Listener {
               Material type = blocks.get(region.getType(x, y, z));
               if (type != null) {
                 region.setType(x, y, z, type);
+                replaced++;
               }
             }
           }
         }
       }
     }
+    HiddenOreTelemetry.addOreRemovalBlocks(replaced);
   }
 
   public static GenerationPolicy parsePolicy(FileConfiguration configuration) {

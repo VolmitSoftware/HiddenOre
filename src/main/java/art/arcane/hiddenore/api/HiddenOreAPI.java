@@ -2,6 +2,7 @@ package art.arcane.hiddenore.api;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.rules.MiningRuleManager;
+import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.hiddenore.vein.ChunkVeins;
 import art.arcane.hiddenore.vein.VeinBlock;
 import art.arcane.hiddenore.vein.VeinConfig;
@@ -56,7 +57,11 @@ public final class HiddenOreAPI {
     }
     int packed = ChunkPositionSet.pack(block.getX() & 15, block.getY(), block.getZ() & 15, world.getMinHeight());
     VeinBlock veinBlock = veins.get(packed);
-    if (veinBlock == null || plugin.getConsumedVeins().contains(block) || isBlockedPlacement(block, rules)) {
+    if (veinBlock == null) {
+      return null;
+    }
+    HiddenOreTelemetry.countPdcRead();
+    if (plugin.getConsumedVeins().contains(block) || isBlockedPlacement(block, rules)) {
       return null;
     }
     return toVein(world, chunkX, chunkZ, veinBlock);
@@ -84,10 +89,15 @@ public final class HiddenOreAPI {
     if (veinBlock == null) {
       return List.of();
     }
+    HiddenOreTelemetry.countPdcRead();
     int[] consumed = plugin.getConsumedVeins().snapshot(block.getChunk());
-    int[] placed = rules.getVeinConfig().allowPlacedBlocks
-        ? EMPTY_POSITIONS
-        : plugin.getPlacedBlocks().snapshot(block.getChunk());
+    int[] placed;
+    if (rules.getVeinConfig().allowPlacedBlocks) {
+      placed = EMPTY_POSITIONS;
+    } else {
+      HiddenOreTelemetry.countPdcRead();
+      placed = plugin.getPlacedBlocks().snapshot(block.getChunk());
+    }
     List<HiddenVein> result = new ArrayList<>();
     int minHeight = world.getMinHeight();
     for (int position : veins.positionsOf(veinBlock.veinId())) {
@@ -146,10 +156,15 @@ public final class HiddenOreAPI {
         if (veins.isEmpty()) {
           continue;
         }
+        HiddenOreTelemetry.countPdcRead();
         int[] consumed = plugin.getConsumedVeins().snapshot(world.getChunkAt(chunkX, chunkZ));
-        int[] placed = rules.getVeinConfig().allowPlacedBlocks
-            ? EMPTY_POSITIONS
-            : plugin.getPlacedBlocks().snapshot(world.getChunkAt(chunkX, chunkZ));
+        int[] placed;
+        if (rules.getVeinConfig().allowPlacedBlocks) {
+          placed = EMPTY_POSITIONS;
+        } else {
+          HiddenOreTelemetry.countPdcRead();
+          placed = plugin.getPlacedBlocks().snapshot(world.getChunkAt(chunkX, chunkZ));
+        }
         for (VeinBlock veinBlock : veins.blocks()) {
           int x = (chunkX << 4) + ChunkPositionSet.unpackLocalX(veinBlock.packedPosition());
           int y = ChunkPositionSet.unpackY(veinBlock.packedPosition(), minHeight);
@@ -195,7 +210,11 @@ public final class HiddenOreAPI {
   }
 
   private boolean isBlockedPlacement(Block block, MiningRuleManager rules) {
-    return !rules.getVeinConfig().allowPlacedBlocks && plugin.getPlacedBlocks().contains(block);
+    if (rules.getVeinConfig().allowPlacedBlocks) {
+      return false;
+    }
+    HiddenOreTelemetry.countPdcRead();
+    return plugin.getPlacedBlocks().contains(block);
   }
 
   private void requireOwnedChunk(World world, int chunkX, int chunkZ) {

@@ -67,12 +67,6 @@ public final class Messages {
       "config_reloaded_message",
       "<green>Configuration updated and reloaded.</green>"
   );
-  public static final LinesKey USAGE = LinesKey.of(
-      "usage",
-      "<aqua>HiddenOre by VolmitSoftware</aqua>",
-      "<yellow>Usage: <white>/hiddenore reload</white></yellow>",
-      "<yellow>Debug: <white>/hiddenore debug</white></yellow>"
-  );
   public static final TextKey DEBUG_PLAYER_PLACED = TextKey.of(
       "debug.player_placed",
       "<red>Player-placed {block}, no hidden drops.</red>"
@@ -136,7 +130,6 @@ public final class Messages {
       DEBUG_ENABLED,
       DEBUG_DISABLED,
       CONFIG_RELOADED_MESSAGE,
-      USAGE,
       DEBUG_PLAYER_PLACED,
       DEBUG_RANDOM_DROP,
       DEBUG_RANDOM_DROP_LOST,

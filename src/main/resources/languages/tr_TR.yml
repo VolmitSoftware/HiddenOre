@@ -7,10 +7,6 @@
 "debug_enabled": "<green>Hata ayıklama modu etkinleştirildi.</green>"
 "debug_disabled": "<red>Hata ayıklama modu devre dışı bırakıldı.</red>"
 "config_reloaded_message": "<green>Yapılandırma güncellendi ve yeniden yüklendi.</green>"
-"usage":
-  - "<aqua>VolmitSoftware tarafından HiddenOre</aqua>"
-  - "<yellow>Kullanım: <white>/hiddenore reload</white></yellow>"
-  - "<yellow>Hata ayıklama: <white>/hiddenore debug</white></yellow>"
 "debug":
   "player_placed": "<red>Oyuncu tarafından yerleştirilen {block}; gizli düşüş yok.</red>"
   "random_drop": "<green>Rastgele düşüş: {material} x{amount}</green>"
@@ -38,14 +34,15 @@
       "page": "Sayfa"
     "no_subcommands": "Bu sayfada alt komut yok."
     "no_description": "Açıklama sağlanmadı"
-    "aliases": "Takma adlar"
     "command_group": "Komut grubu. Açmak için tıklayın."
+    "category": "Komut kategorisi"
     "no_parameters": "Parametre yok. Komutu önceden doldurmak için tıklayın."
-    "parameters": "Parametreler"
+    "parameters_hover": "Daha fazla bilgi için imleci parametrelerin üzerine getirin."
     "parameter":
-      "required": "gerekli"
-      "optional": "isteğe bağlı"
-      "default": "varsayılan"
+      "required": "Bu parametre zorunludur."
+      "optional": "Bu parametre isteğe bağlıdır."
+      "default": "Belirtilmezse varsayılan değer \"{value}\" olur."
+      "type": "Bu parametrenin türü {type}."
   "runtime":
     "error":
       "invalid_origin": "Bu komut bu kaynaktan çalıştırılamaz."

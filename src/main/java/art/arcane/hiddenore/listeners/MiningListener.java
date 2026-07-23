@@ -5,6 +5,7 @@ import art.arcane.hiddenore.api.HiddenVein;
 import art.arcane.hiddenore.api.event.HiddenOreDropsEvent;
 import art.arcane.hiddenore.rules.ItemDropRule;
 import art.arcane.hiddenore.rules.MiningRuleManager;
+import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.project.MiningUtil;
 import art.arcane.hiddenore.util.project.SoundResolver;
@@ -99,6 +100,7 @@ public class MiningListener implements Listener {
     }
 
     event.getItems().clear();
+    HiddenOreTelemetry.countPdcRead();
     boolean trackedPlacement = plugin.getPlacedBlocks().contains(event.getBlock());
     pendingDrops.put(event, new DropPreparation(preparation.runtime(), preparation.tool(), trackedPlacement));
   }
@@ -114,11 +116,13 @@ public class MiningListener implements Listener {
         processAcceptedDrop(event, preparation);
       }
     } finally {
+      HiddenOreTelemetry.countPdcWrite();
       plugin.getPlacedBlocks().remove(block);
     }
   }
 
   private void processAcceptedDrop(BlockDropItemEvent event, DropPreparation preparation) {
+    HiddenOreTelemetry.countBreak();
     Player player = event.getPlayer();
     BlockState blockState = event.getBlockState();
     Material blockType = blockState.getType();
@@ -197,8 +201,9 @@ public class MiningListener implements Listener {
       int packed = ChunkPositionSet.pack(blockX & 15, y, blockZ & 15, world.getMinHeight());
       VeinBlock veinBlock = veins.get(packed);
 
-      if (veinBlock != null && !plugin.getConsumedVeins().contains(block)) {
+      if (veinBlock != null && !consumedVeinsContains(block)) {
         boolean firstOfVein = isFirstOfVein(block, veins, veinBlock, packed);
+        HiddenOreTelemetry.countPdcWrite();
         plugin.getConsumedVeins().add(block);
         ItemDropRule rule = veinBlock.rule();
         ToolTier tier = ToolTier.fromMaterial(tool.getType());
@@ -211,6 +216,7 @@ public class MiningListener implements Listener {
           }
           vein = new HiddenVein(blockX, y, blockZ, veinBlock.veinId(), rule.material, HiddenVein.oreDisplayFor(rule.material, y));
           if (firstOfVein) {
+            HiddenOreTelemetry.countVeinDiscovery();
             playDiscoverySound(player, veinConfig);
           }
           if (debug) {
@@ -251,6 +257,7 @@ public class MiningListener implements Listener {
       if (stack == null || stack.getType().isAir() || stack.getAmount() <= 0) {
         continue;
       }
+      HiddenOreTelemetry.countDrop();
       if (dropsEvent.isToInventory()) {
         HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
         leftover.values().forEach(item -> world.dropItem(centerLoc, item));
@@ -284,7 +291,13 @@ public class MiningListener implements Listener {
     return tool.clone();
   }
 
+  private boolean consumedVeinsContains(Block block) {
+    HiddenOreTelemetry.countPdcRead();
+    return plugin.getConsumedVeins().contains(block);
+  }
+
   private boolean isFirstOfVein(Block block, ChunkVeins veins, VeinBlock veinBlock, int packed) {
+    HiddenOreTelemetry.countPdcRead();
     int[] consumed = plugin.getConsumedVeins().snapshot(block.getChunk());
     if (consumed.length == 0) {
       return true;
