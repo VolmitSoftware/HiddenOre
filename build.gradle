@@ -2,11 +2,23 @@ import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = uri('https://jitpack.io') }
+    }
+    dependencies {
+        classpath('com.github.VolmitSoftware.VolmLib:packaging:master-SNAPSHOT')
+    }
+}
+
 plugins {
     id 'java-library'
     alias(libs.plugins.shadow)
     alias(libs.plugins.slimjar)
 }
+
+apply plugin: 'art.arcane.volmit-packaging'
 
 group = 'art.arcane'
 version = '1.5.1-26.2'
@@ -181,6 +193,17 @@ void createOutputTask(String name, String path, boolean doRename = true) {
                     rename { String ignored -> "HiddenOre-${project.version}.jar" }
                 }
             }
+        }
+    }
+}
+
+pluginPackaging {
+    artifacts {
+        create('distribution') {
+            taskName = 'shadowJar'
+            policyName = 'HiddenOre'
+            prunePrefixes = ['art/arcane/volmlib/']
+            keepPrefixes = ['art/arcane/volmlib/util/matter/slices/']
         }
     }
 }
