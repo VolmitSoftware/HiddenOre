@@ -18,33 +18,33 @@ public class HiddenOrePlaceholderAbsenceTest {
   };
 
   @Test
-  public void everyEnablePathClassLoadsWhenPlaceholderApiIsAbsent() {
-    ClassLoader hidden = new PlaceholderApiHidingLoader();
-
-    for (String name : LOADS_WITHOUT_PLACEHOLDER_API) {
-      try {
-        Class.forName(name, true, hidden);
-      } catch (Throwable failure) {
-        throw new AssertionError(name + " must load when PlaceholderAPI is not installed", failure);
+  public void everyEnablePathClassLoadsWhenPlaceholderApiIsAbsent() throws Exception {
+    try (PlaceholderApiHidingLoader hidden = new PlaceholderApiHidingLoader()) {
+      for (String name : LOADS_WITHOUT_PLACEHOLDER_API) {
+        try {
+          Class.forName(name, true, hidden);
+        } catch (Throwable failure) {
+          throw new AssertionError(name + " must load when PlaceholderAPI is not installed", failure);
+        }
       }
     }
   }
 
   @Test
-  public void theExpansionItselfStillDependsOnPlaceholderApi() {
-    ClassLoader hidden = new PlaceholderApiHidingLoader();
+  public void theExpansionItselfStillDependsOnPlaceholderApi() throws Exception {
+    try (PlaceholderApiHidingLoader hidden = new PlaceholderApiHidingLoader()) {
+      for (String name : REQUIRES_PLACEHOLDER_API) {
+        boolean threw = false;
 
-    for (String name : REQUIRES_PLACEHOLDER_API) {
-      boolean threw = false;
+        try {
+          Class.forName(name, true, hidden);
+        } catch (Throwable failure) {
+          threw = true;
+        }
 
-      try {
-        Class.forName(name, true, hidden);
-      } catch (Throwable failure) {
-        threw = true;
-      }
-
-      if (!threw) {
-        throw new AssertionError(name + " is expected to depend on PlaceholderAPI, so the split above is what keeps the plugin loadable");
+        if (!threw) {
+          throw new AssertionError(name + " is expected to depend on PlaceholderAPI, so the split above is what keeps the plugin loadable");
+        }
       }
     }
   }

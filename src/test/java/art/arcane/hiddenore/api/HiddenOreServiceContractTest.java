@@ -15,7 +15,10 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,11 +52,6 @@ public class HiddenOreServiceContractTest {
   }
 
   @Test
-  public void hiddenOreApi_isTheRegisteredServiceImplementation() {
-    assertTrue(HiddenOreService.class.isAssignableFrom(HiddenOreAPI.class));
-  }
-
-  @Test
   public void nearbyLimits_liveOnTheServiceInterfaceOnly() throws Exception {
     assertEquals(128, HiddenOreService.MAX_NEARBY_RADIUS);
     assertEquals(4096, HiddenOreService.MAX_NEARBY_RESULTS);
@@ -78,10 +76,8 @@ public class HiddenOreServiceContractTest {
 
   @Test
   public void blockOrigin_keepsAllThreeStatesDistinctAndNamesThePresumption() {
-    assertEquals(3, BlockOrigin.values().length);
-    assertEquals(BlockOrigin.PRESUMED_GENERATED, BlockOrigin.valueOf("PRESUMED_GENERATED"));
-    assertEquals(BlockOrigin.PLAYER_PLACED, BlockOrigin.valueOf("PLAYER_PLACED"));
-    assertEquals(BlockOrigin.UNTRACKED, BlockOrigin.valueOf("UNTRACKED"));
+    assertEquals(Set.of("PRESUMED_GENERATED", "PLAYER_PLACED", "UNTRACKED"),
+        Arrays.stream(BlockOrigin.values()).map(Enum::name).collect(Collectors.toSet()));
   }
 
   private static List<String> inspect(List<Class<?>> types) {

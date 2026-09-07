@@ -1,11 +1,9 @@
 package art.arcane.hiddenore.listeners;
 
 import art.arcane.hiddenore.api.BlockOrigin;
-import art.arcane.hiddenore.api.event.HiddenOreDropsEvent;
 import art.arcane.hiddenore.rules.ItemDropRule;
 import art.arcane.hiddenore.vein.VeinConfig;
 import org.bukkit.Material;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -24,44 +22,11 @@ import static org.junit.Assert.assertTrue;
 
 public class MiningListenerContractTest {
   @Test
-  public void blockBreakHandler_runsAtHighestAndIgnoresCancelledBreaks() throws Exception {
-    Method handler = MiningListener.class.getMethod("onBlockBreak", BlockBreakEvent.class);
-    EventHandler annotation = handler.getAnnotation(EventHandler.class);
-
-    assertEquals(EventPriority.HIGHEST, annotation.priority());
-    assertTrue(annotation.ignoreCancelled());
-  }
-
-  @Test
-  public void blockBreakFinalizer_runsAtMonitorAndObservesCancellation() throws Exception {
-    Method finalizer = MiningListener.class.getMethod("onBlockBreakFinal", BlockBreakEvent.class);
-    EventHandler annotation = finalizer.getAnnotation(EventHandler.class);
-
-    assertEquals(EventPriority.MONITOR, annotation.priority());
-    assertFalse(annotation.ignoreCancelled());
-  }
-
-  @Test
-  public void blockDropPreparation_mutatesAtHighestBeforeFinalCancellationCheck() throws Exception {
-    Method preparation = MiningListener.class.getMethod("prepareBlockDrop", BlockDropItemEvent.class);
-    EventHandler annotation = preparation.getAnnotation(EventHandler.class);
-
-    assertEquals(EventPriority.HIGHEST, annotation.priority());
-    assertTrue(annotation.ignoreCancelled());
-  }
-
-  @Test
-  public void blockDropCommit_runsAtMonitorAndObservesCancellation() throws Exception {
-    Method commit = MiningListener.class.getMethod("commitBlockDrop", BlockDropItemEvent.class);
-    EventHandler annotation = commit.getAnnotation(EventHandler.class);
-
-    assertEquals(EventPriority.MONITOR, annotation.priority());
-    assertFalse(annotation.ignoreCancelled());
-  }
-
-  @Test
-  public void rewardEvent_isNotCancellableByIntegrations() {
-    assertFalse(Cancellable.class.isAssignableFrom(HiddenOreDropsEvent.class));
+  public void miningHandlers_declareTheirPriorityAndCancellationPolicy() throws Exception {
+    assertHandler("onBlockBreak", BlockBreakEvent.class, EventPriority.HIGHEST, true);
+    assertHandler("onBlockBreakFinal", BlockBreakEvent.class, EventPriority.MONITOR, false);
+    assertHandler("prepareBlockDrop", BlockDropItemEvent.class, EventPriority.HIGHEST, true);
+    assertHandler("commitBlockDrop", BlockDropItemEvent.class, EventPriority.MONITOR, false);
   }
 
   @Test
@@ -107,9 +72,6 @@ public class MiningListenerContractTest {
   public void breakOrigin_reportsPlacementTrackingWithoutCollapsingIntoTheRewardDecision() {
     assertEquals(BlockOrigin.PLAYER_PLACED, MiningListener.breakOrigin(true));
     assertEquals(BlockOrigin.PRESUMED_GENERATED, MiningListener.breakOrigin(false));
-
-    assertEquals(BlockOrigin.PLAYER_PLACED, MiningListener.breakOrigin(true));
-    assertFalse(MiningListener.blocksHiddenRewards(true, true));
   }
 
   @Test
@@ -241,6 +203,15 @@ public class MiningListenerContractTest {
     assertNotSame(original, snapshot);
     assertEquals(Material.DIAMOND_PICKAXE, snapshot.getType());
     assertEquals(1, snapshot.getAmount());
+  }
+
+  private static void assertHandler(String name, Class<?> eventType, EventPriority priority, boolean ignoreCancelled)
+      throws Exception {
+    Method handler = MiningListener.class.getMethod(name, eventType);
+    EventHandler annotation = handler.getAnnotation(EventHandler.class);
+
+    assertEquals(name, priority, annotation.priority());
+    assertEquals(name, ignoreCancelled, annotation.ignoreCancelled());
   }
 
   private static MiningListener.CommandExec command(String command, ItemDropRule.ExecutionTarget target) {

@@ -95,6 +95,14 @@ public final class PlaceholderApiSandbox implements AutoCloseable {
   }
 
   @SuppressWarnings("unchecked")
+  public void reset() throws Exception {
+    ((Map<String, String>) fake.getField("ANSWERS").get(null)).clear();
+    ((List<Object>) fake.getField("SEEN_PLAYERS").get(null)).clear();
+    ((List<String>) fake.getField("SEEN_TEXTS").get(null)).clear();
+    pinned.clear();
+  }
+
+  @SuppressWarnings("unchecked")
   public void answer(String placeholder, String value) throws Exception {
     ((Map<String, String>) fake.getField("ANSWERS").get(null)).put(placeholder, value);
   }
