@@ -204,6 +204,11 @@ pluginPackaging {
             policyName = 'HiddenOre'
             prunePrefixes = ['art/arcane/volmlib/']
             keepPrefixes = ['art/arcane/volmlib/util/matter/slices/']
+            shrinkRules = [file('packaging/shrink.pro')]
+            shrinkRelocations = [
+                'org.bstats': "${lib}.bstats",
+                'net.kyori': "${lib}.kyori"
+            ]
         }
     }
 }
