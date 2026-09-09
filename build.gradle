@@ -21,7 +21,7 @@ plugins {
 apply plugin: 'art.arcane.volmit-packaging'
 
 group = 'art.arcane'
-version = '1.5.1-26.2'
+version = '1.5.2-26.2'
 def apiVersion = '26.1'
 def main = 'art.arcane.hiddenore.HiddenOre'
 def lib = 'art.arcane.hiddenore.libs'
