@@ -5,8 +5,9 @@ import art.arcane.hiddenore.rules.MiningRuleManager;
 import art.arcane.volmlib.util.bukkit.papi.PlaceholderKeyRegistry;
 import art.arcane.volmlib.util.bukkit.papi.PlaceholderValues;
 import art.arcane.volmlib.util.bukkit.papi.VolmitPlaceholderExpansion;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
@@ -112,9 +113,11 @@ public class HiddenOrePlaceholderExpansionTest {
   }
 
   private static HiddenOre.RuntimeState state(String generation, int dropRules) {
-    YamlConfiguration config = new YamlConfiguration();
-    config.set("blocks.stone.drop", "cobblestone");
-    config.set("veins.generation", generation);
+    Gson gson = new Gson();
+    JsonObject config = gson.toJsonTree(Map.of(
+        "blocks", Map.of("stone", Map.of("drop", "cobblestone")),
+        "veins", Map.of("generation", generation)
+    )).getAsJsonObject();
 
     List<Map<String, Object>> drops = new ArrayList<>(dropRules);
     for (int index = 0; index < dropRules; index++) {
@@ -127,9 +130,9 @@ public class HiddenOrePlaceholderExpansionTest {
       entry.put("execute_as", "console");
       drops.add(entry);
     }
-    config.set("drops", drops);
+    config.add("drops", gson.toJsonTree(drops));
 
-    return new HiddenOre.RuntimeState(new MiningRuleManager(config), null, null, null, null, false, false, true);
+    return new HiddenOre.RuntimeState(new MiningRuleManager(config), null, null, null, false, false, true);
   }
 
   private static OfflinePlayer player() {

@@ -1,0 +1,247 @@
+# HiddenOre — nl_NL
+#
+# === Bestand bewerken ===
+# plugins/HiddenOre/languages/nl_NL.toml
+# Je kunt dit bestand rechtstreeks bewerken. Lokale wijzigingen blijven behouden; ontbrekende of ongeldige vermeldingen gebruiken het ingebouwde Engels.
+# /hiddenore language server edit nl_NL
+#
+# === Voorvoegsel ===
+# prefix staat vóór chatberichten; een lege tekenreeks verbergt het.
+#
+# === Opmaak ===
+# Kleurcodes: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Variabelen ===
+# Behoud de namen van variabelen en gebruik alleen de variabelen die bij het bericht horen.
+#   {after}  Waarde na de wijziging
+#   {amount}  Aantal gedropte voorwerpen
+#   {argument}  onverwacht argument
+#   {before}  Waarde vóór de wijziging
+#   {block}  Type van het gedolven blok
+#   {chance}  Ingestelde activeringskans
+#   {command}  opdrachtpad
+#   {count}  Aantal berichten
+#   {group}  Categorie in de taaleditor
+#   {key}  Bericht- of parametersleutel
+#   {line}  Regelnummer binnen een bericht
+#   {locale}  landinstelling
+#   {material}  Type van het gedropte voorwerp
+#   {maximum}  Maximaal toegestane waarde
+#   {number}  Nummer van de vermelding
+#   {page}  Huidige pagina
+#   {pages}  Totaal aantal pagina’s
+#   {path}  Pad naar de instelling of sectie
+#   {parameter}  parameternaam
+#   {personal}  persoonlijke landinstelling
+#   {plugin}  Pluginnaam
+#   {reason}  foutreden
+#   {roll}  Getrokken willekeurige waarde
+#   {target}  Plugin waarvoor de taal wordt gekozen
+#   {type}  type
+#   {usage}  opdrachtgebruik
+#   {value}  huidige, standaard- of ruwe waarde
+#   {variables}  geldige tijdelijke aanduidingen
+#   {vein}  Naam van de ertsader
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cJe hebt geen toestemming om deze opdracht te gebruiken.&r"
+player_only = "&cDeze opdracht kan alleen door een speler worden gebruikt.&r"
+debug_enabled = "&aDebugmodus ingeschakeld.&r"
+debug_disabled = "&cDebugmodus uitgeschakeld.&r"
+config_reloaded_message = "&aConfiguratie bijgewerkt en opnieuw geladen.&r"
+
+[debug]
+player_placed = "&cDoor speler geplaatst: {block}; geen verborgen drops.&r"
+random_drop = "&aWillekeurige drop: {material} x{amount}&r"
+random_drop_lost = "&cWillekeurige drop {material} verloren omdat het gereedschapsniveau te laag is.&r"
+vein_drop = "&aErtsader {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aErtsader {vein}: {material} x{amount} (ontdekt)&r"
+vein_drop_lost = "&cErtsader {vein}: {material} verloren omdat het gereedschapsniveau te laag is.&r"
+command_hit = "&7Opdrachtcontrole: chance={chance}, roll={roll} -> &araak&7&r"
+command_miss = "&7Opdrachtcontrole: chance={chance}, roll={roll} -> &cmis&7&r"
+
+[command.parameter]
+debugdump_upload = "Upload het rapport naar mclo.gs"
+
+[command.description]
+config = "Open de configuratie-editor van HiddenOre"
+debug_group = "HiddenOre: Diagnostische hulpmiddelen"
+debugdump = "Maak een diagnostisch rapport en upload het desgewenst"
+root = "HiddenOre-opdrachtgroep"
+debug = "Je eigen erts-debugmodus omschakelen"
+
+[config.editor]
+title = "{plugin} / Configuratie"
+section = "Sectie: {path}"
+page = "Pagina {page} van {pages}"
+entry = "Vermelding {number}"
+current = "Huidige waarde: {value}"
+open = "Klik om deze sectie te openen."
+toggle = "Klik om te wisselen tussen true en false."
+edit = "Klik om een nieuwe waarde in de chat in te voeren."
+prompt = "Voer een nieuwe waarde in voor {path}. Typ cancel om terug te gaan."
+expired = "De tijd voor het invoeren van de configuratie is verstreken."
+too-long = "Voer maximaal {maximum} tekens in."
+saving = "Configuratie opslaan..."
+saved = "{path} opgeslagen. Wijzigingen worden automatisch toegepast."
+failed = "Kan de configuratie niet bewerken: {reason}"
+loading = "Configuratie laden..."
+empty = "Deze sectie bevat geen instellingen."
+player-only = "Open de configuratie-editor in het spel."
+no-permission = "Je hebt geen toestemming om deze configuratie te bewerken."
+back = "Terug"
+previous = "Vorige pagina"
+next = "Volgende pagina"
+refresh = "Vernieuwen"
+close = "Sluiten"
+
+[config.editor.type]
+text = "Tekst; aanhalingstekens zijn niet nodig."
+integer = "Voer een geheel getal in."
+decimal = "Voer een getal in, bijvoorbeeld 0.25."
+list = "Gebruik een TOML-lijst, bijvoorbeeld [\"stone\", \"deepslate\"]."
+
+[director.help]
+no_subcommands = "Geen subopdrachten op deze pagina."
+no_description = "Geen beschrijving opgegeven"
+command_group = "Opdrachtgroep. Klik om te openen."
+category = "Commandocategorie"
+no_parameters = "Geen parameters. Klik om de opdracht vooraf in te vullen."
+parameters_hover = "Beweeg de muis over de parameters voor meer informatie."
+
+[director.help.navigation]
+back = "Terug"
+page = "Pagina"
+
+[director.help.navigation.parent]
+hover = "Terug naar de bovenliggende opdrachtgroep"
+
+[director.help.navigation.previous]
+hover = "Vorige pagina"
+
+[director.help.navigation.next]
+hover = "Volgende pagina"
+
+[director.help.parameter]
+required = "Deze parameter is verplicht."
+optional = "Deze parameter is optioneel."
+default = "Standaard \"{value}\" indien niet opgegeven."
+type = "Deze parameter is van het type {type}."
+
+[director.runtime]
+usage = "Gebruik: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Deze opdracht kan niet vanuit deze bron worden uitgevoerd."
+unknown_parameter = "Onbekende parametersleutel: {key}"
+unexpected_argument = "Onverwacht argument \"{argument}\". Optionele parameters moeten met een sleutel worden opgegeven, bijv. seed=123"
+unclosed_group = "Ontbrekende sluitende \"]\" voor parameter {key}"
+conversion_failed = "Kan \"{value}\" voor {parameter} niet naar {type} converteren"
+default_parse_failed = "Kan de standaardwaarde voor parameter {parameter} niet verwerken"
+missing_argument = "Ontbrekend argument \"{parameter}\" ({type})"
+execution_failed = "Opdracht {command} kon niet worden uitgevoerd: {reason}"
+
+[language.menu]
+your_language = "Jouw taal"
+reset_your_language = "Jouw taalkeuze herstellen"
+server_default = "Standaardtaal van de server"
+edit_messages = "Taalberichten bewerken"
+use_server_default = "Standaardtaal van de server gebruiken"
+current = "Huidig: {locale}"
+current_with_personal = "Huidig: {locale} (Jouw keuze: {personal})"
+your_description = "Wijzig alleen de berichten die jij ziet."
+reset_description = "Gebruik de standaardtaal van de server."
+server_description = "Wijzig de standaardtaal van de server."
+edit_description = "Open de berichteneditor voor elke taal."
+select_description = "Klik om deze taal te selecteren."
+remove_personal_description = "Verwijder jouw persoonlijke taalkeuze."
+no_controls = "Je hebt geen toegang tot taalinstellingen."
+command = "Commando: {command}"
+selected = "geselecteerd"
+all-volmit-plugins = "Alle Volmit-plugins"
+
+[language.error]
+stopping = "Taalselectie is niet beschikbaar terwijl de plugin stopt."
+editor-player-only = "Open de taalbewerker in het spel."
+no-providers = "Er zijn geen Volmit-taalaanbieders beschikbaar."
+numeric-page = "Voer een paginanummer in."
+personal-player-only = "Spelertaalvoorkeuren moeten in het spel worden geselecteerd."
+personal-permission = "U hebt geen toestemming om uw taal te selecteren."
+plugin-personal-permission = "Je hebt geen toestemming om je taal voor {plugin} te kiezen."
+plugin-server-permission = "Je hebt geen toestemming om de servertaal voor {plugin} te wijzigen."
+server-locale-required = "Kies een taalcode zoals en_US voor de standaardtaal van de server."
+unavailable-for-all = "De taal {locale} is niet voor alle geselecteerde plugins beschikbaar."
+
+[language.usage]
+editor = "Gebruik: /{command} language server edit [locale]"
+selection = "Gebruik: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Gebruik: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Taal {locale} wordt voorbereid voor {target}..."
+save-failed = "{plugin}: de taalkeuze kon niet worden opgeslagen; controleer de serverconsole."
+english-fallback = "{plugin}: {locale} is niet beschikbaar; Engels (en_US) wordt gebruikt."
+personal-selected = "{plugin}: uw taal is nu {locale}."
+server-selected = "{plugin}: servertaal is nu {locale}."
+server-default-selected = "{plugin}: je taal volgt nu de standaardtaal van de server."
+
+[language.editor]
+loading = "Berichten voor {locale} laden..."
+
+[language.editor.section]
+languages = "Talen"
+search = "Zoeken"
+search-title = "{locale} / Zoeken"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Zoek op berichtsleutel of tekst. Typ cancel om terug te gaan."
+value = "Typ in de chat een nieuwe waarde voor {key}."
+current = "Huidige waarde: {value}"
+variables = "Variabelen: {variables}"
+guidance = "Gebruik \\n voor een nieuwe regel, \\\\ voor een backslash, of typ cancel om terug te gaan."
+
+[language.editor.input]
+expired = "De invoer voor de taalbewerker is verlopen."
+too-long = "De invoer mag maximaal {maximum} tekens bevatten."
+unable-to-save = "Opslaan mislukt: {reason}"
+
+[language.editor.navigation]
+back = "&eTerug&r"
+close = "&cSluiten&r"
+previous-page = "&eVorige pagina&r"
+next-page = "&eVolgende pagina&r"
+
+[language.editor.search]
+messages = "Berichten doorzoeken"
+messages-lore = "Klik om alle berichten te doorzoeken."
+clear = "Zoekopdracht wissen"
+
+[language.editor.message]
+current-value = "&7Huidige waarde:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Klik om een meervoudsvorm te bewerken.&r"
+edit-lines = "&7Klik om afzonderlijke regels te bewerken.&r"
+edit-chat = "&7Klik om in de chat te bewerken.&r"
+
+[language.editor.locale]
+open = "&8Klik om deze taal te openen.&r"
+
+[language.editor.category]
+message-count = "&7{count} berichten&r"
+open = "&8Klik om deze categorie te openen.&r"
+
+[language.editor.error]
+no-permission = "Je hebt geen toestemming om de talen van {plugin} te bewerken."
+unable-to-edit = "Bewerken mislukt: {reason}"
+
+[language.editor.saved]
+summary = "{locale} opgeslagen. De taalkeuzes blijven ongewijzigd."
+change = "{key}: “{before}” is gewijzigd in “{after}”."
+
+[language.editor.part]
+line = "Regel {line}"
+
+[language.editor.value]
+none = "Geen"
+empty = "(leeg)"

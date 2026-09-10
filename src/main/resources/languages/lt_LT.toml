@@ -1,0 +1,247 @@
+# HiddenOre — lt_LT
+#
+# === Failo redagavimas ===
+# plugins/HiddenOre/languages/lt_LT.toml
+# Šį failą galima redaguoti tiesiogiai. Vietiniai pakeitimai išsaugomi; trūkstamiems ar netinkamiems įrašams naudojama integruota anglų kalba.
+# /hiddenore language server edit lt_LT
+#
+# === Priešdėlis ===
+# prefix pridedamas prieš pokalbio pranešimus; tuščia eilutė jį paslepia.
+#
+# === Formatavimas ===
+# Spalvų kodai: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Kintamieji ===
+# Nekeiskite kintamųjų pavadinimų ir naudokite tik konkrečiame pranešime esančius kintamuosius.
+#   {after}  Vertė po pakeitimo
+#   {amount}  Iškrentančių daiktų skaičius
+#   {argument}  netikėtas argumentas
+#   {before}  Vertė prieš pakeitimą
+#   {block}  Iškasto bloko tipas
+#   {chance}  Nustatyta suveikimo tikimybė
+#   {command}  komandos kelias
+#   {count}  Pranešimų skaičius
+#   {group}  Kalbos rengyklės kategorija
+#   {key}  Pranešimo arba parametro raktas
+#   {line}  Pranešimo eilutės numeris
+#   {locale}  lokalė
+#   {material}  Iškrentančio daikto tipas
+#   {maximum}  Didžiausia leidžiama vertė
+#   {number}  Įrašo numeris
+#   {page}  Dabartinis puslapis
+#   {pages}  Bendras puslapių skaičius
+#   {path}  Nustatymo arba skyriaus kelias
+#   {parameter}  parametro vardas
+#   {personal}  asmeninė lokalė
+#   {plugin}  Įskiepio pavadinimas
+#   {reason}  klaidos priežastis
+#   {roll}  Sugeneruota atsitiktinė reikšmė
+#   {target}  Papildinys, kuriam parenkama kalba
+#   {type}  tipas
+#   {usage}  komandos naudojimas
+#   {value}  dabartinė, numatytoji arba neapdorota reikšmė
+#   {variables}  galimi vietos žymekliai
+#   {vein}  Rūdos gyslos pavadinimas
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cNeturite leidimo naudoti šią komandą.&r"
+player_only = "&cŠią komandą gali naudoti tik žaidėjas.&r"
+debug_enabled = "&aDerinimo režimas įjungtas.&r"
+debug_disabled = "&cDerinimo režimas išjungtas.&r"
+config_reloaded_message = "&aKonfigūracija atnaujinta ir įkelta iš naujo.&r"
+
+[debug]
+player_placed = "&cŽaidėjo padėtas {block}; paslėptų iškritimų nėra.&r"
+random_drop = "&aAtsitiktinis iškritimas: {material} x{amount}&r"
+random_drop_lost = "&cAtsitiktinis iškritimas {material} prarastas, nes įrankio lygis per žemas.&r"
+vein_drop = "&aRūdos gysla {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aRūdos gysla {vein}: {material} x{amount} (atrasta)&r"
+vein_drop_lost = "&cRūdos gysla {vein}: {material} prarastas, nes įrankio lygis per žemas.&r"
+command_hit = "&7Komandos patikra: chance={chance}, roll={roll} -> &apavyko&7&r"
+command_miss = "&7Komandos patikra: chance={chance}, roll={roll} -> &cnepavyko&7&r"
+
+[command.parameter]
+debugdump_upload = "Įkelti ataskaitą į mclo.gs"
+
+[command.description]
+config = "Atidaryti HiddenOre konfigūracijos rengyklę"
+debug_group = "HiddenOre: Diagnostikos įrankiai"
+debugdump = "Sukurti diagnostikos ataskaitą ir pasirinktinai ją įkelti"
+root = "HiddenOre komandų grupė"
+debug = "Perjungti savo rūdos derinimo režimą"
+
+[config.editor]
+title = "{plugin} / Konfigūracija"
+section = "Skyrius: {path}"
+page = "Puslapis {page} iš {pages}"
+entry = "Įrašas {number}"
+current = "Dabartinė reikšmė: {value}"
+open = "Spustelėkite, kad atidarytumėte šį skyrių."
+toggle = "Spustelėkite, kad perjungtumėte tarp true ir false."
+edit = "Spustelėkite, kad įvestumėte naują reikšmę pokalbyje."
+prompt = "Įveskite naują {path} reikšmę. Norėdami grįžti, įrašykite cancel."
+expired = "Konfigūracijos įvedimo laikas baigėsi."
+too-long = "Įveskite ne daugiau kaip {maximum} simbolių."
+saving = "Išsaugoma konfigūracija..."
+saved = "{path} išsaugota. Pakeitimai pritaikomi automatiškai."
+failed = "Nepavyko redaguoti konfigūracijos: {reason}"
+loading = "Įkeliama konfigūracija..."
+empty = "Šiame skyriuje nėra nustatymų."
+player-only = "Atidarykite konfigūracijos rengyklę žaidime."
+no-permission = "Neturite leidimo redaguoti šios konfigūracijos."
+back = "Atgal"
+previous = "Ankstesnis puslapis"
+next = "Kitas puslapis"
+refresh = "Atnaujinti"
+close = "Uždaryti"
+
+[config.editor.type]
+text = "Tekstas; kabučių nereikia."
+integer = "Įveskite sveikąjį skaičių."
+decimal = "Įveskite skaičių, pavyzdžiui, 0.25."
+list = "Naudokite TOML sąrašą, pavyzdžiui, [\"stone\", \"deepslate\"]."
+
+[director.help]
+no_subcommands = "Šiame puslapyje nėra antrinių komandų."
+no_description = "Aprašymas nepateiktas"
+command_group = "Komandų grupė. Spustelėkite, kad atidarytumėte."
+category = "Komandų kategorija"
+no_parameters = "Parametrų nėra. Spustelėkite, kad iš anksto užpildytumėte komandą."
+parameters_hover = "Užveskite pelės žymeklį ant parametrų, kad sužinotumėte daugiau."
+
+[director.help.navigation]
+back = "Atgal"
+page = "Puslapis"
+
+[director.help.navigation.parent]
+hover = "Grįžti į pirminę komandų grupę"
+
+[director.help.navigation.previous]
+hover = "Ankstesnis puslapis"
+
+[director.help.navigation.next]
+hover = "Kitas puslapis"
+
+[director.help.parameter]
+required = "Šis parametras yra privalomas."
+optional = "Šis parametras yra neprivalomas."
+default = "Jei nenurodyta, numatytoji reikšmė yra \"{value}\"."
+type = "Šio parametro tipas yra {type}."
+
+[director.runtime]
+usage = "Naudojimas: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Šios komandos negalima vykdyti iš šio šaltinio."
+unknown_parameter = "Nežinomas parametro raktas: {key}"
+unexpected_argument = "Netikėtas argumentas \"{argument}\". Pasirenkami parametrai turi būti nurodyti su raktu, pvz. seed=123"
+unclosed_group = "Trūksta uždarančio \"]\" parametrui {key}"
+conversion_failed = "Reikšmės \"{value}\" nepavyko konvertuoti į {type} parametrui {parameter}"
+default_parse_failed = "Nepavyko nuskaityti parametro {parameter} numatytosios reikšmės"
+missing_argument = "Trūksta argumento \"{parameter}\" ({type})"
+execution_failed = "Nepavyko įvykdyti komandos {command}: {reason}"
+
+[language.menu]
+your_language = "Jūsų kalba"
+reset_your_language = "Atkurti jūsų kalbą"
+server_default = "Numatytoji serverio kalba"
+edit_messages = "Redaguoti kalbos pranešimus"
+use_server_default = "Naudoti numatytąją serverio kalbą"
+current = "Dabartinė: {locale}"
+current_with_personal = "Dabartinė: {locale} (Jūsų: {personal})"
+your_description = "Keiskite tik jums rodomus pranešimus."
+reset_description = "Naudokite numatytąją serverio kalbą."
+server_description = "Keiskite numatytąją serverio kalbą."
+edit_description = "Atverkite kiekvienos kalbos pranešimų redaktorių."
+select_description = "Spustelėkite, kad pasirinktumėte šią kalbą."
+remove_personal_description = "Pašalinkite asmeninį kalbos pasirinkimą."
+no_controls = "Jums nepasiekiami kalbos nustatymai."
+command = "Komanda: {command}"
+selected = "pasirinkta"
+all-volmit-plugins = "Visi Volmit papildiniai"
+
+[language.error]
+stopping = "Stabdant papildinį kalbos pasirinkimas nepasiekiamas."
+editor-player-only = "Atverti kalbos rengyklę žaidime."
+no-providers = "Nėra prieinamų Volmit kalbų teikėjų."
+numeric-page = "Įveskite puslapio numerį."
+personal-player-only = "Žaidžiant turi būti pasirinkti žaidėjų kalbos nustatymai."
+personal-permission = "Jūs neturite leidimo pasirinkti savo kalbą."
+plugin-personal-permission = "Neturite leidimo pasirinkti savo kalbos papildiniui {plugin}."
+plugin-server-permission = "Neturite leidimo keisti papildinio {plugin} serverio kalbos."
+server-locale-required = "Pasirinkite numatytosios serverio kalbos kodą, pavyzdžiui, en_US."
+unavailable-for-all = "Kalba {locale} prieinama ne visiems pasirinktiems papildiniams."
+
+[language.usage]
+editor = "Naudojimas: /{command} language server edit [locale]"
+selection = "Naudojimas: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Naudojimas: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Ruošiama kalba {locale} papildiniui {target}..."
+save-failed = "{plugin}: nepavyko išsaugoti kalbos pasirinkimo; patikrinkite serverio konsolę."
+english-fallback = "{plugin}: {locale} neprieinama; naudojama anglų kalba (en_US)."
+personal-selected = "{plugin}: dabar jūsų kalba {locale}."
+server-selected = "{plugin}: serverio kalba yra dabar {locale}."
+server-default-selected = "{plugin}: jūsų kalba dabar atitinka numatytąją serverio kalbą."
+
+[language.editor]
+loading = "Įkeliami kalbos {locale} pranešimai..."
+
+[language.editor.section]
+languages = "Kalbos"
+search = "Ieškoti"
+search-title = "{locale} / Ieškoti"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Ieškokite pranešimo rakto arba teksto. Norėdami grįžti, įveskite cancel."
+value = "Pokalbyje įveskite naują rakto {key} reikšmę."
+current = "Dabartinė reikšmė: {value}"
+variables = "Kintamieji: {variables}"
+guidance = "Naudokite \\n naujai eilutei, \\\\ atvirkštiniam pasvirajam brūkšniui arba įveskite cancel, kad grįžtumėte."
+
+[language.editor.input]
+expired = "Baigėsi kalbos rengyklės įvesties laikas."
+too-long = "Įvestyje gali būti ne daugiau kaip {maximum} simbolių."
+unable-to-save = "Nepavyko išsaugoti: {reason}"
+
+[language.editor.navigation]
+back = "&eAtgal&r"
+close = "&cUždaryti&r"
+previous-page = "&eAnkstesnis puslapis&r"
+next-page = "&eKitas puslapis&r"
+
+[language.editor.search]
+messages = "Ieškoti pranešimų"
+messages-lore = "Spustelėkite norėdami ieškoti visuose pranešimuose."
+clear = "Išvalyti paiešką"
+
+[language.editor.message]
+current-value = "&7Dabartinė reikšmė:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Spustelėkite norėdami redaguoti daugiskaitos formą.&r"
+edit-lines = "&7Spustelėkite norėdami redaguoti atskiras eilutes.&r"
+edit-chat = "&7Spustelėkite norėdami redaguoti pokalbyje.&r"
+
+[language.editor.locale]
+open = "&8Spauskite norėdami atverti šią kalbą.&r"
+
+[language.editor.category]
+message-count = "&7{count} pranešimai&r"
+open = "&8Spustelėkite norėdami atverti šią kategoriją.&r"
+
+[language.editor.error]
+no-permission = "Neturite leidimo redaguoti papildinio {plugin} kalbų."
+unable-to-edit = "Nepavyko redaguoti: {reason}"
+
+[language.editor.saved]
+summary = "{locale} išsaugota. Kalbų pasirinkimai nepakeisti."
+change = "{key}: „{before}“ pakeista į „{after}“."
+
+[language.editor.part]
+line = "Eilutė {line}"
+
+[language.editor.value]
+none = "Nėra"
+empty = "(tuščia)"

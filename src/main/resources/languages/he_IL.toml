@@ -1,0 +1,248 @@
+# HiddenOre — he_IL
+#
+# === עריכת הקובץ ===
+# plugins/HiddenOre/languages/he_IL.toml
+# אפשר לערוך קובץ זה ישירות. שינויים מקומיים נשמרים; ערכים חסרים או לא תקינים משתמשים באנגלית המובנית.
+# /hiddenore language server edit he_IL
+#
+# === קידומת ===
+# prefix נוסף לפני הודעות הצ׳אט; מחרוזת ריקה מסתירה אותו.
+#
+# === עיצוב ===
+# קודי צבע: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === משתנים ===
+# יש לשמור על שמות המשתנים ולהשתמש רק במשתנים הקיימים בכל הודעה.
+#   {after}  ערך לאחר השינוי
+#   {amount}  מספר הפריטים שנופלים
+#   {argument}  ארגומנט לא צפוי
+#   {before}  ערך לפני השינוי
+#   {block}  סוג הבלוק שנכרה
+#   {chance}  הסתברות ההפעלה שהוגדרה
+#   {command}  נתיב פקודה
+#   {count}  מספר ההודעות
+#   {group}  קטגוריה בעורך השפה
+#   {key}  מפתח הודעה או פרמטר
+#   {line}  מספר השורה בהודעה
+#   {locale}  אזור שפה
+#   {material}  סוג הפריט שנופל
+#   {maximum}  ערך מותר מקסימלי
+#   {number}  מספר הרשומה
+#   {page}  מספר העמוד הנוכחי
+#   {pages}  מספר העמודים הכולל
+#   {parameter}  שם פרמטר
+#   {path}  נתיב ההגדרה
+#   {personal}  אזור השפה האישי
+#   {plugin}  שם Plugin
+#   {reason}  סיבת כשל
+#   {roll}  הערך האקראי שהוגרל
+#   {target}  התוסף שעבורו נבחרת השפה
+#   {type}  סוג
+#   {usage}  אופן שימוש
+#   {value}  ערך נוכחי, ברירת מחדל או גולמי
+#   {variables}  מצייני מקום תקינים
+#   {vein}  שם עורק העפרה
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cאין לך הרשאה להשתמש בפקודה זו.&r"
+player_only = "&cרק שחקן יכול להשתמש בפקודה זו.&r"
+debug_enabled = "&aמצב ניפוי השגיאות הופעל.&r"
+debug_disabled = "&cמצב ניפוי השגיאות הושבת.&r"
+config_reloaded_message = "&aההגדרות עודכנו ונטענו מחדש.&r"
+
+[debug]
+player_placed = "&cהבלוק {block} הונח בידי שחקן; אין נפילות נסתרות.&r"
+random_drop = "&aנפילה אקראית: {material} x{amount}&r"
+random_drop_lost = "&cהנפילה האקראית {material} אבדה כי דרגת הכלי נמוכה מדי.&r"
+vein_drop = "&aעורק עפרה {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aעורק עפרה {vein}: {material} x{amount} (התגלה)&r"
+vein_drop_lost = "&cעורק עפרה {vein}: {material} אבד כי דרגת הכלי נמוכה מדי.&r"
+command_hit = "&7בדיקת פקודה: chance={chance}, roll={roll} -> &aהצלחה&7&r"
+command_miss = "&7בדיקת פקודה: chance={chance}, roll={roll} -> &cכישלון&7&r"
+
+[command.parameter]
+debugdump_upload = "העלאת הדוח אל mclo.gs"
+
+[command.description]
+config = "עריכת הגדרות HiddenOre"
+debug_group = "HiddenOre: כלי אבחון"
+debugdump = "יצירת דוח אבחון והעלאתו לפי בחירה"
+root = "קבוצת הפקודות של HiddenOre"
+debug = "הפעלה או השבתה של מצב ניפוי העפרות שלך"
+
+[director.help]
+no_subcommands = "אין פקודות משנה בעמוד זה."
+no_description = "לא סופק תיאור"
+command_group = "קבוצת פקודות. לחצו כדי לפתוח."
+category = "קטגוריית פקודות"
+no_parameters = "אין פרמטרים. לחצו כדי למלא את הפקודה מראש."
+parameters_hover = "רחפו מעל הפרמטרים כדי ללמוד עוד."
+
+[director.help.navigation]
+back = "חזרה"
+page = "עמוד"
+
+[director.help.navigation.parent]
+hover = "חזרה לקבוצת פקודות האב"
+
+[director.help.navigation.previous]
+hover = "העמוד הקודם"
+
+[director.help.navigation.next]
+hover = "העמוד הבא"
+
+[director.help.parameter]
+required = "פרמטר זה הוא חובה."
+optional = "פרמטר זה הוא אופציונלי."
+default = "ברירת המחדל היא \"{value}\" אם לא הוגדר."
+type = "פרמטר זה הוא מסוג {type}."
+
+[director.runtime]
+usage = "שימוש: {usage}"
+
+[director.runtime.error]
+invalid_origin = "לא ניתן להריץ פקודה זו ממקור זה."
+unknown_parameter = "מפתח פרמטר לא ידוע: {key}"
+unexpected_argument = "ארגומנט לא צפוי \"{argument}\". פרמטרים אופציונליים חייבים להינתן עם מפתח, לדוגמה seed=123"
+unclosed_group = "חסר סוגר \"]\" עבור הפרמטר {key}"
+conversion_failed = "לא ניתן להמיר את \"{value}\" ל-{type} עבור {parameter}"
+default_parse_failed = "לא ניתן לנתח את ערך ברירת המחדל של הפרמטר {parameter}"
+missing_argument = "חסר ארגומנט \"{parameter}\" ({type})"
+execution_failed = "הפעלת הפקודה {command} נכשלה: {reason}"
+
+[language.menu]
+your_language = "השפה שלך"
+reset_your_language = "איפוס השפה שלך"
+server_default = "ברירת המחדל של השרת"
+edit_messages = "עריכת הודעות השפה"
+use_server_default = "שימוש בברירת המחדל של השרת"
+current = "נוכחית: {locale}"
+current_with_personal = "נוכחית: {locale} (שלך: {personal})"
+your_description = "שנה רק את ההודעות שאתה רואה."
+reset_description = "השתמש בשפת ברירת המחדל של השרת."
+server_description = "שנה את שפת ברירת המחדל של השרת."
+edit_description = "פתח את עורך ההודעות לכל שפה."
+select_description = "לחץ כדי לבחור בשפה זו."
+remove_personal_description = "הסר את בחירת השפה האישית שלך."
+no_controls = "אין לך גישה להגדרות שפה."
+command = "פקודה: {command}"
+selected = "נבחר"
+all-volmit-plugins = "כל תוספי Volmit"
+
+[language.error]
+stopping = "בחירת שפה אינה זמינה בזמן שהתוסף מפסיק."
+editor-player-only = "פתח את עורך השפה במשחק."
+no-providers = "אין ספקי שפה זמינים של Volmit."
+numeric-page = "יש להזין מספר עמוד."
+personal-player-only = "יש לבחור העדפות שפה של שחקן במשחק."
+personal-permission = "אין לך רשות לבחור את השפה שלך."
+plugin-personal-permission = "אין לך הרשאה לבחור שפה אישית עבור {plugin}."
+plugin-server-permission = "אין לך הרשאה לשנות את שפת השרת עבור {plugin}."
+server-locale-required = "יש לבחור קוד שפה כגון en_US כשפת ברירת המחדל של השרת."
+unavailable-for-all = "השפה {locale} אינה זמינה לכל התוספים שנבחרו."
+
+[language.usage]
+editor = "שימוש: /{command} language server edit [locale]"
+selection = "שימוש: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "שימוש: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "מכין את השפה {locale} עבור {target}..."
+save-failed = "{plugin}: לא ניתן לשמור את בחירת השפה; יש לבדוק את מסוף השרת."
+english-fallback = "{plugin}: השפה {locale} אינה זמינה; נעשה שימוש באנגלית (en_US)."
+personal-selected = "{plugin}: השפה שלך עכשיו {locale}."
+server-selected = "{plugin}: שפת השרת עכשיו {locale}."
+server-default-selected = "{plugin}: השפה שלך תואמת כעת לשפת ברירת המחדל של השרת."
+
+[language.editor]
+loading = "טוען הודעות עבור {locale}..."
+
+[language.editor.section]
+languages = "שפות"
+search = "חיפוש"
+search-title = "{locale} / חיפוש"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "יש לחפש מפתח הודעה או טקסט. לחזרה, יש להקליד cancel."
+value = "יש להקליד בצ׳אט ערך חדש עבור {key}."
+current = "ערך נוכחי: {value}"
+variables = "משתנים: {variables}"
+guidance = "יש להשתמש ב־\\n לשורה חדשה וב־\\\\ ללוכסן הפוך, או להקליד cancel כדי לחזור."
+
+[language.editor.input]
+expired = "זמן ההזנה בעורך השפה פג."
+too-long = "הקלט יכול להכיל לכל היותר {maximum} תווים."
+unable-to-save = "לא ניתן לשמור: {reason}"
+
+[language.editor.navigation]
+back = "&eחזרה&r"
+close = "&cסגור&r"
+previous-page = "&eהעמוד הקודם&r"
+next-page = "&eדף הבא&r"
+
+[language.editor.search]
+messages = "חיפוש הודעות"
+messages-lore = "לחיצה לחיפוש בכל ההודעות."
+clear = "ניקוי החיפוש"
+
+[language.editor.message]
+current-value = "&7ערך נוכחי:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7לחיצה לעריכת צורת רבים.&r"
+edit-lines = "&7לחיצה לעריכת שורות בודדות.&r"
+edit-chat = "&7לחיצה לעריכה בצ׳אט.&r"
+
+[language.editor.locale]
+open = "&8לחץ לפתוח את השפה.&r"
+
+[language.editor.category]
+message-count = "&7{count} הודעות&r"
+open = "&8לחץ לפתוח קטגוריה זו.&r"
+
+[language.editor.error]
+no-permission = "אין לך הרשאה לערוך את השפות של {plugin}."
+unable-to-edit = "לא ניתן לערוך: {reason}"
+
+[language.editor.saved]
+summary = "{locale} נשמרה. בחירות השפה לא השתנו."
+change = "{key}: הערך ״{before}״ הוחלף ב־״{after}״."
+
+[language.editor.part]
+line = "שורה {line}"
+
+[language.editor.value]
+none = "אין"
+empty = "(ריק)"
+
+[config.editor]
+title = "{plugin} / הגדרות"
+section = "סעיף: {path}"
+page = "עמוד {page} מתוך {pages}"
+entry = "רשומה {number}"
+current = "ערך נוכחי: {value}"
+open = "לחיצה לפתיחת הסעיף הזה."
+toggle = "לחיצה להחלפה בין true ל-false."
+edit = "לחיצה להזנת ערך חדש בצ'אט."
+prompt = "יש להזין ערך חדש עבור {path}. לחזרה יש להקליד cancel."
+expired = "תם הזמן להזנת ההגדרה."
+too-long = "ניתן להזין עד {maximum} תווים."
+saving = "ההגדרות נשמרות..."
+saved = "{path} נשמר. השינויים יחולו אוטומטית."
+failed = "לא ניתן לערוך את ההגדרות: {reason}"
+loading = "ההגדרות נטענות..."
+empty = "אין הגדרות בסעיף הזה."
+player-only = "יש לפתוח את עורך ההגדרות מתוך המשחק."
+no-permission = "אין לך הרשאה לערוך את ההגדרות האלה."
+back = "חזרה"
+previous = "העמוד הקודם"
+next = "העמוד הבא"
+refresh = "רענון"
+close = "סגירה"
+
+[config.editor.type]
+text = "טקסט ללא מירכאות מסביב."
+integer = "יש להזין מספר שלם."
+decimal = "יש להזין מספר, למשל 0.25."
+list = "יש להשתמש ברשימת TOML, למשל [\"stone\", \"deepslate\"]."
+

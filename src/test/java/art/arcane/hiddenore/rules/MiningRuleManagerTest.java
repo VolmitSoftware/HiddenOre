@@ -2,8 +2,10 @@ package art.arcane.hiddenore.rules;
 
 import art.arcane.hiddenore.util.project.ToolTier;
 import art.arcane.hiddenore.vein.VeinConfig;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -16,22 +18,24 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 
 public class MiningRuleManagerTest {
+  private static final Gson JSON = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+
   @Test
   public void constructor_parsesOrderedImmutableSnapshotAndPartitionsRules() {
-    YamlConfiguration config = new YamlConfiguration();
-    config.set("blocks.stone.drop", "cobblestone");
-    config.set("veins.generation", "pure_random");
+    JsonObject config = new JsonObject();
+    config.add("blocks", JSON.toJsonTree(Map.of("stone", Map.of("drop", "cobblestone"))));
+    config.add("veins", JSON.toJsonTree(Map.of("generation", "pure_random")));
 
     Map<String, Object> itemEntry = validItemRule();
     List<String> commands = new ArrayList<>(List.of("say one", "say two"));
     Map<String, Object> commandEntry = validCommandRule(commands, 1.0, -5, 5);
     List<Map<String, Object>> configuredRules = new ArrayList<>(List.of(itemEntry, commandEntry));
-    config.set("drops", configuredRules);
+    config.add("drops", JSON.toJsonTree(configuredRules));
 
     MiningRuleManager manager = manager(config);
-    itemEntry.put("item", "emerald");
-    commands.add("say three");
-    configuredRules.clear();
+    config.getAsJsonArray("drops").get(0).getAsJsonObject().addProperty("item", "emerald");
+    config.getAsJsonArray("drops").get(1).getAsJsonObject().getAsJsonArray("commands").add("say three");
+    config.remove("drops");
 
     assertEquals(Material.COBBLESTONE, manager.getGuaranteedDrop(Material.STONE));
     assertEquals(1, manager.getItemRules(-64).size());
@@ -61,7 +65,7 @@ public class MiningRuleManagerTest {
 
   @Test
   public void constructor_acceptsInclusiveNumericBoundaries() {
-    YamlConfiguration config = validConfig();
+    JsonObject config = validConfig();
     Map<String, Object> itemEntry = validItemRule();
     itemEntry.put("veins_per_chunk", 0.0);
     itemEntry.put("vein_min_size", 1);
@@ -71,7 +75,7 @@ public class MiningRuleManagerTest {
     itemEntry.put("exp_drop", MiningRuleManager.MAX_EXP_DROP);
     Map<String, Object> zeroChanceCommand = validCommandRule(List.of("say zero"), 0.0, 4, 4);
     Map<String, Object> fullChanceCommand = validCommandRule(List.of("say full"), 1.0, 4, 4);
-    config.set("drops", List.of(itemEntry, zeroChanceCommand, fullChanceCommand));
+    config.add("drops", JSON.toJsonTree(List.of(itemEntry, zeroChanceCommand, fullChanceCommand)));
 
     MiningRuleManager manager = manager(config);
 
@@ -84,69 +88,69 @@ public class MiningRuleManagerTest {
 
   @Test
   public void constructor_rejectsMissingOrMalformedCoreSections() {
-    YamlConfiguration missingBlocks = new YamlConfiguration();
-    assertInvalid("blocks: expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}", missingBlocks);
+    JsonObject missingBlocks = new JsonObject();
+    assertInvalid("blocks: expected a non-empty table; define at least one block with a drop material", missingBlocks);
 
-    YamlConfiguration emptyBlocks = new YamlConfiguration();
-    emptyBlocks.createSection("blocks");
-    assertInvalid("blocks: expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}", emptyBlocks);
+    JsonObject emptyBlocks = new JsonObject();
+    emptyBlocks.add("blocks", new JsonObject());
+    assertInvalid("blocks: expected a non-empty table; define at least one block with a drop material", emptyBlocks);
 
-    YamlConfiguration missingDrops = validConfig();
-    missingDrops.set("drops", null);
+    JsonObject missingDrops = validConfig();
+    missingDrops.remove("drops");
     assertInvalid("drops: expected a non-empty list", missingDrops);
 
-    YamlConfiguration scalarDrops = validConfig();
-    scalarDrops.set("drops", "diamond");
+    JsonObject scalarDrops = validConfig();
+    scalarDrops.add("drops", JSON.toJsonTree("diamond"));
     assertInvalid("drops: expected a non-empty list", scalarDrops);
 
-    YamlConfiguration emptyDrops = validConfig();
-    emptyDrops.set("drops", List.of());
+    JsonObject emptyDrops = validConfig();
+    emptyDrops.add("drops", JSON.toJsonTree(List.of()));
     assertInvalid("drops: expected a non-empty list", emptyDrops);
 
-    YamlConfiguration missingVeins = validConfig();
-    missingVeins.set("veins", null);
-    assertInvalid("veins: expected a configuration section", missingVeins);
+    JsonObject missingVeins = validConfig();
+    missingVeins.remove("veins");
+    assertInvalid("veins: expected a table", missingVeins);
 
-    YamlConfiguration scalarVeins = validConfig();
-    scalarVeins.set("veins", "seeded");
-    assertInvalid("veins: expected a configuration section", scalarVeins);
+    JsonObject scalarVeins = validConfig();
+    scalarVeins.add("veins", JSON.toJsonTree("seeded"));
+    assertInvalid("veins: expected a table", scalarVeins);
   }
 
   @Test
   public void constructor_acceptsInclusiveGenerationResourceLimits() {
-    YamlConfiguration maximumVeins = validConfig();
+    JsonObject maximumVeins = validConfig();
     Map<String, Object> maximumVeinsRule = validItemRule();
     maximumVeinsRule.put("veins_per_chunk", MiningRuleManager.MAX_VEINS_PER_CHUNK);
     maximumVeinsRule.put("vein_min_size", 16);
     maximumVeinsRule.put("vein_max_size", 16);
-    maximumVeins.set("drops", List.of(maximumVeinsRule));
+    maximumVeins.add("drops", JSON.toJsonTree(List.of(maximumVeinsRule)));
     assertEquals(MiningRuleManager.MAX_VEINS_PER_CHUNK, manager(maximumVeins).getAllDropRules().get(0).veinsPerChunk, 0.0);
 
-    YamlConfiguration maximumSize = validConfig();
+    JsonObject maximumSize = validConfig();
     Map<String, Object> maximumSizeRule = validItemRule();
     maximumSizeRule.put("veins_per_chunk", 4.0);
     maximumSizeRule.put("vein_min_size", MiningRuleManager.MAX_VEIN_SIZE);
     maximumSizeRule.put("vein_max_size", MiningRuleManager.MAX_VEIN_SIZE);
-    maximumSize.set("drops", List.of(maximumSizeRule));
+    maximumSize.add("drops", JSON.toJsonTree(List.of(maximumSizeRule)));
     assertEquals(MiningRuleManager.MAX_VEIN_SIZE, manager(maximumSize).getAllDropRules().get(0).veinMaxSize);
 
-    YamlConfiguration maximumCombinedWork = validConfig();
+    JsonObject maximumCombinedWork = validConfig();
     Map<String, Object> firstRule = validItemRule();
     firstRule.put("veins_per_chunk", 2.0);
     firstRule.put("vein_min_size", MiningRuleManager.MAX_VEIN_SIZE);
     firstRule.put("vein_max_size", MiningRuleManager.MAX_VEIN_SIZE);
     Map<String, Object> secondRule = new LinkedHashMap<>(firstRule);
-    maximumCombinedWork.set("drops", List.of(firstRule, secondRule));
+    maximumCombinedWork.add("drops", JSON.toJsonTree(List.of(firstRule, secondRule)));
     assertEquals(2, manager(maximumCombinedWork).getAllDropRules().size());
 
-    YamlConfiguration fullProbability = validConfig();
+    JsonObject fullProbability = validConfig();
     Map<String, Object> fullProbabilityRule = validItemRule();
     fullProbabilityRule.put("veins_per_chunk", 1.0);
     fullProbabilityRule.put("vein_min_size", MiningRuleManager.MAX_VEIN_SIZE);
     fullProbabilityRule.put("vein_max_size", MiningRuleManager.MAX_VEIN_SIZE);
     fullProbabilityRule.put("min_y", 0);
     fullProbabilityRule.put("max_y", 0);
-    fullProbability.set("drops", List.of(fullProbabilityRule));
+    fullProbability.add("drops", JSON.toJsonTree(List.of(fullProbabilityRule)));
     assertEquals(1.0, manager(fullProbability).getAllDropRules().get(0).pureRandomChance(), 0.0);
   }
 
@@ -168,14 +172,14 @@ public class MiningRuleManagerTest {
     assertInvalid("drops[0].vein_max_size: must be less than or equal to " + MiningRuleManager.MAX_VEIN_SIZE,
         configWithRule(excessiveMaximumSize));
 
-    YamlConfiguration excessiveCombinedWork = validConfig();
+    JsonObject excessiveCombinedWork = validConfig();
     Map<String, Object> firstRule = validItemRule();
     firstRule.put("veins_per_chunk", 2.0);
     firstRule.put("vein_min_size", MiningRuleManager.MAX_VEIN_SIZE);
     firstRule.put("vein_max_size", MiningRuleManager.MAX_VEIN_SIZE);
     Map<String, Object> secondRule = new LinkedHashMap<>(firstRule);
     secondRule.put("veins_per_chunk", 3.0);
-    excessiveCombinedWork.set("drops", List.of(firstRule, secondRule));
+    excessiveCombinedWork.add("drops", JSON.toJsonTree(List.of(firstRule, secondRule)));
     assertInvalid("drops[1]: combined worst-case generation work must be less than or equal to "
         + MiningRuleManager.MAX_GENERATION_BLOCK_TARGETS_PER_CHUNK + " target blocks per chunk", excessiveCombinedWork);
 
@@ -191,35 +195,35 @@ public class MiningRuleManagerTest {
 
   @Test
   public void constructor_rejectsMissingOrNonSectionBlockEntries() {
-    YamlConfiguration scalarBlocks = new YamlConfiguration();
-    scalarBlocks.set("blocks", "stone");
-    assertInvalid("blocks: expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}", scalarBlocks);
+    JsonObject scalarBlocks = new JsonObject();
+    scalarBlocks.add("blocks", JSON.toJsonTree("stone"));
+    assertInvalid("blocks: expected a non-empty table; define at least one block with a drop material", scalarBlocks);
 
-    YamlConfiguration scalarBlockEntry = new YamlConfiguration();
-    scalarBlockEntry.set("blocks.stone", "cobblestone");
-    assertInvalid("blocks.stone: expected a configuration section", scalarBlockEntry);
+    JsonObject scalarBlockEntry = new JsonObject();
+    scalarBlockEntry.add("blocks", JSON.toJsonTree(Map.of("stone", "cobblestone")));
+    assertInvalid("blocks.stone: expected a table", scalarBlockEntry);
 
-    YamlConfiguration unknownBlock = new YamlConfiguration();
-    unknownBlock.set("blocks.not_a_block.drop", "cobblestone");
+    JsonObject unknownBlock = new JsonObject();
+    unknownBlock.add("blocks", JSON.toJsonTree(Map.of("not_a_block", Map.of("drop", "cobblestone"))));
     assertInvalid("blocks.not_a_block: unknown material 'not_a_block'", unknownBlock);
   }
 
   @Test
   public void constructor_rejectsMissingOrInvalidBlockDrops() {
-    YamlConfiguration missingDrop = new YamlConfiguration();
-    missingDrop.createSection("blocks").createSection("stone");
+    JsonObject missingDrop = new JsonObject();
+    missingDrop.add("blocks", JSON.toJsonTree(Map.of("stone", Map.of())));
     assertInvalid("blocks.stone.drop: expected a non-empty material name", missingDrop);
 
-    YamlConfiguration invalidDrop = new YamlConfiguration();
-    invalidDrop.set("blocks.stone.drop", "not_an_item");
+    JsonObject invalidDrop = new JsonObject();
+    invalidDrop.add("blocks", JSON.toJsonTree(Map.of("stone", Map.of("drop", "not_an_item"))));
     assertInvalid("blocks.stone.drop: unknown material 'not_an_item'", invalidDrop);
 
-    YamlConfiguration nonBlockBase = new YamlConfiguration();
-    nonBlockBase.set("blocks.diamond.drop", "diamond");
+    JsonObject nonBlockBase = new JsonObject();
+    nonBlockBase.add("blocks", JSON.toJsonTree(Map.of("diamond", Map.of("drop", "diamond"))));
     assertInvalid("blocks.diamond: expected a non-air block material", nonBlockBase);
 
-    YamlConfiguration airDrop = new YamlConfiguration();
-    airDrop.set("blocks.stone.drop", "air");
+    JsonObject airDrop = new JsonObject();
+    airDrop.add("blocks", JSON.toJsonTree(Map.of("stone", Map.of("drop", "air"))));
     assertInvalid("blocks.stone.drop: expected a non-air item material", airDrop);
   }
 
@@ -244,6 +248,10 @@ public class MiningRuleManagerTest {
     nonNumeric.put("veins_per_chunk", "many");
     assertInvalid("drops[0].veins_per_chunk: expected a finite number", configWithRule(nonNumeric));
 
+    Map<String, Object> quotedNumber = validItemRule();
+    quotedNumber.put("veins_per_chunk", "0.5");
+    assertInvalid("drops[0].veins_per_chunk: expected a finite number", configWithRule(quotedNumber));
+
     Map<String, Object> nonFinite = validItemRule();
     nonFinite.put("veins_per_chunk", Double.NaN);
     assertInvalid("drops[0].veins_per_chunk: expected a finite number", configWithRule(nonFinite));
@@ -258,6 +266,10 @@ public class MiningRuleManagerTest {
     Map<String, Object> fractionalSize = validItemRule();
     fractionalSize.put("vein_min_size", 1.5);
     assertInvalid("drops[0].vein_min_size: expected an integer", configWithRule(fractionalSize));
+
+    Map<String, Object> quotedSize = validItemRule();
+    quotedSize.put("vein_min_size", "2");
+    assertInvalid("drops[0].vein_min_size: expected an integer", configWithRule(quotedSize));
 
     Map<String, Object> zeroSize = validItemRule();
     zeroSize.put("vein_min_size", 0);
@@ -315,7 +327,7 @@ public class MiningRuleManagerTest {
   @Test
   public void constructor_rejectsInvalidFortuneAndExecutionTargets() {
     Map<String, Object> invalidFortune = validItemRule();
-    invalidFortune.put("fortune_multiplier", "yes");
+    invalidFortune.put("fortune_multiplier", "true");
     assertInvalid("drops[0].fortune_multiplier: expected true or false", configWithRule(invalidFortune));
 
     Map<String, Object> invalidTarget = validCommandRule(List.of("say hi"), 0.5, -64, 320);
@@ -391,17 +403,17 @@ public class MiningRuleManagerTest {
     return entry;
   }
 
-  private static YamlConfiguration configWithRule(Map<String, Object> entry) {
-    YamlConfiguration config = validConfig();
-    config.set("drops", List.of(entry));
+  private static JsonObject configWithRule(Map<String, Object> entry) {
+    JsonObject config = validConfig();
+    config.add("drops", JSON.toJsonTree(List.of(entry)));
     return config;
   }
 
-  private static YamlConfiguration validConfig() {
-    YamlConfiguration config = new YamlConfiguration();
-    config.set("blocks.stone.drop", "cobblestone");
-    config.createSection("veins");
-    config.set("drops", List.of(validItemRule()));
+  private static JsonObject validConfig() {
+    JsonObject config = new JsonObject();
+    config.add("blocks", JSON.toJsonTree(Map.of("stone", Map.of("drop", "cobblestone"))));
+    config.add("veins", new JsonObject());
+    config.add("drops", JSON.toJsonTree(List.of(validItemRule())));
     return config;
   }
 
@@ -411,12 +423,12 @@ public class MiningRuleManagerTest {
     assertInvalid(expectedMessage, configWithRule(command));
   }
 
-  private static void assertInvalid(String expectedMessage, YamlConfiguration config) {
+  private static void assertInvalid(String expectedMessage, JsonObject config) {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> manager(config));
     assertEquals(expectedMessage, exception.getMessage());
   }
 
-  private static MiningRuleManager manager(YamlConfiguration config) {
+  private static MiningRuleManager manager(JsonObject config) {
     return new MiningRuleManager(config);
   }
 }

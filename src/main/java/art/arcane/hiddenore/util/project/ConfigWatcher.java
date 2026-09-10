@@ -2,15 +2,18 @@ package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.util.common.Messages;
+import art.arcane.volmlib.util.director.theme.DirectorThemes;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.DirectoryIteratorException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 public final class ConfigWatcher implements Runnable {
   private static final long RELOAD_DEBOUNCE_MILLIS = 250L;
@@ -39,10 +43,14 @@ public final class ConfigWatcher implements Runnable {
   private static final long WATCHER_RETRY_MILLIS = 1_000L;
   private static final long WATCHER_FAILURE_LOG_INTERVAL_MILLIS = 30_000L;
   private static final long MAX_CONFIG_BYTES = 8L * 1024L * 1024L;
+  private static final long MAX_LANGUAGE_BYTES = 2L * 1024L * 1024L;
+  private static final Pattern LANGUAGE_FILE = Pattern.compile("[A-Za-z0-9_-]{2,32}\\.toml");
 
   private final HiddenOre plugin;
   private final Set<String> watchedFiles;
   private final Path dir;
+  private final Path languageDirectory;
+  private final Map<String, String> initialLanguageSignatures;
   private final Map<String, String> lastSignatures = new HashMap<>();
   private final Set<String> oversizedWarnings = new HashSet<>();
   private final Object reloadQueueLock = new Object();
@@ -52,6 +60,7 @@ public final class ConfigWatcher implements Runnable {
   private volatile boolean running;
   private volatile Thread thread;
   private volatile WatchService watchService;
+  private WatchKey languageWatchKey;
   private boolean reloadPending;
   private boolean reloadScheduled;
   private ReloadSnapshot pendingReload;
@@ -65,15 +74,17 @@ public final class ConfigWatcher implements Runnable {
   public ConfigWatcher(HiddenOre plugin) {
     this.plugin = plugin;
     this.dir = plugin.getDataFolder().toPath();
-    this.watchedFiles = Set.of("hiddenore.yml", "language.yml");
+    this.languageDirectory = dir.resolve("languages");
+    this.initialLanguageSignatures = initialLanguageSignatures();
+    this.watchedFiles = Set.of("hiddenore.toml");
   }
 
-  public synchronized void startWithAppliedSnapshot(String configYaml, String languageYaml) {
+  public synchronized void startWithAppliedSnapshot(String configToml) {
     if (thread != null && thread.isAlive()) {
       return;
     }
 
-    Map<String, String> appliedSignatures = appliedSignatures(configYaml, languageYaml);
+    Map<String, String> appliedSignatures = appliedSignatures(configToml, initialLanguageSignatures);
     running = true;
     signatureReconciliation.reset(System.nanoTime());
     synchronized (reloadQueueLock) {
@@ -130,6 +141,15 @@ public final class ConfigWatcher implements Runnable {
     }
   }
 
+  public void configurationSaved() {
+    synchronized (reloadQueueLock) {
+      reloadGeneration++;
+      pendingReload = null;
+      reloadPending = false;
+      lastSignatures.remove("hiddenore.toml");
+    }
+  }
+
   @Override
   public void run() {
     try {
@@ -181,17 +201,19 @@ public final class ConfigWatcher implements Runnable {
   private void watchDirectory() throws IOException, InterruptedException {
     try (WatchService watcher = FileSystems.getDefault().newWatchService()) {
       watchService = watcher;
+      languageWatchKey = null;
       dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
           StandardWatchEventKinds.ENTRY_DELETE);
       while (running && plugin.isEnabled()) {
+        registerLanguageDirectory(watcher);
         long pollNanos = signatureReconciliation.pollTimeoutNanos(
             System.nanoTime(),
             TimeUnit.MILLISECONDS.toNanos(POLL_TIMEOUT_MILLIS)
         );
         WatchKey key = watcher.poll(pollNanos, TimeUnit.NANOSECONDS);
         boolean shouldReload = key != null && containsWatchedChange(key);
-        if (key != null && !key.reset()) {
-          throw new IOException("HiddenOre config watcher key became invalid for " + dir);
+        if (key != null) {
+          shouldReload |= resetWatchKey(key);
         }
         long now = System.nanoTime();
         if (shouldReload) {
@@ -242,26 +264,22 @@ public final class ConfigWatcher implements Runnable {
         return;
       }
 
-      synchronized (plugin) {
-        if (generation != reloadGeneration || !running || plugin.isDraining() || !plugin.isEnabled()) {
+      try {
+        if (!plugin.reloadAll(snapshot.configToml(), snapshot.messages(), snapshot.configurationRevision())) {
+          applied = true;
           return;
         }
-        try {
-          plugin.reloadAll(snapshot.configYaml(), snapshot.languageYaml());
-        } catch (RuntimeException exception) {
-          plugin.logException(Level.SEVERE, exception,
-              "Config reload failed; the previous runtime configuration remains active.");
-          return;
-        }
+      } catch (RuntimeException exception) {
+        plugin.logException(Level.SEVERE, exception,
+            "Config reload failed; the previous runtime configuration remains active.");
+        return;
       }
       applied = true;
 
       HiddenOre.RuntimeState runtime = plugin.getRuntimeState();
-      HiddenOre.ReloadNotification notification = runtime.reloadNotification();
       Component message = runtime.messages().component(Messages.CONFIG_RELOADED_MESSAGE);
       for (Player player : Bukkit.getOnlinePlayers()) {
-        if (!SchedulerUtils.runEntity(plugin, player, () -> notifyOperator(player, message, notification.sound(),
-            notification.volume(), notification.pitch()))) {
+        if (!SchedulerUtils.runEntity(plugin, player, () -> notifyOperator(player, message))) {
           plugin.warnThrottled("config-reload-notification-scheduling",
               "Failed to schedule a config reload notification for %s.", player.getName());
         }
@@ -356,10 +374,15 @@ public final class ConfigWatcher implements Runnable {
     synchronized (reloadQueueLock) {
       previous = Map.copyOf(lastSignatures);
     }
-    return !previous.equals(currentSignatures());
+    try {
+      return !previous.equals(currentSignatures());
+    } catch (IOException exception) {
+      reportWatcherFailure("Unable to inspect HiddenOre language hotload targets", exception);
+      return false;
+    }
   }
 
-  private Map<String, String> currentSignatures() {
+  private Map<String, String> currentSignatures() throws IOException {
     return diskSignatures(dir);
   }
 
@@ -367,28 +390,19 @@ public final class ConfigWatcher implements Runnable {
     if (!requiredFilesPresent()) {
       return null;
     }
-    String configYaml = readBoundedUtf8(dir.resolve("hiddenore.yml"));
-    String languageYaml = readBoundedUtf8(dir.resolve("language.yml"));
+    long configurationRevision = plugin.configurationRevision();
+    String configToml = readBoundedUtf8(dir.resolve("hiddenore.toml"));
+    Messages messages;
+    try {
+      messages = plugin.prepareReloadMessages(configToml);
+    } catch (RuntimeException exception) {
+      reportWatcherFailure("Unable to prepare HiddenOre configuration and language hotload", exception);
+      return null;
+    }
     if (!expectedSignatures.equals(currentSignatures())) {
       return null;
     }
-    return new ReloadSnapshot(configYaml, languageYaml, Map.copyOf(expectedSignatures));
-  }
-
-  public void resetAfterManualReload(String configYaml, String languageYaml) {
-    Map<String, String> signatures = appliedSignatures(configYaml, languageYaml);
-    signatureReconciliation.reset(System.nanoTime());
-    synchronized (reloadQueueLock) {
-      reloadGeneration++;
-      reloadPending = false;
-      reloadScheduled = false;
-      pendingReload = null;
-      scheduledReload = null;
-      reloadCompleted = true;
-      lastReloadCompletedAtNanos = System.nanoTime();
-      lastSignatures.clear();
-      lastSignatures.putAll(signatures);
-    }
+    return new ReloadSnapshot(configToml, messages, configurationRevision);
   }
 
   private String readBoundedUtf8(Path file) throws IOException {
@@ -401,13 +415,13 @@ public final class ConfigWatcher implements Runnable {
     }
   }
 
-  private static String signature(Path file) {
+  private static String signature(Path file, long maximumBytes) {
     if (file == null || !Files.isRegularFile(file)) {
       return "missing";
     }
     try {
       BasicFileAttributes before = Files.readAttributes(file, BasicFileAttributes.class);
-      if (before.size() > MAX_CONFIG_BYTES) {
+      if (before.size() > maximumBytes) {
         return "oversized:" + attributesSignature(before);
       }
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -417,7 +431,7 @@ public final class ConfigWatcher implements Runnable {
         int read;
         while ((read = input.read(buffer)) >= 0) {
           size += read;
-          if (size > MAX_CONFIG_BYTES) {
+          if (size > maximumBytes) {
             return "oversized:" + attributesSignature(before);
           }
           digest.update(buffer, 0, read);
@@ -445,18 +459,43 @@ public final class ConfigWatcher implements Runnable {
     }
   }
 
-  static Map<String, String> appliedSignatures(String configYaml, String languageYaml) {
-    Map<String, String> signatures = new HashMap<>();
-    signatures.put("hiddenore.yml", contentSignature(configYaml));
-    signatures.put("language.yml", contentSignature(languageYaml));
+  static Map<String, String> appliedSignatures(String configToml, Map<String, String> languageSignatures) {
+    Map<String, String> signatures = new HashMap<>(languageSignatures);
+    signatures.put("hiddenore.toml", contentSignature(configToml));
     return Map.copyOf(signatures);
   }
 
-  static Map<String, String> diskSignatures(Path directory) {
-    Map<String, String> signatures = new HashMap<>();
-    signatures.put("hiddenore.yml", signature(directory.resolve("hiddenore.yml")));
-    signatures.put("language.yml", signature(directory.resolve("language.yml")));
+  static Map<String, String> diskSignatures(Path directory) throws IOException {
+    Map<String, String> signatures = new HashMap<>(languageSignatures(directory));
+    signatures.put("hiddenore.toml", signature(directory.resolve("hiddenore.toml"), MAX_CONFIG_BYTES));
     return Map.copyOf(signatures);
+  }
+
+  static Map<String, String> languageSignatures(Path directory) throws IOException {
+    Map<String, String> signatures = new HashMap<>();
+    Path languages = directory.resolve("languages");
+    if (!Files.isDirectory(languages)) {
+      return Map.of();
+    }
+    try (DirectoryStream<Path> files = Files.newDirectoryStream(languages)) {
+      for (Path file : files) {
+        if (LANGUAGE_FILE.matcher(file.getFileName().toString()).matches()) {
+          signatures.put("languages/" + file.getFileName(), signature(file, MAX_LANGUAGE_BYTES));
+        }
+      }
+    } catch (DirectoryIteratorException exception) {
+      throw exception.getCause();
+    }
+    return Map.copyOf(signatures);
+  }
+
+  private Map<String, String> initialLanguageSignatures() {
+    try {
+      return languageSignatures(dir);
+    } catch (IOException exception) {
+      plugin.logException(Level.WARNING, exception, "Unable to capture initial HiddenOre language hotload targets.");
+      return Map.of();
+    }
   }
 
   private static String contentSignature(String content) {
@@ -483,11 +522,49 @@ public final class ConfigWatcher implements Runnable {
       if (!(event.context() instanceof Path changed)) {
         continue;
       }
-      if (watchedFiles.contains(changed.getFileName().toString())) {
+      if (key.watchable().equals(dir) && changed.toString().equals("languages")
+          && event.kind() != StandardWatchEventKinds.ENTRY_MODIFY) {
+        if (languageWatchKey != null) {
+          languageWatchKey.cancel();
+          languageWatchKey = null;
+        }
+        watched = true;
+      } else if (isWatchedFile(dir, (Path) key.watchable(), changed)) {
         watched = true;
       }
     }
     return watched;
+  }
+
+  static boolean isWatchedFile(Path directory, Path watchedDirectory, Path changed) {
+    if (changed.getNameCount() != 1) {
+      return false;
+    }
+    String name = changed.toString();
+    if (watchedDirectory.equals(directory)) {
+      return name.equals("hiddenore.toml");
+    }
+    return watchedDirectory.equals(directory.resolve("languages")) && LANGUAGE_FILE.matcher(name).matches();
+  }
+
+  private void registerLanguageDirectory(WatchService watcher) throws IOException {
+    if ((languageWatchKey == null || !languageWatchKey.isValid()) && Files.isDirectory(languageDirectory)) {
+      languageWatchKey = languageDirectory.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+          StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
+    }
+  }
+
+  private boolean resetWatchKey(WatchKey key) throws IOException {
+    if (key.reset()) {
+      return false;
+    }
+    if (key.watchable().equals(dir)) {
+      throw new IOException("HiddenOre config watcher key became invalid for " + dir);
+    }
+    if (key == languageWatchKey) {
+      languageWatchKey = null;
+    }
+    return true;
   }
 
   private Map<String, String> awaitQuietPeriod(WatchService watcher) throws InterruptedException, IOException {
@@ -506,8 +583,8 @@ public final class ConfigWatcher implements Runnable {
       if (key != null && containsWatchedChange(key)) {
         deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(RELOAD_DEBOUNCE_MILLIS);
       }
-      if (key != null && !key.reset()) {
-        throw new IOException("HiddenOre config watcher key became invalid for " + dir);
+      if (key != null) {
+        resetWatchKey(key);
       }
       Map<String, String> sampled = currentSignatures();
       if (!sampled.equals(candidate)) {
@@ -528,15 +605,15 @@ public final class ConfigWatcher implements Runnable {
     plugin.logException(Level.WARNING, failure, "%s.", message);
   }
 
-  private void notifyOperator(Player player, Component message, Sound sound, float volume, float pitch) {
+  private void notifyOperator(Player player, Component message) {
     if (!player.isOp()) {
       return;
     }
     HiddenOre.sendMessage(player, message);
-    player.playSound(player.getLocation(), sound, volume, pitch);
+    player.playSound(player.getLocation(), DirectorThemes.HIDDENORE.getSuccessSound(), SoundCategory.MASTER, 0.8f, 1.2f);
   }
 
-  private record ReloadSnapshot(String configYaml, String languageYaml, Map<String, String> signatures) {
+  private record ReloadSnapshot(String configToml, Messages messages, long configurationRevision) {
   }
 
   static final class SignatureReconciliation {

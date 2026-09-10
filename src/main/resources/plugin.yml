@@ -12,7 +12,7 @@ softdepend:
 commands:
   hiddenore:
     description: HiddenOre base command.
-    usage: /hiddenore [reload|debug|language]
+    usage: /hiddenore [config|debug|language]
 permissions:
   hiddenore.debugdump:
     description: Allows creating and optionally uploading diagnostic reports.

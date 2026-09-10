@@ -1,0 +1,247 @@
+# HiddenOre — pl_PL
+#
+# === Edycja pliku ===
+# plugins/HiddenOre/languages/pl_PL.toml
+# Ten plik można edytować bezpośrednio. Lokalne zmiany są zachowywane; brakujące lub nieprawidłowe wpisy korzystają z wbudowanego angielskiego tekstu.
+# /hiddenore language server edit pl_PL
+#
+# === Prefiks ===
+# prefix jest dodawany przed wiadomościami czatu; pusty ciąg go ukrywa.
+#
+# === Formatowanie ===
+# Kody kolorów: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Zmienne ===
+# Zachowaj nazwy zmiennych i używaj tylko tych, które występują w danej wiadomości.
+#   {after}  Wartość po zmianie
+#   {amount}  Liczba upuszczanych przedmiotów
+#   {argument}  nieoczekiwany argument
+#   {before}  Wartość przed zmianą
+#   {block}  Typ wykopanego bloku
+#   {chance}  Ustawione prawdopodobieństwo aktywacji
+#   {command}  ścieżka polecenia
+#   {count}  Liczba wiadomości
+#   {group}  Kategoria edytora języka
+#   {key}  Klucz wiadomości lub parametru
+#   {line}  Numer wiersza wiadomości
+#   {locale}  ustawienia regionalne
+#   {material}  Typ upuszczanego przedmiotu
+#   {maximum}  Maksymalna dopuszczalna wartość
+#   {number}  Numer wpisu
+#   {page}  Bieżąca strona
+#   {pages}  Łączna liczba stron
+#   {path}  Ścieżka ustawienia lub sekcji
+#   {parameter}  nazwa parametru
+#   {personal}  osobiste ustawienie regionalne
+#   {plugin}  Nazwa wtyczki
+#   {reason}  powód błędu
+#   {roll}  Wylosowana wartość
+#   {target}  Wtyczka, dla której wybierany jest język
+#   {type}  typ
+#   {usage}  użycie polecenia
+#   {value}  wartość bieżąca, domyślna lub surowa
+#   {variables}  dozwolone symbole zastępcze
+#   {vein}  Nazwa żyły rudy
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cNie masz uprawnień do użycia tej komendy.&r"
+player_only = "&cTej komendy może użyć tylko gracz.&r"
+debug_enabled = "&aTryb debugowania włączony.&r"
+debug_disabled = "&cTryb debugowania wyłączony.&r"
+config_reloaded_message = "&aKonfiguracja zaktualizowana i przeładowana.&r"
+
+[debug]
+player_placed = "&cBlok {block} umieszczony przez gracza; brak ukrytych dropów.&r"
+random_drop = "&aLosowy drop: {material} x{amount}&r"
+random_drop_lost = "&cLosowy drop {material} utracony, ponieważ poziom narzędzia jest za niski.&r"
+vein_drop = "&aŻyła rudy {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aŻyła rudy {vein}: {material} x{amount} (odkryta)&r"
+vein_drop_lost = "&cŻyła rudy {vein}: utracono {material}, ponieważ poziom narzędzia jest za niski.&r"
+command_hit = "&7Test komendy: chance={chance}, roll={roll} -> &atrafienie&7&r"
+command_miss = "&7Test komendy: chance={chance}, roll={roll} -> &cpudło&7&r"
+
+[command.parameter]
+debugdump_upload = "Prześlij raport do mclo.gs"
+
+[command.description]
+config = "Otwórz edytor konfiguracji HiddenOre"
+debug_group = "HiddenOre: Narzędzia diagnostyczne"
+debugdump = "Utwórz raport diagnostyczny i opcjonalnie go prześlij"
+root = "Grupa komend HiddenOre"
+debug = "Przełącz własny tryb debugowania rud"
+
+[config.editor]
+title = "{plugin} / Konfiguracja"
+section = "Sekcja: {path}"
+page = "Strona {page} z {pages}"
+entry = "Wpis {number}"
+current = "Bieżąca wartość: {value}"
+open = "Kliknij, aby otworzyć tę sekcję."
+toggle = "Kliknij, aby przełączyć między true i false."
+edit = "Kliknij, aby wpisać nową wartość na czacie."
+prompt = "Wpisz nową wartość dla {path}. Wpisz cancel, aby wrócić."
+expired = "Upłynął czas na wprowadzenie konfiguracji."
+too-long = "Wpisz maksymalnie {maximum} znaków."
+saving = "Zapisywanie konfiguracji..."
+saved = "Zapisano {path}. Zmiany są stosowane automatycznie."
+failed = "Nie można edytować konfiguracji: {reason}"
+loading = "Wczytywanie konfiguracji..."
+empty = "Ta sekcja nie zawiera ustawień."
+player-only = "Otwórz edytor konfiguracji w grze."
+no-permission = "Nie masz uprawnień do edycji tej konfiguracji."
+back = "Wstecz"
+previous = "Poprzednia strona"
+next = "Następna strona"
+refresh = "Odśwież"
+close = "Zamknij"
+
+[config.editor.type]
+text = "Tekst; cudzysłowy nie są potrzebne."
+integer = "Wpisz liczbę całkowitą."
+decimal = "Wpisz liczbę, na przykład 0.25."
+list = "Użyj listy TOML, na przykład [\"stone\", \"deepslate\"]."
+
+[director.help]
+no_subcommands = "Na tej stronie nie ma podpoleceń."
+no_description = "Nie podano opisu"
+command_group = "Grupa poleceń. Kliknij, aby otworzyć."
+category = "Kategoria poleceń"
+no_parameters = "Brak parametrów. Kliknij, aby wstępnie uzupełnić polecenie."
+parameters_hover = "Najedź kursorem na parametry, aby dowiedzieć się więcej."
+
+[director.help.navigation]
+back = "Wstecz"
+page = "Strona"
+
+[director.help.navigation.parent]
+hover = "Wróć do nadrzędnej grupy poleceń"
+
+[director.help.navigation.previous]
+hover = "Poprzednia strona"
+
+[director.help.navigation.next]
+hover = "Następna strona"
+
+[director.help.parameter]
+required = "Ten parametr jest wymagany."
+optional = "Ten parametr jest opcjonalny."
+default = "Domyślnie \"{value}\", jeśli nie określono."
+type = "Ten parametr jest typu {type}."
+
+[director.runtime]
+usage = "Użycie: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Tego polecenia nie można wykonać z tego źródła."
+unknown_parameter = "Nieznany klucz parametru: {key}"
+unexpected_argument = "Nieoczekiwany argument \"{argument}\". Parametry opcjonalne muszą mieć klucz, np. seed=123"
+unclosed_group = "Brak zamykającego \"]\" dla parametru {key}"
+conversion_failed = "Nie można przekonwertować \"{value}\" na {type} dla {parameter}"
+default_parse_failed = "Nie można odczytać wartości domyślnej parametru {parameter}"
+missing_argument = "Brak argumentu \"{parameter}\" ({type})"
+execution_failed = "Nie udało się wykonać polecenia {command}: {reason}"
+
+[language.menu]
+your_language = "Twój język"
+reset_your_language = "Zresetuj swój język"
+server_default = "Domyślny język serwera"
+edit_messages = "Edytuj komunikaty językowe"
+use_server_default = "Użyj domyślnego języka serwera"
+current = "Bieżący: {locale}"
+current_with_personal = "Bieżący: {locale} (Twój: {personal})"
+your_description = "Zmień tylko komunikaty, które widzisz."
+reset_description = "Użyj domyślnego języka serwera."
+server_description = "Zmień domyślny język serwera."
+edit_description = "Otwórz edytor komunikatów dla każdego języka."
+select_description = "Kliknij, aby wybrać ten język."
+remove_personal_description = "Usuń swój osobisty wybór języka."
+no_controls = "Nie masz dostępu do ustawień języka."
+command = "Polecenie: {command}"
+selected = "wybrany"
+all-volmit-plugins = "Wszystkie wtyczki Volmit"
+
+[language.error]
+stopping = "Wybór języka jest niedostępny podczas zatrzymywania wtyczki."
+editor-player-only = "Otwórz edytor języka w grze."
+no-providers = "Brak dostępnych dostawców języków Volmit."
+numeric-page = "Podaj numer strony."
+personal-player-only = "Preferencje językowe gracza muszą być wybrane w grze."
+personal-permission = "Nie masz pozwolenia na wybranie języka."
+plugin-personal-permission = "Nie masz uprawnienia do wyboru swojego języka we wtyczce {plugin}."
+plugin-server-permission = "Nie masz uprawnienia do zmiany języka serwera we wtyczce {plugin}."
+server-locale-required = "Wybierz kod języka, np. en_US, jako domyślny język serwera."
+unavailable-for-all = "Język {locale} nie jest dostępny we wszystkich wybranych wtyczkach."
+
+[language.usage]
+editor = "Użycie: /{command} language server edit [locale]"
+selection = "Użycie: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Użycie: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Przygotowywanie języka {locale} dla {target}..."
+save-failed = "{plugin}: nie udało się zapisać wyboru języka; sprawdź konsolę serwera."
+english-fallback = "{plugin}: {locale} jest niedostępny; używany będzie angielski (en_US)."
+personal-selected = "{plugin}: Twój język jest teraz {locale}."
+server-selected = "{plugin}: język serwera jest teraz {locale}."
+server-default-selected = "{plugin}: twój język jest teraz zgodny z domyślnym językiem serwera."
+
+[language.editor]
+loading = "Wczytywanie wiadomości w języku {locale}..."
+
+[language.editor.section]
+languages = "Języki"
+search = "Szukaj"
+search-title = "{locale} / Szukaj"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Wyszukaj klucz lub tekst wiadomości. Wpisz cancel, aby wrócić."
+value = "Wpisz na czacie nową wartość dla {key}."
+current = "Bieżąca wartość: {value}"
+variables = "Zmienne: {variables}"
+guidance = "Użyj \\n dla nowej linii, \\\\ dla odwrotnego ukośnika lub wpisz cancel, aby wrócić."
+
+[language.editor.input]
+expired = "Czas na wpisanie tekstu w edytorze języka minął."
+too-long = "Wpisany tekst może mieć najwyżej {maximum} znaków."
+unable-to-save = "Nie udało się zapisać: {reason}"
+
+[language.editor.navigation]
+back = "&eWstecz&r"
+close = "&cZamknij&r"
+previous-page = "&ePoprzednia strona&r"
+next-page = "&eNastępna strona&r"
+
+[language.editor.search]
+messages = "Wyszukaj wiadomości"
+messages-lore = "Kliknij, aby przeszukać wszystkie wiadomości."
+clear = "Wyczyść wyszukiwanie"
+
+[language.editor.message]
+current-value = "&7Bieżąca wartość:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Kliknij, aby edytować formę liczby mnogiej.&r"
+edit-lines = "&7Kliknij, aby edytować poszczególne linie.&r"
+edit-chat = "&7Kliknij, aby edytować na czacie.&r"
+
+[language.editor.locale]
+open = "&8Kliknij, aby otworzyć ten język.&r"
+
+[language.editor.category]
+message-count = "&7{count} wiadomości&r"
+open = "&8Kliknij, aby otworzyć tę kategorię.&r"
+
+[language.editor.error]
+no-permission = "Nie masz uprawnienia do edycji języków wtyczki {plugin}."
+unable-to-edit = "Nie udało się edytować: {reason}"
+
+[language.editor.saved]
+summary = "Zapisano {locale}. Wybory języka pozostały bez zmian."
+change = "{key}: „{before}” zmieniono na „{after}”."
+
+[language.editor.part]
+line = "Linia {line}"
+
+[language.editor.value]
+none = "Brak"
+empty = "(pusty)"

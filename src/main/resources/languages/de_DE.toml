@@ -1,0 +1,248 @@
+# HiddenOre — de_DE
+#
+# === Datei bearbeiten ===
+# plugins/HiddenOre/languages/de_DE.toml
+# Diese Datei kann direkt bearbeitet werden. Lokale Änderungen bleiben erhalten; fehlende oder ungültige Einträge verwenden das eingebaute Englisch.
+# /hiddenore language server edit de_DE
+#
+# === Präfix ===
+# prefix steht vor Chatnachrichten; eine leere Zeichenfolge blendet ihn aus.
+#
+# === Formatierung ===
+# Farbcodes: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Variablen ===
+# Variablennamen unverändert lassen und nur die Variablen der jeweiligen Nachricht verwenden.
+#   {after}  Wert nach der Änderung
+#   {amount}  Anzahl der fallen gelassenen Gegenstände
+#   {argument}  unerwartetes Argument
+#   {before}  Wert vor der Änderung
+#   {block}  Typ des abgebauten Blocks
+#   {chance}  Eingestellte Auslösewahrscheinlichkeit
+#   {command}  Befehlspfad
+#   {count}  Anzahl der Nachrichten
+#   {group}  Kategorie des Spracheneditors
+#   {key}  Nachrichten- oder Parameterschlüssel
+#   {line}  Zeilennummer innerhalb einer Nachricht
+#   {locale}  Sprachkennung
+#   {material}  Typ des fallengelassenen Gegenstands
+#   {maximum}  Zulässiger Höchstwert
+#   {number}  Nummer des Eintrags
+#   {page}  Aktuelle Seite
+#   {pages}  Gesamtzahl der Seiten
+#   {parameter}  Parametername
+#   {path}  Pfad der Konfigurationseinstellung
+#   {personal}  persönliche Sprachkennung
+#   {plugin}  Plugin Name
+#   {reason}  Fehlergrund
+#   {roll}  Gezogener Zufallswert
+#   {target}  Plugin für die Sprachauswahl
+#   {type}  Parametertyp
+#   {usage}  Befehlsverwendung
+#   {value}  aktueller, Standard- oder Rohwert
+#   {variables}  gültige Platzhalter
+#   {vein}  Name der Erzader
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cDu hast keine Berechtigung, diesen Befehl zu verwenden.&r"
+player_only = "&cDieser Befehl kann nur von einem Spieler verwendet werden.&r"
+debug_enabled = "&aDebug-Modus aktiviert.&r"
+debug_disabled = "&cDebug-Modus deaktiviert.&r"
+config_reloaded_message = "&aKonfiguration aktualisiert und neu geladen.&r"
+
+[debug]
+player_placed = "&cVom Spieler platziert: {block}; keine versteckten Drops.&r"
+random_drop = "&aZufälliger Drop: {material} x{amount}&r"
+random_drop_lost = "&cZufälliger Drop {material} verloren, weil die Werkzeugstufe zu niedrig ist.&r"
+vein_drop = "&aErzader {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aErzader {vein}: {material} x{amount} (entdeckt)&r"
+vein_drop_lost = "&cErzader {vein}: {material} verloren, weil die Werkzeugstufe zu niedrig ist.&r"
+command_hit = "&7Befehlsprüfung: chance={chance}, roll={roll} -> &aTreffer&7&r"
+command_miss = "&7Befehlsprüfung: chance={chance}, roll={roll} -> &cFehlschlag&7&r"
+
+[command.parameter]
+debugdump_upload = "Den Bericht zu mclo.gs hochladen"
+
+[command.description]
+config = "HiddenOre-Einstellungen bearbeiten"
+debug_group = "HiddenOre: Diagnosewerkzeuge"
+debugdump = "Einen Diagnosebericht erstellen und optional hochladen"
+root = "HiddenOre-Befehlsgruppe"
+debug = "Erz-Debug-Modus für dich umschalten"
+
+[director.help]
+no_subcommands = "Auf dieser Seite gibt es keine Unterbefehle."
+no_description = "Keine Beschreibung vorhanden"
+command_group = "Befehlsgruppe. Zum Öffnen klicken."
+category = "Befehlskategorie"
+no_parameters = "Keine Parameter. Klicken, um den Befehl vorab auszufüllen."
+parameters_hover = "Bewege den Mauszeiger über die Parameter, um mehr zu erfahren."
+
+[director.help.navigation]
+back = "Zurück"
+page = "Seite"
+
+[director.help.navigation.parent]
+hover = "Zur übergeordneten Befehlsgruppe zurückkehren"
+
+[director.help.navigation.previous]
+hover = "Vorherige Seite"
+
+[director.help.navigation.next]
+hover = "Nächste Seite"
+
+[director.help.parameter]
+required = "Dieser Parameter ist erforderlich."
+optional = "Dieser Parameter ist optional."
+default = "Standardmäßig \"{value}\", wenn nicht angegeben."
+type = "Dieser Parameter hat den Typ {type}."
+
+[director.runtime]
+usage = "Verwendung: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Dieser Befehl kann von diesem Ursprung aus nicht ausgeführt werden."
+unknown_parameter = "Unbekannter Parameterschlüssel: {key}"
+unexpected_argument = "Unerwartetes Argument \"{argument}\". Optionale Parameter müssen als Schlüssel angegeben werden, z. B. seed=123"
+unclosed_group = "Fehlende schließende Klammer \"]\" für Parameter {key}"
+conversion_failed = "\"{value}\" kann für {parameter} nicht in {type} konvertiert werden"
+default_parse_failed = "Der Standardwert für Parameter {parameter} kann nicht gelesen werden"
+missing_argument = "Fehlendes Argument \"{parameter}\" ({type})"
+execution_failed = "Befehl {command} konnte nicht ausgeführt werden: {reason}"
+
+[language.menu]
+your_language = "Ihre Sprache"
+reset_your_language = "Eigene Sprachauswahl zurücksetzen"
+server_default = "Serverstandard"
+edit_messages = "Sprachnachrichten bearbeiten"
+use_server_default = "Serverstandard verwenden"
+current = "Aktuell: {locale}"
+current_with_personal = "Aktuell: {locale} (Ihre: {personal})"
+your_description = "Ändern Sie nur die Nachrichten, die Sie sehen."
+reset_description = "Verwenden Sie die Standardsprache des Servers."
+server_description = "Ändern Sie die Standardsprache des Servers."
+edit_description = "Öffnen Sie den Nachrichteneditor für jede Sprache."
+select_description = "Klicken Sie, um diese Sprache auszuwählen."
+remove_personal_description = "Entfernen Sie Ihre persönliche Sprachauswahl."
+no_controls = "Für Sie sind keine Spracheinstellungen verfügbar."
+command = "Befehl: {command}"
+selected = "ausgewählt"
+all-volmit-plugins = "Alle Volmit-Plugins"
+
+[language.error]
+stopping = "Sprachauswahl ist nicht verfügbar, während das Plugin stoppt."
+editor-player-only = "Öffnen Sie den Spracheditor im Spiel."
+no-providers = "Es sind keine Volmit-Sprachanbieter verfügbar."
+numeric-page = "Gib die Seitennummer als Zahl ein."
+personal-player-only = "Die Spracheinstellungen der Spieler müssen im Spiel ausgewählt werden."
+personal-permission = "Sie haben keine Berechtigung, Ihre Sprache auszuwählen."
+plugin-personal-permission = "Du darfst deine Sprache für {plugin} nicht ändern."
+plugin-server-permission = "Du darfst die Serversprache für {plugin} nicht ändern."
+server-locale-required = "Wähle einen Sprachcode wie en_US als Serverstandard."
+unavailable-for-all = "Die Sprache {locale} ist nicht für alle ausgewählten Plugins verfügbar."
+
+[language.usage]
+editor = "Syntax: /{command} language server edit [locale]"
+selection = "Syntax: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Syntax: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Sprache {locale} wird für {target} vorbereitet..."
+save-failed = "{plugin}: Die Sprachauswahl konnte nicht gespeichert werden; prüfe die Serverkonsole."
+english-fallback = "{plugin}: {locale} ist nicht verfügbar; Englisch (en_US) wird verwendet."
+personal-selected = "{plugin}: Deine Sprache ist jetzt {locale}."
+server-selected = "{plugin}: Serversprache ist jetzt {locale}."
+server-default-selected = "{plugin}: Deine Sprache folgt jetzt dem Serverstandard."
+
+[language.editor]
+loading = "Nachrichten für {locale} werden geladen..."
+
+[language.editor.section]
+languages = "Sprachen"
+search = "Suche"
+search-title = "{locale} / Suche"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Suche nach Nachrichtenschlüssel oder Text. Gib cancel ein, um zurückzukehren."
+value = "Gib im Chat einen neuen Wert für {key} ein."
+current = "Aktueller Wert: {value}"
+variables = "Variablen: {variables}"
+guidance = "Verwende \\n für Zeilenumbrüche und \\\\ für einen Backslash oder gib cancel ein, um zurückzukehren."
+
+[language.editor.input]
+expired = "Die Eingabe im Spracheditor ist abgelaufen."
+too-long = "Die Eingabe darf höchstens {maximum} Zeichen enthalten."
+unable-to-save = "Speichern fehlgeschlagen: {reason}"
+
+[language.editor.navigation]
+back = "&eZurück&r"
+close = "&cSchließen&r"
+previous-page = "&eVorherige Seite&r"
+next-page = "&eNächste Seite&r"
+
+[language.editor.search]
+messages = "Nachrichten durchsuchen"
+messages-lore = "Klicken, um alle Nachrichten zu durchsuchen."
+clear = "Suche zurücksetzen"
+
+[language.editor.message]
+current-value = "&7Aktueller Wert:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Klicken, um eine Pluralform zu bearbeiten.&r"
+edit-lines = "&7Klicken, um einzelne Zeilen zu bearbeiten.&r"
+edit-chat = "&7Klicken, um im Chat zu bearbeiten.&r"
+
+[language.editor.locale]
+open = "&8Klicken, um diese Sprache zu öffnen.&r"
+
+[language.editor.category]
+message-count = "&7{count} Nachrichten&r"
+open = "&8Klicken, um diese Kategorie zu öffnen.&r"
+
+[language.editor.error]
+no-permission = "Du darfst die Sprachdateien von {plugin} nicht bearbeiten."
+unable-to-edit = "Bearbeiten fehlgeschlagen: {reason}"
+
+[language.editor.saved]
+summary = "{locale} gespeichert. Die Sprachauswahl bleibt unverändert."
+change = "{key}: „{before}“ wurde in „{after}“ geändert."
+
+[language.editor.part]
+line = "Zeile {line}"
+
+[language.editor.value]
+none = "Keine"
+empty = "(leer)"
+
+[config.editor]
+title = "{plugin} / Konfiguration"
+section = "Abschnitt: {path}"
+page = "Seite {page} von {pages}"
+entry = "Eintrag {number}"
+current = "Aktuell: {value}"
+open = "Klicken, um diesen Abschnitt zu öffnen."
+toggle = "Klicken, um zwischen true und false umzuschalten."
+edit = "Klicken, um einen neuen Wert im Chat einzugeben."
+prompt = "Gib einen neuen Wert für {path} ein. Mit cancel kehrst du zurück."
+expired = "Die Konfigurationseingabe ist abgelaufen."
+too-long = "Gib höchstens {maximum} Zeichen ein."
+saving = "Konfiguration wird gespeichert..."
+saved = "{path} gespeichert. Änderungen werden automatisch übernommen."
+failed = "Konfiguration konnte nicht bearbeitet werden: {reason}"
+loading = "Konfiguration wird geladen..."
+empty = "Dieser Abschnitt enthält keine Einstellungen."
+player-only = "Öffne den Konfigurationseditor im Spiel."
+no-permission = "Du hast keine Berechtigung, diese Konfiguration zu bearbeiten."
+back = "Zurück"
+previous = "Vorherige Seite"
+next = "Nächste Seite"
+refresh = "Aktualisieren"
+close = "Schließen"
+
+[config.editor.type]
+text = "Text ohne umschließende Anführungszeichen eingeben."
+integer = "Eine ganze Zahl eingeben."
+decimal = "Eine Zahl eingeben, zum Beispiel 0.25."
+list = "Eine TOML-Liste verwenden, zum Beispiel [\"stone\", \"deepslate\"]."
+

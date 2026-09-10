@@ -2,9 +2,11 @@ package art.arcane.hiddenore.rules;
 
 import art.arcane.hiddenore.util.project.ToolTier;
 import art.arcane.hiddenore.vein.VeinConfig;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -16,7 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class MiningRuleManager {
-  private static final String REQUIRED_BLOCKS = "expected a non-empty configuration section; define at least one entry, for example blocks: {stone: {drop: cobblestone}}";
+  private static final String REQUIRED_BLOCKS = "expected a non-empty table; define at least one block with a drop material";
   static final double MAX_VEINS_PER_CHUNK = 64.0;
   static final int MAX_VEIN_SIZE = 256;
   static final long MAX_GENERATION_BLOCK_TARGETS_PER_CHUNK = 1024L;
@@ -28,8 +30,8 @@ public final class MiningRuleManager {
   private final List<ItemDropRule> dropRules;
   private final VeinConfig veinConfig;
 
-  public MiningRuleManager(FileConfiguration config) {
-    FileConfiguration activeConfig = Objects.requireNonNull(config, "config");
+  public MiningRuleManager(JsonObject config) {
+    JsonObject activeConfig = Objects.requireNonNull(config, "config");
     Map<Material, Material> parsedGuaranteedDrops = parseGuaranteedDrops(activeConfig);
     VeinConfig parsedVeinConfig = parseVeinConfig(activeConfig);
     List<ItemDropRule> parsedItemRules = new ArrayList<>();
@@ -63,26 +65,20 @@ public final class MiningRuleManager {
     return veinConfig;
   }
 
-  private static Map<Material, Material> parseGuaranteedDrops(FileConfiguration config) {
-    Object rawBlocks = config.get("blocks");
-    if (rawBlocks == null) {
+  private static Map<Material, Material> parseGuaranteedDrops(JsonObject config) {
+    if (!(config.get("blocks") instanceof JsonObject blocks)) {
       throw invalid("blocks", REQUIRED_BLOCKS);
     }
-
-    ConfigurationSection blocks = config.getConfigurationSection("blocks");
-    if (blocks == null) {
-      throw invalid("blocks", REQUIRED_BLOCKS);
-    }
-    if (blocks.getKeys(false).isEmpty()) {
+    if (blocks.isEmpty()) {
       throw invalid("blocks", REQUIRED_BLOCKS);
     }
 
     Map<Material, Material> parsedDrops = new LinkedHashMap<>();
-    for (String key : blocks.getKeys(false)) {
+    for (Map.Entry<String, JsonElement> entry : blocks.entrySet()) {
+      String key = entry.getKey();
       String blockPath = "blocks." + key;
-      ConfigurationSection blockEntry = blocks.getConfigurationSection(key);
-      if (blockEntry == null) {
-        throw invalid(blockPath, "expected a configuration section");
+      if (!(entry.getValue() instanceof JsonObject blockEntry)) {
+        throw invalid(blockPath, "expected a table");
       }
 
       Material block = Material.matchMaterial(key.toUpperCase(Locale.ROOT));
@@ -106,25 +102,18 @@ public final class MiningRuleManager {
     return parsedDrops;
   }
 
-  private static VeinConfig parseVeinConfig(FileConfiguration config) {
-    Object rawVeins = config.get("veins");
-    if (!(rawVeins instanceof ConfigurationSection)) {
-      throw invalid("veins", "expected a configuration section");
+  private static VeinConfig parseVeinConfig(JsonObject config) {
+    if (!(config.get("veins") instanceof JsonObject veins)) {
+      throw invalid("veins", "expected a table");
     }
-    return new VeinConfig((ConfigurationSection) rawVeins);
+    return new VeinConfig(veins);
   }
 
-  private static List<ItemDropRule> parseDropRules(FileConfiguration config, List<ItemDropRule> itemRules,
+  private static List<ItemDropRule> parseDropRules(JsonObject config, List<ItemDropRule> itemRules,
                                                     List<ItemDropRule> commandRules) {
-    Object rawDrops = config.get("drops");
-    if (rawDrops == null) {
+    if (!(config.get("drops") instanceof JsonArray configuredDrops)) {
       throw invalid("drops", "expected a non-empty list");
     }
-    if (!(rawDrops instanceof List<?>)) {
-      throw invalid("drops", "expected a non-empty list");
-    }
-
-    List<?> configuredDrops = (List<?>) rawDrops;
     if (configuredDrops.isEmpty()) {
       throw invalid("drops", "expected a non-empty list");
     }
@@ -132,13 +121,10 @@ public final class MiningRuleManager {
     List<ItemDropRule> parsedRules = new ArrayList<>(configuredDrops.size());
     long generationBlockTargets = 0L;
     for (int index = 0; index < configuredDrops.size(); index++) {
-      Object rawEntry = configuredDrops.get(index);
       String path = "drops[" + index + "]";
-      if (!(rawEntry instanceof Map<?, ?>)) {
-        throw invalid(path, "expected a map");
+      if (!(configuredDrops.get(index) instanceof JsonObject entry)) {
+        throw invalid(path, "expected a table");
       }
-
-      Map<?, ?> entry = (Map<?, ?>) rawEntry;
       ItemDropRule rule = isCommandRule(entry) ? parseCommandRule(entry, path) : parseItemRule(entry, path);
       parsedRules.add(rule);
       if (rule.type == ItemDropRule.DropType.COMMAND) {
@@ -156,13 +142,14 @@ public final class MiningRuleManager {
     return parsedRules;
   }
 
-  private static boolean isCommandRule(Map<?, ?> entry) {
-    Object typeValue = entry.get("type");
-    String type = typeValue instanceof String ? ((String) typeValue).toLowerCase(Locale.ROOT) : "";
-    return "command".equals(type) || entry.containsKey("command") || entry.containsKey("commands");
+  private static boolean isCommandRule(JsonObject entry) {
+    JsonElement typeValue = entry.get("type");
+    String type = typeValue instanceof JsonPrimitive primitive && primitive.isString()
+        ? primitive.getAsString().toLowerCase(Locale.ROOT) : "";
+    return "command".equals(type) || entry.has("command") || entry.has("commands");
   }
 
-  private static ItemDropRule parseCommandRule(Map<?, ?> entry, String path) {
+  private static ItemDropRule parseCommandRule(JsonObject entry, String path) {
     int minY = optionalInteger(entry, "min_y", -64, path + ".min_y");
     int maxY = optionalInteger(entry, "max_y", 320, path + ".max_y");
     validateRange(minY, maxY, path);
@@ -177,7 +164,7 @@ public final class MiningRuleManager {
     return new ItemDropRule(List.copyOf(commands), chance, minY, maxY, executionTarget);
   }
 
-  private static ItemDropRule parseItemRule(Map<?, ?> entry, String path) {
+  private static ItemDropRule parseItemRule(JsonObject entry, String path) {
     int minY = optionalInteger(entry, "min_y", -64, path + ".min_y");
     int maxY = optionalInteger(entry, "max_y", 320, path + ".max_y");
     validateRange(minY, maxY, path);
@@ -214,11 +201,11 @@ public final class MiningRuleManager {
       throw invalid(path + ".vein_max_size", "must be less than or equal to " + MAX_VEIN_SIZE);
     }
 
-    Object fortuneValue = entry.get("fortune_multiplier");
-    if (fortuneValue != null && !(fortuneValue instanceof Boolean)) {
+    JsonElement fortuneValue = entry.get("fortune_multiplier");
+    if (fortuneValue != null && (!(fortuneValue instanceof JsonPrimitive primitive) || !primitive.isBoolean())) {
       throw invalid(path + ".fortune_multiplier", "expected true or false");
     }
-    boolean fortuneMultiplier = fortuneValue instanceof Boolean && (Boolean) fortuneValue;
+    boolean fortuneMultiplier = fortuneValue != null && fortuneValue.getAsBoolean();
     Set<ToolTier> toolTiers = parseToolTiers(entry.get("tool_tiers"), path + ".tool_tiers");
     int expDrop = parseExpDrop(entry, material, path);
     ItemDropRule rule = new ItemDropRule(material, veinsPerChunk, veinMinSize, veinMaxSize, minY, maxY, fortuneMultiplier, toolTiers, expDrop);
@@ -232,47 +219,46 @@ public final class MiningRuleManager {
     return (long) Math.ceil(rule.veinsPerChunk) * rule.veinMaxSize;
   }
 
-  private static List<String> parseCommands(Map<?, ?> entry, String path) {
-    if (entry.containsKey("command")) {
+  private static List<String> parseCommands(JsonObject entry, String path) {
+    if (entry.has("command")) {
       throw invalid(path + ".command", "unsupported; use 'commands'");
     }
 
-    Object commandList = entry.get("commands");
+    JsonElement commandList = entry.get("commands");
     if (commandList == null) {
       throw invalid(path + ".commands", "must contain at least one command");
     }
-    if (!(commandList instanceof List<?>)) {
+    if (!(commandList instanceof JsonArray configuredCommands)) {
       throw invalid(path + ".commands", "expected a list of commands");
     }
 
-    List<?> configuredCommands = (List<?>) commandList;
     if (configuredCommands.isEmpty()) {
       throw invalid(path + ".commands", "must contain at least one command");
     }
 
     List<String> commands = new ArrayList<>(configuredCommands.size());
     for (int index = 0; index < configuredCommands.size(); index++) {
-      Object configuredCommand = configuredCommands.get(index);
+      JsonElement configuredCommand = configuredCommands.get(index);
       String commandPath = path + ".commands[" + index + "]";
-      if (!(configuredCommand instanceof String) || ((String) configuredCommand).isBlank()) {
+      if (!(configuredCommand instanceof JsonPrimitive primitive) || !primitive.isString() || primitive.getAsString().isBlank()) {
         throw invalid(commandPath, "expected a non-empty command");
       }
-      commands.add((String) configuredCommand);
+      commands.add(primitive.getAsString());
     }
     return commands;
   }
 
-  private static ItemDropRule.ExecutionTarget parseExecutionTarget(Map<?, ?> entry, String path) {
-    if (entry.containsKey("as_player")) {
+  private static ItemDropRule.ExecutionTarget parseExecutionTarget(JsonObject entry, String path) {
+    if (entry.has("as_player")) {
       throw invalid(path + ".as_player", "unsupported; use 'execute_as'");
     }
-    if (entry.containsKey("as_console")) {
+    if (entry.has("as_console")) {
       throw invalid(path + ".as_console", "unsupported; use 'execute_as'");
     }
 
-    Object executeAsValue = entry.get("execute_as");
-    if (executeAsValue instanceof String) {
-      String executeAs = (String) executeAsValue;
+    JsonElement executeAsValue = entry.get("execute_as");
+    if (executeAsValue instanceof JsonPrimitive primitive && primitive.isString()) {
+      String executeAs = primitive.getAsString();
       if ("player".equals(executeAs)) {
         return ItemDropRule.ExecutionTarget.PLAYER;
       }
@@ -288,25 +274,24 @@ public final class MiningRuleManager {
     return ItemDropRule.ExecutionTarget.CONSOLE;
   }
 
-  private static Set<ToolTier> parseToolTiers(Object value, String path) {
-    if (!(value instanceof List<?>)) {
+  private static Set<ToolTier> parseToolTiers(JsonElement value, String path) {
+    if (!(value instanceof JsonArray configuredTiers)) {
       throw invalid(path, "expected a non-empty list");
     }
 
-    List<?> configuredTiers = (List<?>) value;
     if (configuredTiers.isEmpty()) {
       throw invalid(path, "expected a non-empty list");
     }
 
     Set<ToolTier> tiers = new LinkedHashSet<>(configuredTiers.size());
     for (int index = 0; index < configuredTiers.size(); index++) {
-      Object configuredTier = configuredTiers.get(index);
+      JsonElement configuredTier = configuredTiers.get(index);
       String tierPath = path + "[" + index + "]";
-      if (!(configuredTier instanceof String) || ((String) configuredTier).isBlank()) {
+      if (!(configuredTier instanceof JsonPrimitive primitive) || !primitive.isString() || primitive.getAsString().isBlank()) {
         throw invalid(tierPath, "expected a tool tier name");
       }
 
-      String tierName = (String) configuredTier;
+      String tierName = primitive.getAsString();
       try {
         tiers.add(ToolTier.valueOf(tierName.toUpperCase(Locale.ROOT)));
       } catch (IllegalArgumentException exception) {
@@ -316,7 +301,7 @@ public final class MiningRuleManager {
     return Set.copyOf(tiers);
   }
 
-  private static int parseExpDrop(Map<?, ?> entry, Material material, String path) {
+  private static int parseExpDrop(JsonObject entry, Material material, String path) {
     int defaultExp = switch (material) {
       case COAL, RAW_COPPER -> 2;
       case DIAMOND, EMERALD -> 7;
@@ -333,39 +318,39 @@ public final class MiningRuleManager {
     return expDrop;
   }
 
-  private static String requiredString(Object value, String path, String description) {
-    if (!(value instanceof String) || ((String) value).isBlank()) {
+  private static String requiredString(JsonElement value, String path, String description) {
+    if (!(value instanceof JsonPrimitive primitive) || !primitive.isString() || primitive.getAsString().isBlank()) {
       throw invalid(path, "expected a non-empty " + description);
     }
-    return (String) value;
+    return primitive.getAsString();
   }
 
-  private static int optionalInteger(Map<?, ?> entry, String key, int defaultValue, String path) {
-    Object value = entry.get(key);
+  private static int optionalInteger(JsonObject entry, String key, int defaultValue, String path) {
+    JsonElement value = entry.get(key);
     if (value == null) {
       return defaultValue;
     }
-    if (!(value instanceof Number)) {
+    if (!(value instanceof JsonPrimitive primitive) || !primitive.isNumber()) {
       throw invalid(path, "expected an integer");
     }
 
-    double numericValue = ((Number) value).doubleValue();
+    double numericValue = primitive.getAsDouble();
     if (!Double.isFinite(numericValue) || numericValue != Math.rint(numericValue) || numericValue < Integer.MIN_VALUE || numericValue > Integer.MAX_VALUE) {
       throw invalid(path, "expected an integer");
     }
     return (int) numericValue;
   }
 
-  private static double optionalFiniteDouble(Map<?, ?> entry, String key, double defaultValue, String path) {
-    Object value = entry.get(key);
+  private static double optionalFiniteDouble(JsonObject entry, String key, double defaultValue, String path) {
+    JsonElement value = entry.get(key);
     if (value == null) {
       return defaultValue;
     }
-    if (!(value instanceof Number)) {
+    if (!(value instanceof JsonPrimitive primitive) || !primitive.isNumber()) {
       throw invalid(path, "expected a finite number");
     }
 
-    double numericValue = ((Number) value).doubleValue();
+    double numericValue = primitive.getAsDouble();
     if (!Double.isFinite(numericValue)) {
       throw invalid(path, "expected a finite number");
     }

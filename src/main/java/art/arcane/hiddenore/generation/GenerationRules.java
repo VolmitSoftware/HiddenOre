@@ -3,11 +3,12 @@ package art.arcane.hiddenore.generation;
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.volmlib.util.bukkit.WorldIdentity;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -128,16 +129,15 @@ public final class GenerationRules extends BlockPopulator implements Listener {
     HiddenOreTelemetry.addOreRemovalBlocks(replaced);
   }
 
-  public static GenerationPolicy parsePolicy(FileConfiguration configuration) {
-    FileConfiguration config = Objects.requireNonNull(configuration, "configuration");
-    Object rawPolicy = config.get("ore-removal");
+  public static GenerationPolicy parsePolicy(JsonObject configuration) {
+    JsonObject config = Objects.requireNonNull(configuration, "configuration");
+    JsonElement rawPolicy = config.get("ore-removal");
     if (rawPolicy == null) {
       return DISABLED_POLICY;
     }
 
-    ConfigurationSection section = config.getConfigurationSection("ore-removal");
-    if (section == null) {
-      throw invalid("ore-removal", "expected a configuration section");
+    if (!(rawPolicy instanceof JsonObject section)) {
+      throw invalid("ore-removal", "expected a table");
     }
 
     boolean enabled = optionalBoolean(section, "enabled", false, "ore-removal.enabled");
@@ -146,23 +146,22 @@ public final class GenerationRules extends BlockPopulator implements Listener {
     return new GenerationPolicy(enabled, worldExceptions, defaults);
   }
 
-  private static Map<String, Map<Material, Material>> parseWorldExceptions(ConfigurationSection policy) {
-    Object rawExceptions = policy.get("exceptions");
+  private static Map<String, Map<Material, Material>> parseWorldExceptions(JsonObject policy) {
+    JsonElement rawExceptions = policy.get("exceptions");
     if (rawExceptions == null) {
       return Map.of();
     }
 
-    ConfigurationSection exceptions = policy.getConfigurationSection("exceptions");
-    if (exceptions == null) {
-      throw invalid("ore-removal.exceptions", "expected a configuration section");
+    if (!(rawExceptions instanceof JsonObject exceptions)) {
+      throw invalid("ore-removal.exceptions", "expected a table");
     }
 
     Map<String, Map<Material, Material>> worldExceptions = new HashMap<>();
-    for (String world : exceptions.getKeys(false)) {
+    for (Map.Entry<String, JsonElement> entry : exceptions.entrySet()) {
+      String world = entry.getKey();
       String path = "ore-removal.exceptions." + world;
-      ConfigurationSection worldSection = exceptions.getConfigurationSection(world);
-      if (worldSection == null) {
-        throw invalid(path, "expected a configuration section");
+      if (!(entry.getValue() instanceof JsonObject worldSection)) {
+        throw invalid(path, "expected a table");
       }
       String worldKey;
       try {
@@ -175,19 +174,18 @@ public final class GenerationRules extends BlockPopulator implements Listener {
     return Map.copyOf(worldExceptions);
   }
 
-  private static Map<Material, Material> parseReplacements(ConfigurationSection parent, String key, String path) {
-    Object rawSection = parent.get(key);
+  private static Map<Material, Material> parseReplacements(JsonObject parent, String key, String path) {
+    JsonElement rawSection = parent.get(key);
     if (rawSection == null) {
       return Map.of();
     }
-    ConfigurationSection section = parent.getConfigurationSection(key);
-    if (section == null) {
-      throw invalid(path, "expected a configuration section");
+    if (!(rawSection instanceof JsonObject section)) {
+      throw invalid(path, "expected a table");
     }
     return parseReplacements(section, path);
   }
 
-  private static Map<Material, Material> parseReplacements(ConfigurationSection section, String path) {
+  private static Map<Material, Material> parseReplacements(JsonObject section, String path) {
     Map<Material, Material> replacements = new HashMap<>();
     boolean defaultValue = optionalBoolean(section, "default", false, path + ".default");
     if (defaultValue) {
@@ -196,7 +194,8 @@ public final class GenerationRules extends BlockPopulator implements Listener {
       }
     }
 
-    for (String key : section.getKeys(false)) {
+    for (Map.Entry<String, JsonElement> entry : section.entrySet()) {
+      String key = entry.getKey();
       if ("default".equals(key)) {
         continue;
       }
@@ -205,11 +204,11 @@ public final class GenerationRules extends BlockPopulator implements Listener {
       if (material == null || !ORES.contains(material)) {
         throw invalid(materialPath, "unknown ore material '" + key + "'");
       }
-      Object value = section.get(key);
-      if (!(value instanceof Boolean)) {
+      JsonElement value = entry.getValue();
+      if (!(value instanceof JsonPrimitive primitive) || !primitive.isBoolean()) {
         throw invalid(materialPath, "expected true or false");
       }
-      if ((Boolean) value) {
+      if (primitive.getAsBoolean()) {
         replacements.put(material, getReplacement(material));
       } else {
         replacements.remove(material);
@@ -218,15 +217,15 @@ public final class GenerationRules extends BlockPopulator implements Listener {
     return Map.copyOf(replacements);
   }
 
-  private static boolean optionalBoolean(ConfigurationSection section, String key, boolean defaultValue, String path) {
-    Object value = section.get(key);
+  private static boolean optionalBoolean(JsonObject section, String key, boolean defaultValue, String path) {
+    JsonElement value = section.get(key);
     if (value == null) {
       return defaultValue;
     }
-    if (!(value instanceof Boolean)) {
+    if (!(value instanceof JsonPrimitive primitive) || !primitive.isBoolean()) {
       throw invalid(path, "expected true or false");
     }
-    return (Boolean) value;
+    return primitive.getAsBoolean();
   }
 
   private void attachToLoadedWorlds() {

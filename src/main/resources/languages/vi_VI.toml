@@ -1,0 +1,248 @@
+# HiddenOre — vi_VI
+#
+# === Chỉnh sửa tệp ===
+# plugins/HiddenOre/languages/vi_VI.toml
+# Bạn có thể chỉnh sửa trực tiếp tệp này. Thay đổi cục bộ được giữ lại; mục thiếu hoặc không hợp lệ dùng bản tiếng Anh tích hợp.
+# /hiddenore language server edit vi_VI
+#
+# === Tiền tố ===
+# prefix được thêm trước tin nhắn trò chuyện; chuỗi rỗng sẽ ẩn nó.
+#
+# === Định dạng ===
+# Mã màu: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Biến ===
+# Giữ nguyên tên biến và chỉ dùng những biến có sẵn trong từng thông báo.
+#   {after}  Giá trị sau khi thay đổi
+#   {amount}  Số lượng vật phẩm rơi
+#   {argument}  đối số ngoài dự kiến
+#   {before}  Giá trị trước khi thay đổi
+#   {block}  Loại khối được đào
+#   {chance}  Xác suất kích hoạt đã cấu hình
+#   {command}  đường dẫn lệnh
+#   {count}  Số lượng thông báo
+#   {group}  Danh mục trong trình sửa ngôn ngữ
+#   {key}  Khóa thông báo hoặc tham số
+#   {line}  Số dòng trong thông báo
+#   {locale}  mã vùng
+#   {material}  Loại vật phẩm rơi
+#   {maximum}  Giá trị được chấp nhận tối đa
+#   {number}  Số thứ tự mục
+#   {page}  Số trang hiện tại
+#   {pages}  Tổng số trang
+#   {parameter}  tên tham số
+#   {path}  Đường dẫn cài đặt
+#   {personal}  mã vùng cá nhân
+#   {plugin}  Tên phần bổ sung
+#   {reason}  lý do lỗi
+#   {roll}  Giá trị ngẫu nhiên được lấy
+#   {target}  Plugin được chọn ngôn ngữ
+#   {type}  kiểu
+#   {usage}  cách dùng lệnh
+#   {value}  giá trị hiện tại, mặc định hoặc thô
+#   {variables}  chỗ giữ chỗ hợp lệ
+#   {vein}  Tên mạch quặng
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cBạn không có quyền sử dụng lệnh này.&r"
+player_only = "&cChỉ người chơi mới có thể sử dụng lệnh này.&r"
+debug_enabled = "&aĐã bật chế độ gỡ lỗi.&r"
+debug_disabled = "&cĐã tắt chế độ gỡ lỗi.&r"
+config_reloaded_message = "&aCấu hình đã được cập nhật và nạp lại.&r"
+
+[debug]
+player_placed = "&c{block} do người chơi đặt; không có vật phẩm ẩn.&r"
+random_drop = "&aVật phẩm ngẫu nhiên: {material} x{amount}&r"
+random_drop_lost = "&cĐã mất vật phẩm ngẫu nhiên {material} vì cấp công cụ quá thấp.&r"
+vein_drop = "&aMạch quặng {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aMạch quặng {vein}: {material} x{amount} (đã phát hiện)&r"
+vein_drop_lost = "&cMạch quặng {vein}: mất {material} vì cấp công cụ quá thấp.&r"
+command_hit = "&7Kiểm tra lệnh: chance={chance}, roll={roll} -> &athành công&7&r"
+command_miss = "&7Kiểm tra lệnh: chance={chance}, roll={roll} -> &cthất bại&7&r"
+
+[command.parameter]
+debugdump_upload = "Tải báo cáo lên mclo.gs"
+
+[command.description]
+config = "Chỉnh sửa cài đặt HiddenOre"
+debug_group = "HiddenOre: Công cụ chẩn đoán"
+debugdump = "Tạo báo cáo chẩn đoán và tải lên nếu muốn"
+root = "Nhóm lệnh HiddenOre"
+debug = "Bật hoặc tắt chế độ gỡ lỗi quặng của bạn"
+
+[director.help]
+no_subcommands = "Không có lệnh con trên trang này."
+no_description = "Không có mô tả"
+command_group = "Nhóm lệnh. Nhấp để mở."
+category = "Danh mục lệnh"
+no_parameters = "Không có tham số. Nhấp để điền sẵn lệnh."
+parameters_hover = "Di chuột qua các tham số để tìm hiểu thêm."
+
+[director.help.navigation]
+back = "Quay lại"
+page = "Trang"
+
+[director.help.navigation.parent]
+hover = "Quay lại nhóm lệnh cha"
+
+[director.help.navigation.previous]
+hover = "Trang trước"
+
+[director.help.navigation.next]
+hover = "Trang sau"
+
+[director.help.parameter]
+required = "Tham số này là bắt buộc."
+optional = "Tham số này là tùy chọn."
+default = "Mặc định là \"{value}\" nếu không được chỉ định."
+type = "Tham số này có kiểu {type}."
+
+[director.runtime]
+usage = "Cách dùng: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Không thể chạy lệnh này từ nguồn này."
+unknown_parameter = "Khóa tham số không xác định: {key}"
+unexpected_argument = "Đối số không mong đợi \"{argument}\". Các tham số tùy chọn phải được chỉ định bằng khóa, ví dụ seed=123"
+unclosed_group = "Thiếu dấu \"]\" đóng cho tham số {key}"
+conversion_failed = "Không thể chuyển \"{value}\" thành {type} cho {parameter}"
+default_parse_failed = "Không thể phân tích giá trị mặc định của tham số {parameter}"
+missing_argument = "Thiếu đối số \"{parameter}\" ({type})"
+execution_failed = "Không thể thực thi lệnh {command}: {reason}"
+
+[language.menu]
+your_language = "Ngôn ngữ của bạn"
+reset_your_language = "Đặt lại ngôn ngữ của bạn"
+server_default = "Ngôn ngữ mặc định của máy chủ"
+edit_messages = "Chỉnh sửa thông báo ngôn ngữ"
+use_server_default = "Dùng ngôn ngữ mặc định của máy chủ"
+current = "Hiện tại: {locale}"
+current_with_personal = "Hiện tại: {locale} (Của bạn: {personal})"
+your_description = "Chỉ thay đổi những thông báo bạn thấy."
+reset_description = "Dùng ngôn ngữ mặc định của máy chủ."
+server_description = "Thay đổi ngôn ngữ mặc định của máy chủ."
+edit_description = "Mở trình chỉnh sửa thông báo cho từng ngôn ngữ."
+select_description = "Nhấp để chọn ngôn ngữ này."
+remove_personal_description = "Xóa lựa chọn ngôn ngữ cá nhân của bạn."
+no_controls = "Bạn không có quyền dùng các tùy chọn ngôn ngữ."
+command = "Câu lệnh: {command}"
+selected = "Đã chọn"
+all-volmit-plugins = "Tất cả plugin Volmit"
+
+[language.error]
+stopping = "Không có khả năng chọn ngôn ngữ trong khi bổ sung đang dừng."
+editor-player-only = "Mở trình soạn thảo ngôn ngữ trong trò chơi."
+no-providers = "Không có nhà cung cấp ngôn ngữ Volmit nào khả dụng."
+numeric-page = "Nhập số trang bằng chữ số."
+personal-player-only = "Bạn phải chọn ngôn ngữ cá nhân trong trò chơi."
+personal-permission = "Bạn không có quyền chọn ngôn ngữ của mình."
+plugin-personal-permission = "Bạn không có quyền chọn ngôn ngữ cá nhân cho {plugin}."
+plugin-server-permission = "Bạn không có quyền thay đổi ngôn ngữ máy chủ cho {plugin}."
+server-locale-required = "Chọn mã ngôn ngữ như en_US làm ngôn ngữ mặc định của máy chủ."
+unavailable-for-all = "Ngôn ngữ {locale} không khả dụng cho tất cả plugin đã chọn."
+
+[language.usage]
+editor = "Cách dùng: /{command} language server edit [locale]"
+selection = "Cách dùng: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Cách dùng: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Đang chuẩn bị ngôn ngữ {locale} cho {target}..."
+save-failed = "{plugin}: không thể lưu lựa chọn ngôn ngữ; hãy kiểm tra bảng điều khiển máy chủ."
+english-fallback = "{plugin}: {locale} không khả dụng; sẽ dùng tiếng Anh (en_US)."
+personal-selected = "{plugin}: ngôn ngữ của bạn hiện là {locale}."
+server-selected = "{plugin}: ngôn ngữ máy chủ hiện là {locale}."
+server-default-selected = "{plugin}: ngôn ngữ của bạn hiện theo ngôn ngữ mặc định của máy chủ."
+
+[language.editor]
+loading = "Đang tải tin nhắn cho {locale}..."
+
+[language.editor.section]
+languages = "Ngôn ngữ"
+search = "Tìm kiếm"
+search-title = "{locale} / Tìm kiếm"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Tìm khóa hoặc nội dung tin nhắn. Nhập cancel để quay lại."
+value = "Nhập giá trị mới cho {key} trong trò chuyện."
+current = "Giá trị hiện tại: {value}"
+variables = "Biến: {variables}"
+guidance = "Dùng \\n để xuống dòng, \\\\ để nhập dấu gạch chéo ngược, hoặc nhập cancel để quay lại."
+
+[language.editor.input]
+expired = "Đã hết thời gian nhập trong trình chỉnh sửa ngôn ngữ."
+too-long = "Nội dung nhập chỉ được có tối đa {maximum} ký tự."
+unable-to-save = "Không thể lưu: {reason}"
+
+[language.editor.navigation]
+back = "&eQuay lại&r"
+close = "&cĐóng&r"
+previous-page = "&eTrang trước&r"
+next-page = "&eTrang kế&r"
+
+[language.editor.search]
+messages = "Tìm tin nhắn"
+messages-lore = "Nhấn vào để tìm kiếm mọi tin nhắn."
+clear = "Xóa tìm kiếm"
+
+[language.editor.message]
+current-value = "&7Giá trị hiện có:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Nhấp để chỉnh sửa một dạng số nhiều.&r"
+edit-lines = "&7Nhấp để chỉnh sửa từng dòng.&r"
+edit-chat = "&7Nhấp để chỉnh sửa trong trò chuyện.&r"
+
+[language.editor.locale]
+open = "&8Nhấn vào để mở ngôn ngữ này.&r"
+
+[language.editor.category]
+message-count = "&7{count} tin nhắn&r"
+open = "&8Nhấn vào để mở phân loại này.&r"
+
+[language.editor.error]
+no-permission = "Bạn không có quyền chỉnh sửa ngôn ngữ của {plugin}."
+unable-to-edit = "Không thể chỉnh sửa: {reason}"
+
+[language.editor.saved]
+summary = "Đã lưu {locale}. Các lựa chọn ngôn ngữ không thay đổi."
+change = "{key}: “{before}” đã đổi thành “{after}”."
+
+[language.editor.part]
+line = "Dòng {line}"
+
+[language.editor.value]
+none = "Không có"
+empty = "(trống)"
+
+[config.editor]
+title = "{plugin} / Cấu hình"
+section = "Phần: {path}"
+page = "Trang {page} trên {pages}"
+entry = "Mục {number}"
+current = "Giá trị hiện tại: {value}"
+open = "Nhấp để mở phần này."
+toggle = "Nhấp để chuyển giữa true và false."
+edit = "Nhấp để nhập giá trị mới trong trò chuyện."
+prompt = "Nhập giá trị mới cho {path}. Nhập cancel để quay lại."
+expired = "Đã hết thời gian nhập cấu hình."
+too-long = "Nhập tối đa {maximum} ký tự."
+saving = "Đang lưu cấu hình..."
+saved = "Đã lưu {path}. Các thay đổi sẽ tự động được áp dụng."
+failed = "Không thể chỉnh sửa cấu hình: {reason}"
+loading = "Đang tải cấu hình..."
+empty = "Phần này không có cài đặt nào."
+player-only = "Mở trình chỉnh sửa cấu hình trong trò chơi."
+no-permission = "Bạn không có quyền chỉnh sửa cấu hình này."
+back = "Quay lại"
+previous = "Trang trước"
+next = "Trang sau"
+refresh = "Làm mới"
+close = "Đóng"
+
+[config.editor.type]
+text = "Văn bản không cần dấu ngoặc kép bao quanh."
+integer = "Nhập một số nguyên."
+decimal = "Nhập một số, chẳng hạn 0.25."
+list = "Dùng danh sách TOML, chẳng hạn [\"stone\", \"deepslate\"]."
+

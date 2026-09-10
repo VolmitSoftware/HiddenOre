@@ -19,9 +19,14 @@ import art.arcane.volmlib.util.localization.VolmitLocales;
 import art.arcane.volmlib.util.plugin.ComponentText;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.configuration.file.YamlConfiguration;
+import art.arcane.volmlib.util.config.TomlCodec;
+import art.arcane.volmlib.util.localization.TomlLanguageWriter;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -31,10 +36,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,45 +59,44 @@ public class MessagesTest {
   @Rule
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
   @Test
-  public void editorPersistsEnglishMessagesAndPreservesGlobalOverrides() throws Exception {
+  public void editorPersistsEnglishMessagesInTheLanguageFile() throws Exception {
     Path data = temporaryFolder.newFolder().toPath();
     Path languages = Files.createDirectories(data.resolve("languages"));
-    Files.writeString(data.resolve("language.yml"), "prefix: ''\n");
     Messages messages = new Messages(null, languages);
-    messages.reload(new YamlConfiguration(), "language.yml", "en_US");
+    messages.reload("en_US");
     PluginLanguageEditor.Options editor = messages.editorOptions();
     LocalizationSnapshot original = editor.loader().load("en_US");
-    TextValue replacement = new TextValue("Edited permission message");
+    TextValue replacement = new TextValue("&cEdited permission message");
     editor.writer().write(new PluginLanguageEditor.Edit("en_US", Messages.NO_PERMISSION.id(),
         original.value(Messages.NO_PERMISSION), replacement));
-    TextValue editedReload = new TextValue("Reload complete");
-    editor.writer().write(new PluginLanguageEditor.Edit("en_US", Messages.RELOADED.id(),
-        original.value(Messages.RELOADED), editedReload));
+    TextValue editedReload = new TextValue("&6Reload complete&r");
+    editor.writer().write(new PluginLanguageEditor.Edit("en_US", Messages.CONFIG_RELOADED_MESSAGE.id(),
+        original.value(Messages.CONFIG_RELOADED_MESSAGE), editedReload));
 
     assertEquals(replacement, messages.defaultSnapshot().value(Messages.NO_PERMISSION));
     LocalizationSnapshot reloaded = editor.loader().load("en_US");
     assertEquals(replacement, reloaded.value(Messages.NO_PERMISSION));
-    assertEquals(editedReload, reloaded.value(Messages.RELOADED));
-    assertEquals("prefix: ''\n", Files.readString(data.resolve("language.yml")));
+    assertEquals(editedReload, reloaded.value(Messages.CONFIG_RELOADED_MESSAGE));
+    assertTrue(Files.readString(languages.resolve("en_US.toml")).contains("&cEdited permission message"));
+    assertTextStyle(messages.component(Messages.NO_PERMISSION), "Edited permission message", NamedTextColor.RED, false);
   }
 
   @Test
   public void editorLeavesActiveLocaleUnchangedAndRejectsInvalidOrStaleEdits() throws Exception {
     Path data = temporaryFolder.newFolder().toPath();
     Path languages = Files.createDirectories(data.resolve("languages"));
-    Files.writeString(data.resolve("language.yml"), "prefix: ''\n");
-    Files.writeString(languages.resolve("fr_FR.yml"), "locale: fr_FR\nno_permission: Permission\n");
+    Files.writeString(languages.resolve("fr_FR.toml"), "no_permission = \"Permission\"\n");
     try (RemoteLanguageCatalog remote = RemoteLanguageCatalog.load(new RemoteLanguageCatalog.Options(
         "HiddenOre", URI.create("https://raw.githubusercontent.com/VolmitSoftware/HiddenOre/"),
-        "src/main/resources/languages", ".yml", "language-source.properties", languages.resolve("cache"),
+        "src/main/resources/languages", ".toml", "language-source.properties",
         Messages.class.getClassLoader()))) {
       Messages messages = new Messages(remote, languages);
       PluginLanguageEditor.Options editor = messages.editorOptions();
       LocalizationSnapshot original = editor.loader().load("fr_FR");
-      Path file = languages.resolve("overrides/fr_FR.yml");
+      Path file = languages.resolve("fr_FR.toml");
       assertThrows(IllegalArgumentException.class, () -> editor.writer().write(new PluginLanguageEditor.Edit(
           "fr_FR", Messages.NO_PERMISSION.id(), original.value(Messages.NO_PERMISSION), new TextValue("{unexpected}"))));
-      assertFalse(Files.exists(file));
+      assertEquals("no_permission = \"Permission\"\n", Files.readString(file));
       TextValue replacement = new TextValue("Permission modifiee");
       editor.writer().write(new PluginLanguageEditor.Edit("fr_FR", Messages.NO_PERMISSION.id(),
           original.value(Messages.NO_PERMISSION), replacement));
@@ -102,20 +112,20 @@ public class MessagesTest {
   @Test
   public void englishDefaultsLiveInTheTypedJavaCatalog() {
     Messages messages = new Messages();
+    assertTrue(messages.reload("en_US").applied());
 
-    assertEquals("<green>[HiddenOre]</green> ", Messages.PREFIX.english());
+    assertEquals("&a[HiddenOre]&r ", Messages.PREFIX.english());
     assertTrue(Messages.NO_PERMISSION.english().contains("You do not have permission"));
     assertEquals("[HiddenOre] You do not have permission to use this command.", text(messages.component(Messages.NO_PERMISSION)));
   }
 
   @Test
   public void everyDownloadableLocaleFullyCoversTheTypedCatalog() throws Exception {
-    Messages messages = new Messages();
+    Path languages = temporaryFolder.newFolder().toPath();
+    Messages messages = new Messages(null, languages);
     for (String locale : VolmitLocales.nonEnglish()) {
-      YamlConfiguration language = new YamlConfiguration();
-      language.load(Path.of("src/main/resources/languages", locale + ".yml").toFile());
-      language.set("locale", null);
-      LocalizationReloadResult result = messages.reload(language, "language.yml", locale);
+      Files.copy(Path.of("src/main/resources/languages", locale + ".toml"), languages.resolve(locale + ".toml"));
+      LocalizationReloadResult result = messages.reload(locale);
 
       assertTrue(locale, result.applied());
       for (MessageKey key : Messages.catalog().keys()) {
@@ -127,7 +137,7 @@ public class MessagesTest {
   @Test
   public void downloadableResourceSetExactlyMatchesSharedManifest() throws Exception {
     Set<String> expected = VolmitLocales.nonEnglish().stream()
-        .map(locale -> locale + ".yml")
+        .map(locale -> locale + ".toml")
         .collect(Collectors.toUnmodifiableSet());
     try (Stream<Path> paths = Files.list(Path.of("src/main/resources/languages"))) {
       Set<String> actual = paths
@@ -136,24 +146,24 @@ public class MessagesTest {
           .collect(Collectors.toUnmodifiableSet());
       assertEquals(expected, actual);
     }
-    assertFalse(expected.contains(VolmitLocales.ENGLISH + ".yml"));
+    assertFalse(expected.contains(VolmitLocales.ENGLISH + ".toml"));
   }
 
   @Test
   public void installedCatalogAndPersonalChoiceUseTheSharedRuntime() throws Exception {
     Path directory = temporaryFolder.newFolder().toPath();
-    Files.copy(Path.of("src/main/resources/languages/de_DE.yml"), directory.resolve("de_DE.yml"));
+    Files.copy(Path.of("src/main/resources/languages/de_DE.toml"), directory.resolve("de_DE.toml"));
     Messages messages = new Messages();
     UUID player = UUID.randomUUID();
     try (RemoteLanguageCatalog remote = RemoteLanguageCatalog.load(new RemoteLanguageCatalog.Options(
         "HiddenOre", URI.create("https://raw.githubusercontent.com/VolmitSoftware/HiddenOre/"),
-        "src/main/resources/languages", ".yml", "language-source.properties", directory.resolve("cache"),
+        "src/main/resources/languages", ".toml", "language-source.properties",
         Messages.class.getClassLoader()));
          PluginLanguageService service = new PluginLanguageService(new PluginLanguageService.Options(
              directory.resolve("preferences.properties"), VolmitLocales::all, () -> "en_US", messages::defaultSnapshot,
              locale -> {
                Messages selected = new Messages(remote, directory);
-               selected.reload(new YamlConfiguration(), "language.yml", locale);
+               selected.reload(locale);
                return selected.defaultSnapshot();
              }, (locale, prepared) -> messages.install(prepared), Logger.getAnonymousLogger()))) {
       messages.languageService(service);
@@ -169,102 +179,76 @@ public class MessagesTest {
 
   @Test
   public void generatedFilesKeepLanguageAndMetricsInTheMainConfig() throws Exception {
-    YamlConfiguration config = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/hiddenore.yml").toFile());
-    YamlConfiguration language = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/language.yml").toFile());
-    List<String> keys = config.getKeys(false).stream().toList();
+    JsonObject config = TomlCodec.toJsonElement(Files.readString(Path.of("src/main/resources/hiddenore.toml")))
+        .getAsJsonObject();
 
-    assertEquals("language", keys.get(0));
-    assertEquals("metrics", keys.get(1));
-    assertFalse(language.contains("locale"));
+    assertEquals("en_US", config.get("language").getAsString());
+    assertTrue(config.get("metrics").getAsBoolean());
   }
 
   @Test
-  public void externalOverlayIsImmutableAfterAtomicReload() {
-    Messages messages = new Messages();
-    YamlConfiguration language = new YamlConfiguration();
-    language.set("prefix", "<gold>[Erz]</gold> ");
-    language.set("no_permission", "<red>Keine Berechtigung.</red>");
-    language.set("director.help.navigation.page", "Seite");
-    language.set("command.description.reload", "HiddenOre-Konfiguration neu laden");
+  public void localeSnapshotIsImmutableUntilTheNextReload() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    Path file = languages.resolve("de_DE.toml");
+    Map<String, Object> language = new LinkedHashMap<>();
 
-    LocalizationReloadResult result = messages.reload(language, "translations/de_DE.yml", "de_DE");
-    language.set("prefix", "Changed after reload");
-    language.set("no_permission", "Changed after reload");
+    language.put("prefix", "&6[Erz]&r ");
+    language.put("no_permission", "&cKeine Berechtigung.");
+    language.put("director.help.navigation.page", "Seite");
+    language.put("command.description.debug", "Erz-Debug-Modus umschalten");
+
+    saveLanguageFile(file, language);
+    Messages messages = new Messages(null, languages);
+    LocalizationReloadResult result = messages.reload("de_DE");
+    language.put("prefix", "Changed after reload");
+    language.put("no_permission", "Changed after reload");
+    saveLanguageFile(file, language);
 
     assertTrue(result.applied());
     assertEquals("[Erz] Keine Berechtigung.", text(messages.component(Messages.NO_PERMISSION)));
     DirectorTextResolver resolver = messages.directorResolver();
     assertEquals("Seite", resolver.resolve(DirectorHelpMessages.PAGE));
-    assertEquals("HiddenOre-Konfiguration neu laden", resolver.resolve(Messages.COMMAND_RELOAD_DESCRIPTION));
+    assertEquals("Erz-Debug-Modus umschalten", resolver.resolve(Messages.COMMAND_DEBUG_DESCRIPTION));
+    messages.reload("de_DE");
+    assertEquals("Changed after reloadChanged after reload", text(messages.component(Messages.NO_PERMISSION)));
   }
 
   @Test
-  public void invalidReloadRetainsTheLastGoodSnapshot() {
-    Messages messages = new Messages();
-    YamlConfiguration valid = new YamlConfiguration();
-    valid.set("no_permission", "<red>Accès refusé.</red>");
-    messages.reload(valid, "translations/fr_FR.yml", "fr_FR");
+  public void invalidEntriesFallBackIndividuallyAndKeepValidTranslations() throws Exception {
+    Map<String, Object> language = new LinkedHashMap<>();
+    language.put("no_permission", "&cBonjour {player}");
+    language.put("config_reloaded_message", " ");
+    language.put("player_only", List.of("Wrong shape"));
+    language.put("unknown_message", "Ignored");
+    language.put("debug_enabled", "&aDiagnose aktiv.");
 
-    YamlConfiguration placeholderDrift = new YamlConfiguration();
-    placeholderDrift.set("no_permission", "<red>Bonjour {player}</red>");
-
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> messages.reload(placeholderDrift, "translations/fr_FR.yml", "fr_FR")
-    );
-
-    assertTrue(exception.getMessage().contains("localization reload rejected"));
-    assertEquals("[HiddenOre] Accès refusé.", text(messages.component(Messages.NO_PERMISSION)));
-  }
-
-  @Test
-  public void malformedMiniMessageAndWrongShapesAreRejected() {
-    Messages messages = new Messages();
-    YamlConfiguration valid = new YamlConfiguration();
-    valid.set("reloaded", "<gold>Dernière bonne version.</gold>");
-    messages.reload(valid, "language.yml", "en_US");
-    YamlConfiguration malformed = new YamlConfiguration();
-    malformed.set("reloaded", "<red>Missing close");
-    IllegalArgumentException malformedException = assertThrows(
-        IllegalArgumentException.class,
-        () -> messages.reload(malformed, "language.yml", "en_US")
-    );
-
-    YamlConfiguration wrongShape = new YamlConfiguration();
-    wrongShape.set("reloaded", List.of("Not", "a", "string"));
-    IllegalArgumentException shapeException = assertThrows(
-        IllegalArgumentException.class,
-        () -> messages.reload(wrongShape, "language.yml", "en_US")
-    );
-
-    assertTrue(malformedException.getMessage().contains("invalid MiniMessage"));
-    assertEquals("[HiddenOre] Dernière bonne version.", text(messages.component(Messages.RELOADED)));
-    assertTrue(shapeException.getMessage().contains("expected a non-empty message string"));
-    assertEquals("[HiddenOre] Dernière bonne version.", text(messages.component(Messages.RELOADED)));
-  }
-
-  @Test
-  public void unknownOverlayKeysAreRejectedWithoutChangingDefaults() {
-    Messages messages = new Messages();
-    YamlConfiguration valid = new YamlConfiguration();
-    valid.set("debug_enabled", "<green>Diagnose aktiv.</green>");
-    messages.reload(valid, "language.yml", "en_US");
-    YamlConfiguration language = new YamlConfiguration();
-    language.set("unknown_message", "Unexpected");
-
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> messages.reload(language, "language.yml", "en_US")
-    );
-
-    assertTrue(exception.getMessage().contains("UNUSED_KEY"));
+    Messages messages = messagesWithLanguage("fr_FR", language);
+    assertTrue(messages.reload("fr_FR").applied());
+    assertEquals(Messages.NO_PERMISSION.englishValue(), messages.snapshot().value(Messages.NO_PERMISSION));
+    assertEquals(Messages.CONFIG_RELOADED_MESSAGE.englishValue(), messages.snapshot().value(Messages.CONFIG_RELOADED_MESSAGE));
+    assertEquals(Messages.PLAYER_ONLY.englishValue(), messages.snapshot().value(Messages.PLAYER_ONLY));
     assertEquals("[HiddenOre] Diagnose aktiv.", text(messages.component(Messages.DEBUG_ENABLED)));
   }
 
   @Test
-  public void untrustedNamedArgumentsCannotInjectMiniMessage() {
+  public void startupCreatesEditableEnglishAndPreservesEdits() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    new Messages(null, languages);
+    Path english = languages.resolve("en_US.toml");
+    assertTrue(Files.readString(english).contains("{material}  Dropped item type"));
+    assertTrue(Files.readString(english).contains("&a[HiddenOre]&r "));
+    Files.writeString(english, "no_permission = \"&cCustom English\"\n");
+    Messages messages = new Messages(null, languages);
+    messages.reload("en_US");
+    assertEquals("&cCustom English", ((TextValue) messages.snapshot().value(Messages.NO_PERMISSION)).template());
+    assertEquals("no_permission = \"&cCustom English\"\n", Files.readString(english));
+    assertTextStyle(messages.component(Messages.NO_PERMISSION), "Custom English", NamedTextColor.RED, false);
+  }
+
+  @Test
+  public void untrustedNamedArgumentsRemainLiteralAndCannotChangeFormatting() {
     Messages messages = new Messages();
-    String maliciousMaterial = "{amount}<click:run_command:'/op @s'>diamond</click>";
+    String maliciousMaterial = "&c&l&#12ab34\u00a7c\u00a7r{amount}<click:run_command:'/op @s'>diamond</click>";
     Component component = messages.component(
         Messages.DEBUG_RANDOM_DROP,
         MessageArgs.builder()
@@ -275,48 +259,137 @@ public class MessagesTest {
 
     assertEquals("[HiddenOre] Random drop: " + maliciousMaterial + " x4", text(component));
     assertFalse(hasClickEvent(component));
+    assertFalse(hasHoverEvent(component));
+    assertTextStyle(component, maliciousMaterial, NamedTextColor.GREEN, false);
+    assertTextStyle(component, " x", NamedTextColor.GREEN, false);
   }
 
   @Test
-  public void sharedComponentBridgePreservesColorClickAndHoverEvents() {
-    Messages messages = new Messages();
-    YamlConfiguration language = new YamlConfiguration();
-    language.set("reloaded",
-        "<click:run_command:'/hiddenore reload'><hover:show_text:'Reload HiddenOre'>"
-            + "<#12ab34>Reload now</#12ab34></hover></click>");
-    messages.reload(language, "language.yml", "en_US");
+  public void everyLanguageUsesTheStandardHeaderAndDocumentsItsVariables() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    new Messages(null, languages);
+    Set<String> expected = new HashSet<>();
+    for (MessageKey key : Messages.catalog().keys()) {
+      expected.addAll(key.placeholders());
+      expected.addAll(key.optionalPlaceholders());
+    }
+    List<String> locales = new ArrayList<>(VolmitLocales.nonEnglish());
+    locales.add(VolmitLocales.ENGLISH);
+    Pattern placeholder = Pattern.compile("(?<!\\{)\\{([A-Za-z][A-Za-z0-9_]*)\\}(?!\\})");
+    for (String locale : locales) {
+      Path path = VolmitLocales.ENGLISH.equals(locale)
+          ? languages.resolve(locale + ".toml")
+          : Path.of("src/main/resources/languages", locale + ".toml");
+      String header = Files.readString(path).lines().takeWhile(line -> line.startsWith("#"))
+          .collect(Collectors.joining("\n"));
+      assertEquals(locale, 4L, header.lines().filter(line -> line.startsWith("# === ")).count());
+      Set<String> documented = new HashSet<>();
+      Matcher matcher = placeholder.matcher(header);
+      while (matcher.find()) {
+        documented.add(matcher.group(1));
+      }
+      assertEquals(locale, expected, documented);
+    }
+  }
 
-    ComponentText bridged = ComponentText.component(messages.component(Messages.RELOADED));
+  @Test
+  public void sharedComponentBridgePreservesAmpersandColorsStylesAndResets() throws Exception {
+    Map<String, Object> language = new LinkedHashMap<>();
+    language.put("prefix", "");
+    language.put("config_reloaded_message", "&aGreen &cRed &6Gold &lBold&r Plain &#12ab34Hex");
+    Messages messages = messagesWithLanguage("en_US", language);
+    messages.reload("en_US");
+
+    ComponentText bridged = ComponentText.component(messages.component(Messages.CONFIG_RELOADED_MESSAGE));
     Component restored = MiniMessage.miniMessage().deserialize(bridged.miniMessage());
 
-    assertEquals("[HiddenOre] Reload now", bridged.plain());
-    assertTrue(hasClickEvent(restored));
-    assertTrue(hasHoverEvent(restored));
-    assertTrue(hasColor(restored, TextColor.color(0x12ab34)));
+    assertEquals("Green Red Gold Bold Plain Hex", bridged.plain());
+    assertTextStyle(restored, "Green", NamedTextColor.GREEN, false);
+    assertTextStyle(restored, "Red", NamedTextColor.RED, false);
+    assertTextStyle(restored, "Gold", NamedTextColor.GOLD, false);
+    assertTextStyle(restored, "Bold", NamedTextColor.GOLD, true);
+    assertTextStyle(restored, "Plain", null, false);
+    assertTextStyle(restored, "Hex", TextColor.color(0x12ab34), false);
+    assertFalse(hasClickEvent(restored));
+    assertFalse(hasHoverEvent(restored));
   }
 
   @Test
-  public void overlaysCannotPlaceUntrustedArgumentsInsideMiniMessageTags() {
-    Messages messages = new Messages();
-    YamlConfiguration language = new YamlConfiguration();
-    language.set(
+  public void templatesKeepAngleBracketsAndEscapedBracesAndAmpersandsLiteral() throws Exception {
+    Map<String, Object> language = new LinkedHashMap<>();
+    language.put("prefix", "");
+    language.put(
         "debug.random_drop",
-        "<click:run_command:'/{material}'>Random drop: {material} x{amount}</click>"
+        "&6<{material}> x{amount} {{literal}} \\&a"
     );
 
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> messages.reload(language, "language.yml", "en_US")
-    );
-
-    assertTrue(exception.getMessage().contains("placeholders cannot be used inside MiniMessage tags"));
-    assertFalse(hasClickEvent(messages.component(
+    Messages messages = messagesWithLanguage("en_US", language);
+    assertTrue(messages.reload("en_US").applied());
+    Component component = messages.component(
         Messages.DEBUG_RANDOM_DROP,
         MessageArgs.builder()
             .untrusted("material", "diamond")
             .untrusted("amount", 1)
             .build()
-    )));
+    );
+    assertEquals("<diamond> x1 {literal} &a", text(component));
+    assertTextStyle(component, "&a", NamedTextColor.GOLD, false);
+    assertFalse(hasClickEvent(component));
+    assertFalse(hasHoverEvent(component));
+  }
+
+  @Test
+  public void prefixResetClearsFormattingBeforeTheMessage() throws Exception {
+    Messages messages = messagesWithLanguage("en_US", Map.of(
+        "prefix", "&a&l[HiddenOre]&r ",
+        "no_permission", "Permission"
+    ));
+    messages.reload("en_US");
+    Component component = messages.component(Messages.NO_PERMISSION);
+
+    assertEquals("[HiddenOre] Permission", text(component));
+    assertTextStyle(component, "[HiddenOre]", NamedTextColor.GREEN, true);
+    assertTextStyle(component, "Permission", null, false);
+  }
+
+  @Test
+  public void templateColorRestoresFormattingAfterTrustedArguments() throws Exception {
+    Messages messages = messagesWithLanguage("en_US", Map.of(
+        "debug.random_drop", "&aRandom drop: {material}&a x{amount}"
+    ));
+    messages.reload("en_US");
+    Component component = messages.component(Messages.DEBUG_RANDOM_DROP, MessageArgs.builder()
+        .trusted("material", "&c&lDiamond")
+        .untrusted("amount", 4)
+        .build());
+
+    assertEquals("[HiddenOre] Random drop: Diamond x4", text(component));
+    assertTextStyle(component, "Diamond", NamedTextColor.RED, true);
+    assertTextStyle(component, " x", NamedTextColor.GREEN, false);
+  }
+
+  @Test
+  public void trustedArgumentColorsAndResetsOverrideInheritedFormatting() throws Exception {
+    Messages messages = messagesWithLanguage("en_US", Map.of(
+        "prefix", "",
+        "debug.random_drop", "&a&l{material}&a&l x{amount}"
+    ));
+    messages.reload("en_US");
+    Map<String, TextStyle> expected = Map.of(
+        "Stone", new TextStyle(NamedTextColor.GREEN, true),
+        "&cStone", new TextStyle(NamedTextColor.RED, false),
+        "&rStone", new TextStyle(null, false)
+    );
+    for (Map.Entry<String, TextStyle> entry : expected.entrySet()) {
+      Component component = messages.component(Messages.DEBUG_RANDOM_DROP, MessageArgs.builder()
+          .trusted("material", entry.getKey())
+          .untrusted("amount", 4)
+          .build());
+
+      assertEquals("Stone x4", text(component));
+      assertTextStyle(component, "Stone", entry.getValue().color(), entry.getValue().bold());
+      assertTextStyle(component, " x", NamedTextColor.GREEN, true);
+    }
   }
 
   @Test
@@ -344,23 +417,14 @@ public class MessagesTest {
   }
 
   @Test
-  public void operationalLanguageSettingsAreNotTreatedAsMessageKeys() {
-    Messages messages = new Messages();
-    YamlConfiguration language = new YamlConfiguration();
-    language.set("config_reloaded_sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
-    language.set("config_reloaded_sound_volume", 1.0);
-    language.set("config_reloaded_sound_pitch", 1.6);
-
-    assertTrue(messages.reload(language, "language.yml", "en_US").applied());
-  }
-
-  @Test
-  public void directorHelpUsesTheSameOverlayAndProducesValidMiniMessage() {
-    Messages messages = new Messages();
-    YamlConfiguration language = new YamlConfiguration();
-    language.set("command.description.reload", "HiddenOre neu laden");
-    language.set("director.help.no_parameters", "Keine Parameter.");
-    messages.reload(language, "language.yml", "de_DE");
+  public void directorHelpUsesTheSameOverlayAndProducesValidMiniMessage() throws Exception {
+    Map<String, Object> language = new LinkedHashMap<>();
+    language.put("command.description.debug", "&6Erz-Debug-Modus umschalten");
+    language.put("director.help.no_parameters", "&aKeine Parameter.");
+    Messages messages = messagesWithLanguage("de_DE", language);
+    messages.reload("de_DE");
+    assertEquals("Erz-Debug-Modus umschalten", messages.directorResolver().resolve(Messages.COMMAND_DEBUG_DESCRIPTION));
+    assertEquals("Keine Parameter.", messages.directorResolver().resolve(DirectorHelpMessages.NO_PARAMETERS));
     DirectorRuntimeEngine engine = DirectorEngineFactory.create(new HelpCommands());
     DirectorMiniMenu.DirectorHelpPage page = DirectorMiniMenu.resolveHelp(engine, List.of()).orElseThrow();
     List<String> rendered = DirectorMiniMenu.render(
@@ -369,15 +433,22 @@ public class MessagesTest {
         messages.directorResolver()
     );
 
-    assertTrue(String.join("\n", rendered).contains("HiddenOre neu laden"));
+    assertTrue(String.join("\n", rendered).contains("Erz-Debug-Modus umschalten"));
     assertTrue(String.join("\n", rendered).contains("Keine Parameter."));
     for (String line : rendered) {
       MiniMessage.miniMessage().deserialize(line);
     }
   }
 
-  private static List<String> texts(List<Component> components) {
-    return components.stream().map(MessagesTest::text).toList();
+  private Messages messagesWithLanguage(String locale, Map<String, Object> language) throws IOException {
+    Path languages = temporaryFolder.newFolder().toPath();
+
+    saveLanguageFile(languages.resolve(locale + ".toml"), language);
+    return new Messages(null, languages);
+  }
+
+  private void saveLanguageFile(Path file, Map<String, Object> values) throws IOException {
+    Files.writeString(file, TomlLanguageWriter.renderJson(new Gson().toJsonTree(values).getAsJsonObject(), List.of()));
   }
 
   private static String text(Component component) {
@@ -419,22 +490,35 @@ public class MessagesTest {
     return false;
   }
 
-  private static boolean hasColor(Component component, TextColor color) {
-    if (color.equals(component.color())) {
+  private static void assertTextStyle(Component component, String content, TextColor color, boolean bold) {
+    assertTrue("Expected style for " + content + ": color=" + color + ", bold=" + bold,
+        hasTextStyle(component, content, new TextStyle(color, bold), new TextStyle(null, false)));
+  }
+
+  private static boolean hasTextStyle(Component component, String content, TextStyle expected, TextStyle inherited) {
+    TextColor color = component.color() == null ? inherited.color() : component.color();
+    TextDecoration.State bold = component.decoration(TextDecoration.BOLD);
+    TextStyle effective = new TextStyle(color,
+        bold == TextDecoration.State.NOT_SET ? inherited.bold() : bold == TextDecoration.State.TRUE);
+    if (component instanceof TextComponent textComponent && textComponent.content().contains(content)
+        && effective.equals(expected)) {
       return true;
     }
     for (Component child : component.children()) {
-      if (hasColor(child, color)) {
+      if (hasTextStyle(child, content, expected, effective)) {
         return true;
       }
     }
     return false;
   }
 
+  private record TextStyle(TextColor color, boolean bold) {
+  }
+
   @Director(name = "hiddenore", description = "HiddenOre command root", descriptionKey = "command.description.root")
   public static final class HelpCommands {
-    @Director(name = "reload", description = "Reload HiddenOre configuration and language files", descriptionKey = "command.description.reload")
-    public void reload() {
+    @Director(name = "debug", description = "Toggle ore debug mode for yourself", descriptionKey = "command.description.debug")
+    public void debug() {
     }
   }
 }

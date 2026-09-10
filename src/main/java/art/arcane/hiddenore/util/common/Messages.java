@@ -1,19 +1,28 @@
 package art.arcane.hiddenore.util.common;
 
 import art.arcane.volmlib.util.director.DirectorMessages;
+import art.arcane.volmlib.util.config.BukkitConfigMessages;
 import art.arcane.volmlib.util.director.DirectorTextResolver;
+import art.arcane.volmlib.util.format.ColorFormatter;
 import art.arcane.volmlib.util.localization.LinesKey;
+import art.arcane.volmlib.util.localization.BukkitLanguageMessages;
 import art.arcane.volmlib.util.localization.LinesValue;
 import art.arcane.volmlib.util.localization.LocaleOverlay;
 import art.arcane.volmlib.util.localization.PluginLanguageService;
 import art.arcane.volmlib.util.localization.PluginLanguageEditor;
 import art.arcane.volmlib.util.localization.LanguageFileEditor;
+import art.arcane.volmlib.util.localization.LanguageReferenceRenderer;
+import art.arcane.volmlib.util.localization.LanguageFileHeader;
+import art.arcane.volmlib.util.localization.TomlLanguageEditor;
+import art.arcane.volmlib.util.localization.TomlLanguageParser;
 import art.arcane.volmlib.util.localization.RemoteLanguageCatalog;
 import art.arcane.volmlib.util.localization.LocalizationCandidate;
 import art.arcane.volmlib.util.localization.LocalizationIssue;
 import art.arcane.volmlib.util.localization.LocalizationManager;
 import art.arcane.volmlib.util.localization.LocalizationReloadResult;
 import art.arcane.volmlib.util.localization.LocalizationSnapshot;
+import art.arcane.volmlib.util.localization.LocalizationValidator;
+import art.arcane.volmlib.util.io.AtomicFileIO;
 import art.arcane.volmlib.util.localization.MessageArgs;
 import art.arcane.volmlib.util.localization.MessageArgument;
 import art.arcane.volmlib.util.localization.MessageArgumentKind;
@@ -27,13 +36,11 @@ import art.arcane.volmlib.util.localization.TextKey;
 import art.arcane.volmlib.util.localization.TextValue;
 import art.arcane.volmlib.util.localization.VolmitLocales;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.nio.file.Path;
 import java.nio.file.Files;
@@ -41,101 +48,89 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Messages {
   public static final TextKey DEBUG_DUMP_DESCRIPTION = TextKey.of("command.description.debugdump", "Create and optionally upload a diagnostic report");
+  public static final TextKey DEBUG_GROUP_DESCRIPTION = TextKey.of("command.description.debug_group", "HiddenOre diagnostic tools");
   public static final TextKey DEBUG_DUMP_UPLOAD = TextKey.of("command.parameter.debugdump_upload", "Upload the report to mclo.gs");
-  public static final TextKey PREFIX = TextKey.of("prefix", "<green>[HiddenOre]</green> ");
+  public static final TextKey PREFIX = TextKey.of("prefix", "&a[HiddenOre]&r ");
   public static final TextKey NO_PERMISSION = TextKey.of(
       "no_permission",
-      "<red>You do not have permission to use this command.</red>"
-  );
-  public static final TextKey RELOADED = TextKey.of(
-      "reloaded",
-      "<gold>Plugin configuration and translations reloaded.</gold>"
-  );
-  public static final TextKey RELOAD_FAILED = TextKey.of(
-      "reload_failed",
-      "<red>Reload failed. The previous configuration is still active; check the console.</red>"
+      "&cYou do not have permission to use this command.&r"
   );
   public static final TextKey PLAYER_ONLY = TextKey.of(
       "player_only",
-      "<red>This command can only be used by a player.</red>"
+      "&cThis command can only be used by a player.&r"
   );
   public static final TextKey DEBUG_ENABLED = TextKey.of(
       "debug_enabled",
-      "<green>Debug mode enabled.</green>"
+      "&aDebug mode enabled.&r"
   );
   public static final TextKey DEBUG_DISABLED = TextKey.of(
       "debug_disabled",
-      "<red>Debug mode disabled.</red>"
+      "&cDebug mode disabled.&r"
   );
   public static final TextKey CONFIG_RELOADED_MESSAGE = TextKey.of(
       "config_reloaded_message",
-      "<green>Configuration updated and reloaded.</green>"
+      "&aConfiguration updated and reloaded.&r"
   );
   public static final TextKey DEBUG_PLAYER_PLACED = TextKey.of(
       "debug.player_placed",
-      "<red>Player-placed {block}, no hidden drops.</red>"
+      "&cPlayer-placed {block}, no hidden drops.&r"
   );
   public static final TextKey DEBUG_RANDOM_DROP = TextKey.of(
       "debug.random_drop",
-      "<green>Random drop: {material} x{amount}</green>"
+      "&aRandom drop: {material} x{amount}&r"
   );
   public static final TextKey DEBUG_RANDOM_DROP_LOST = TextKey.of(
       "debug.random_drop_lost",
-      "<red>Random drop {material} lost because the tool tier is too low.</red>"
+      "&cRandom drop {material} lost because the tool tier is too low.&r"
   );
   public static final TextKey DEBUG_VEIN_DROP = TextKey.of(
       "debug.vein_drop",
-      "<green>Vein {vein}: {material} x{amount}</green>"
+      "&aVein {vein}: {material} x{amount}&r"
   );
   public static final TextKey DEBUG_VEIN_DROP_DISCOVERED = TextKey.of(
       "debug.vein_drop_discovered",
-      "<green>Vein {vein}: {material} x{amount} (discovered)</green>"
+      "&aVein {vein}: {material} x{amount} (discovered)&r"
   );
   public static final TextKey DEBUG_VEIN_DROP_LOST = TextKey.of(
       "debug.vein_drop_lost",
-      "<red>Vein {vein}: {material} lost because the tool tier is too low.</red>"
+      "&cVein {vein}: {material} lost because the tool tier is too low.&r"
   );
   public static final TextKey DEBUG_COMMAND_HIT = TextKey.of(
       "debug.command_hit",
-      "<gray>Command roll: chance={chance}, roll={roll} -> <green>hit</green></gray>"
+      "&7Command roll: chance={chance}, roll={roll} -> &ahit&7&r"
   );
   public static final TextKey DEBUG_COMMAND_MISS = TextKey.of(
       "debug.command_miss",
-      "<gray>Command roll: chance={chance}, roll={roll} -> <red>miss</red></gray>"
+      "&7Command roll: chance={chance}, roll={roll} -> &cmiss&7&r"
   );
   public static final TextKey COMMAND_ROOT_DESCRIPTION = TextKey.of(
       "command.description.root",
       "HiddenOre command root"
   );
-  public static final TextKey COMMAND_RELOAD_DESCRIPTION = TextKey.of(
-      "command.description.reload",
-      "Reload HiddenOre configuration and language files"
-  );
   public static final TextKey COMMAND_DEBUG_DESCRIPTION = TextKey.of(
       "command.description.debug",
       "Toggle ore debug mode for yourself"
   );
+  public static final TextKey COMMAND_CONFIG_DESCRIPTION = TextKey.of("command.description.config", "Edit HiddenOre settings");
 
   private static final String ENGLISH_LOCALE = VolmitLocales.ENGLISH;
-  private static final MiniMessage MINI_MESSAGE = MiniMessage.builder().strict(true).build();
+  private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+  private static final Pattern PLACEHOLDERS = Pattern.compile("\\{\\{|\\}\\}|\\{([^{}]+)\\}");
   private static final PlainTextComponentSerializer PLAIN_SERIALIZER = PlainTextComponentSerializer.plainText();
-  private static final Set<String> NON_MESSAGE_PATHS = Set.of(
-      "config_reloaded_sound",
-      "config_reloaded_sound_volume",
-      "config_reloaded_sound_pitch"
-  );
   private static final List<MessageKey> PLUGIN_KEYS = List.of(
+    DEBUG_GROUP_DESCRIPTION,
     DEBUG_DUMP_DESCRIPTION,
     DEBUG_DUMP_UPLOAD,
       PREFIX,
       NO_PERMISSION,
-      RELOADED,
-      RELOAD_FAILED,
       PLAYER_ONLY,
       DEBUG_ENABLED,
       DEBUG_DISABLED,
@@ -149,8 +144,8 @@ public final class Messages {
       DEBUG_COMMAND_HIT,
       DEBUG_COMMAND_MISS,
       COMMAND_ROOT_DESCRIPTION,
-      COMMAND_RELOAD_DESCRIPTION,
-      COMMAND_DEBUG_DESCRIPTION
+      COMMAND_DEBUG_DESCRIPTION,
+      COMMAND_CONFIG_DESCRIPTION
   );
   private static final MessageCatalog CATALOG = createCatalog();
 
@@ -168,19 +163,19 @@ public final class Messages {
     this.remoteCatalog = remoteCatalog;
     this.languageDirectory = languageDirectory;
     manager = new LocalizationManager(LocalizationCandidate.english(CATALOG, PluralSelector.oneOther()));
-    validateCatalogTemplates();
+    if (languageDirectory != null) {
+      writeEnglishIfMissing();
+    }
   }
 
-  public LocalizationReloadResult reload(YamlConfiguration language, String source, String locale) {
-    YamlConfiguration configuration = Objects.requireNonNull(language, "Language configuration cannot be null");
-    String overlaySource = source == null || source.isBlank() ? "language.yml" : source;
-    String requestedLocale = requireLocale(locale, "hiddenore.yml");
-    LocalizationReloadResult result = manager.reload(() -> loadCandidate(configuration, overlaySource, requestedLocale));
+  public LocalizationReloadResult reload(String locale) {
+    String requestedLocale = requireLocale(locale, "hiddenore.toml");
+    LocalizationReloadResult result = manager.reload(() -> loadCandidate(requestedLocale));
     if (result.applied()) {
       activeLocale = requestedLocale;
       return result;
     }
-    throw invalidReload(overlaySource, result);
+    throw invalidReload("languages/" + requestedLocale + ".toml", result);
   }
 
   public Component component(TextKey key) {
@@ -191,7 +186,7 @@ public final class Messages {
     LocalizationSnapshot snapshot = selectedSnapshot(null);
     ResolvedText resolved = snapshot.resolve(key, arguments);
     String prefix = snapshot.resolve(PREFIX).template();
-    return MINI_MESSAGE.deserialize(prefix + interpolate(resolved.template(), resolved.arguments()));
+    return render(prefix + resolved.template(), resolved.arguments());
   }
 
   public List<Component> components(LinesKey key) {
@@ -204,7 +199,7 @@ public final class Messages {
     String prefix = snapshot.resolve(PREFIX).template();
     List<Component> components = new ArrayList<>(resolved.lines().size());
     for (String line : resolved.lines()) {
-      components.add(MINI_MESSAGE.deserialize(prefix + interpolate(line, resolved.arguments())));
+      components.add(render(prefix + line, resolved.arguments()));
     }
     return List.copyOf(components);
   }
@@ -217,7 +212,7 @@ public final class Messages {
     LocalizationSnapshot snapshot = selectedSnapshot(sender);
     ResolvedText resolved = snapshot.resolve(key, arguments);
     String prefix = snapshot.resolve(PREFIX).template();
-    return MINI_MESSAGE.deserialize(prefix + interpolate(resolved.template(), resolved.arguments()));
+    return render(prefix + resolved.template(), resolved.arguments());
   }
 
   public void languageService(PluginLanguageService languageService) {
@@ -238,60 +233,34 @@ public final class Messages {
   }
 
   private LocalizationSnapshot loadEditorSnapshot(String locale) throws Exception {
-    Path path = languageDirectory.getParent().resolve("language.yml");
-    YamlConfiguration yaml = new YamlConfiguration();
-    yaml.loadFromString(Files.readString(path));
-    return LocalizationSnapshot.create(loadCandidate(yaml, path.toString(), locale));
+    return LocalizationSnapshot.create(loadCandidate(locale));
   }
 
   private synchronized LocalizationSnapshot saveEditor(PluginLanguageEditor.Edit edit) throws Exception {
-    Path globalPath = languageDirectory.getParent().resolve("language.yml");
-    YamlConfiguration global = new YamlConfiguration();
-    global.loadFromString(Files.readString(globalPath));
-    LocalizationCandidate base = loadBaseCandidate(global, globalPath.toString(), edit.locale());
-    Path path = overridePath(edit.locale());
+    LocaleOverlay edited = LocaleOverlay.builder("editor", edit.locale()).put(edit.key(), edit.value()).build();
+    LocalizationValidator.validate(CATALOG, List.of(edited)).throwIfInvalid();
+    loadEditorSnapshot(edit.locale());
+    LocalizationCandidate base = LocalizationCandidate.english(CATALOG, PluralSelector.oneOther());
+    Path path = languagePath(edit.locale());
     LocalizationSnapshot prepared = LanguageFileEditor.update(path, raw -> {
-      YamlConfiguration yaml = new YamlConfiguration();
-      try {
-        yaml.loadFromString(raw);
-      } catch (InvalidConfigurationException exception) {
-        throw new IOException("Could not parse language overrides: " + path, exception);
-      }
-      LocalizationSnapshot current = withOverride(base, parseEditorOverlay(yaml, edit.locale()));
+      LocalizationSnapshot current = withOverride(base, loadOverlay(raw, path.toString(), edit.locale()));
       MessageKey key = CATALOG.key(edit.key());
       if (key == null || !current.value(key).equals(edit.expected())) {
         throw new IOException("Language message changed while it was being edited: " + edit.key());
       }
-      yaml.set("locale", edit.locale());
-      MessageValue value = edit.value();
-      if (value instanceof TextValue text) {
-        yaml.set(edit.key(), text.template());
-      } else if (value instanceof LinesValue lines) {
-        yaml.set(edit.key(), lines.lines());
-      } else {
-        throw new IllegalArgumentException("Unsupported language message shape: " + edit.key());
-      }
-      LocalizationSnapshot updated = withOverride(base, parseEditorOverlay(yaml, edit.locale()));
-      return new LanguageFileEditor.Prepared<>(yaml.saveToString(), updated);
+      String updatedContent = TomlLanguageEditor.upsert(raw, edit.key(), edit.value()).content();
+      LocalizationSnapshot updated = withOverride(base, loadOverlay(updatedContent, path.toString(), edit.locale()));
+      return new LanguageFileEditor.Prepared<>(updatedContent, updated);
     });
+
     if (activeLocale.equals(edit.locale())) {
       manager.install(prepared);
     }
     return prepared;
   }
 
-  private Path overridePath(String locale) {
-    if (!locale.matches("[A-Za-z0-9_-]{2,32}")) {
-      throw new IllegalArgumentException("Invalid language locale: " + locale);
-    }
-    return languageDirectory.resolve("overrides").resolve(locale + ".yml");
-  }
-
-  private LocaleOverlay parseEditorOverlay(YamlConfiguration yaml, String locale) {
-    if (yaml.contains("locale") && !locale.equals(yaml.getString("locale"))) {
-      throw new IllegalArgumentException("Language override must declare locale: " + locale);
-    }
-    return loadOverlay(yaml, overridePath(locale).toString(), locale, true);
+  private Path languagePath(String locale) {
+    return languageDirectory.resolve(requireLocale(locale, "languages") + ".toml");
   }
 
   private LocalizationSnapshot withOverride(LocalizationCandidate base, LocaleOverlay override) {
@@ -327,238 +296,157 @@ public final class Messages {
       return DirectorTextResolver.ENGLISH.resolve(key, arguments);
     }
     ResolvedText resolved = selectedSnapshot(null).resolve(textKey, arguments);
-    String text = PLAIN_SERIALIZER.serialize(
-        MINI_MESSAGE.deserialize(interpolate(resolved.template(), resolved.arguments()))
-    );
-    return text.replace(String.valueOf('\u00A7'), "");
+    return PLAIN_SERIALIZER.serialize(render(resolved.template(), resolved.arguments()));
   }
 
   private static MessageCatalog createCatalog() {
     MessageCatalog.Builder builder = MessageCatalog.builder(ENGLISH_LOCALE);
     builder.addAll(PLUGIN_KEYS);
     builder.addAll(DirectorMessages.keys());
+    builder.addAll(BukkitLanguageMessages.keys());
+    builder.addAll(BukkitConfigMessages.keys());
     return builder.build();
   }
 
-  private LocalizationCandidate loadCandidate(YamlConfiguration language, String source, String locale) throws Exception {
-    LocalizationCandidate base = loadBaseCandidate(language, source, locale);
+  private LocalizationCandidate loadCandidate(String locale) {
     if (languageDirectory == null) {
-      return base;
+      return LocalizationCandidate.english(CATALOG, PluralSelector.oneOther());
     }
-    Path path = overridePath(locale);
-    if (!Files.exists(path)) {
-      return base;
-    }
-    if (!Files.isRegularFile(path) || Files.size(path) > 2L * 1024L * 1024L) {
-      throw new IOException("Language override is not a regular file within the size limit: " + path);
-    }
-    YamlConfiguration yaml = new YamlConfiguration();
-    yaml.loadFromString(Files.readString(path));
-    List<LocaleOverlay> overlays = new ArrayList<>(base.overlays().size() + 1);
-    overlays.add(parseEditorOverlay(yaml, locale));
-    overlays.addAll(base.overlays());
-    return new LocalizationCandidate(CATALOG, overlays, PluralSelector.oneOther());
-  }
-
-  private LocalizationCandidate loadBaseCandidate(YamlConfiguration language, String source, String locale) throws Exception {
     List<LocaleOverlay> overlays = new ArrayList<>();
-    overlays.add(loadOverlay(language, source, locale, false));
-    LocaleOverlay downloaded = loadDownloadedOverlay(locale);
-    if (downloaded != null) {
-      overlays.add(downloaded);
+    try {
+      LocaleOverlay installed = loadDownloadedOverlay(locale);
+      if (installed != null) {
+        overlays.add(installed);
+      }
+    } catch (Exception failure) {
+      Logger.getLogger("HiddenOre").log(Level.WARNING, "Cannot read language " + locale + "; using English.", failure);
     }
     return new LocalizationCandidate(CATALOG, overlays, PluralSelector.oneOther());
   }
 
-  private LocaleOverlay loadOverlay(YamlConfiguration language, String source, String locale, boolean bundled) {
+  private void writeEnglishIfMissing() {
+    Path path = languagePath(ENGLISH_LOCALE);
+    if (Files.exists(path)) {
+      return;
+    }
+    List<String> header = LanguageFileHeader.render(new LanguageFileHeader.Options(
+        "HiddenOre", ENGLISH_LOCALE,
+        List.of("prefix is added before chat messages. Set it to an empty string to hide it."),
+        List.of("Use &0-&f for colors, &k-&o for formatting, &r to reset, and &#RRGGBB for hex colors.",
+            "For example: &aGreen text&r. Use \\n inside quoted TOML strings for a new line."),
+        Map.ofEntries(
+            Map.entry("after", "Message value after editing"),
+            Map.entry("amount", "Number of dropped items"),
+            Map.entry("argument", "Unexpected command argument"),
+            Map.entry("before", "Message value before editing"),
+            Map.entry("block", "Mined block type"),
+            Map.entry("chance", "Configured trigger probability"),
+            Map.entry("command", "Command path"),
+            Map.entry("count", "Number of messages"),
+            Map.entry("group", "Language editor category"),
+            Map.entry("key", "Message or parameter key"),
+            Map.entry("line", "Line number within a message"),
+            Map.entry("locale", "Language code"),
+            Map.entry("material", "Dropped item type"),
+            Map.entry("maximum", "Maximum editor input length"),
+            Map.entry("number", "Configuration list entry number"),
+            Map.entry("page", "Current configuration page"),
+            Map.entry("pages", "Total configuration pages"),
+            Map.entry("parameter", "Command parameter name"),
+            Map.entry("path", "Configuration setting or section"),
+            Map.entry("personal", "Personal language code"),
+            Map.entry("plugin", "Plugin name"),
+            Map.entry("reason", "Error reason"),
+            Map.entry("roll", "Sampled random value"),
+            Map.entry("target", "Plugin receiving the language selection"),
+            Map.entry("type", "Expected parameter type"),
+            Map.entry("usage", "Command syntax"),
+            Map.entry("value", "Current message or parameter value"),
+            Map.entry("variables", "Allowed message placeholders"),
+            Map.entry("vein", "Ore vein name")
+        )));
+    try {
+      AtomicFileIO.writeString(path, LanguageReferenceRenderer.render(CATALOG, header));
+    } catch (IOException failure) {
+      Logger.getLogger("HiddenOre").log(Level.WARNING, "Cannot create English language file " + path, failure);
+    }
+  }
+
+  private LocaleOverlay loadOverlay(String raw, String source, String locale) throws IOException {
     LocaleOverlay.Builder overlay = LocaleOverlay.builder(source, locale);
-    for (Map.Entry<String, Object> entry : language.getValues(true).entrySet()) {
-      String path = entry.getKey();
-      Object value = entry.getValue();
-      if ((bundled && "locale".equals(path)) || NON_MESSAGE_PATHS.contains(path) || value instanceof ConfigurationSection) {
+    for (Map.Entry<String, MessageValue> entry : TomlLanguageParser.parseValidValues(raw, CATALOG).entrySet()) {
+      MessageValue value = entry.getValue();
+      if (value instanceof TextValue text && !PREFIX.id().equals(entry.getKey()) && text.template().isBlank()) {
         continue;
       }
-      addOverlayValue(overlay, source, path, value);
+      overlay.put(entry.getKey(), value);
     }
     return overlay.build();
   }
 
   private LocaleOverlay loadDownloadedOverlay(String locale) throws Exception {
-    if (VolmitLocales.ENGLISH.equals(locale) || remoteCatalog == null) {
-      return null;
-    }
-    Path file = languageDirectory.resolve(locale + ".yml");
-    String raw = remoteCatalog.readOrInstall(locale, file, (selectedLocale, content) ->
+    Path file = languagePath(locale);
+    String raw;
+    if (Files.exists(file)) {
+      if (!Files.isRegularFile(file) || Files.size(file) > 2L * 1024L * 1024L) {
+        throw new IOException("Language file is not a regular file within the size limit: " + file);
+      }
+      raw = Files.readString(file);
+    } else if (remoteCatalog != null && remoteCatalog.availableLocales().contains(locale)) {
+      raw = remoteCatalog.readOrInstall(locale, file, (selectedLocale, content) ->
         LocalizationSnapshot.create(new LocalizationCandidate(CATALOG,
             List.of(parseDownloadedOverlay(selectedLocale, content)), PluralSelector.oneOther())));
+    } else {
+      return null;
+    }
     return parseDownloadedOverlay(locale, raw);
   }
 
-  private LocaleOverlay parseDownloadedOverlay(String locale, String raw) throws Exception {
-    String source = "languages/" + locale + ".yml";
-    YamlConfiguration language = new YamlConfiguration();
-    language.loadFromString(raw);
-    String declaredLocale = readLocale(language, source);
-    if (!locale.equals(declaredLocale)) {
-      throw invalid(source, "locale", "expected " + locale + " but found " + declaredLocale);
-    }
-    return loadOverlay(language, source, locale, true);
+  private LocaleOverlay parseDownloadedOverlay(String locale, String raw) throws IOException {
+    return loadOverlay(raw, "languages/" + locale + ".toml", locale);
   }
 
-  private String readLocale(YamlConfiguration language, String source) {
-    Object configured = language.get("locale");
-    if (configured == null) {
-      return ENGLISH_LOCALE;
-    }
-    if (!(configured instanceof String locale) || locale.isBlank()) {
-      throw invalid(source, "locale", "expected a non-empty locale name");
-    }
-    return locale.trim();
-  }
-
-  private String requireLocale(String locale, String source) {
+  public static String requireLocale(String locale, String source) {
     if (locale == null || locale.isBlank()) {
       throw invalid(source, "language", "expected a non-empty locale name");
     }
-    return locale.trim();
+    String normalized = locale.trim();
+    if (!normalized.matches("[A-Za-z0-9_-]{2,32}")) {
+      throw invalid(source, "language", "use 2 to 32 letters, digits, underscores, or hyphens");
+    }
+    return normalized;
   }
 
-  private void addOverlayValue(LocaleOverlay.Builder overlay, String source, String path, Object value) {
-    MessageKey definition = CATALOG.key(path);
-    if (definition instanceof TextKey) {
-      String template = requireText(source, path, value, PREFIX.id().equals(path));
-      validateTemplate(source + ":" + path, template, sampleArguments(new TextValue(template).placeholders()));
-      overlay.text(path, template);
-      return;
+  private Component render(String template, MessageArgs arguments) {
+    if (template.indexOf('{') < 0 && template.indexOf('}') < 0) {
+      return LEGACY.deserialize(ColorFormatter.translateColors(template));
     }
-    if (definition instanceof LinesKey) {
-      List<String> lines = requireLines(source, path, value);
-      LinesValue linesValue = new LinesValue(lines);
-      validateLines(source + ":" + path, linesValue.lines(), sampleArguments(linesValue.placeholders()));
-      overlay.lines(path, lines);
-      return;
-    }
-    if (value instanceof String template) {
-      overlay.text(path, template);
-      return;
-    }
-    if (value instanceof List<?>) {
-      overlay.lines(path, requireLines(source, path, value));
-      return;
-    }
-    throw invalid(source, path, "expected a message string or non-empty list of message strings");
+    String expanded = PLACEHOLDERS.matcher(template)
+        .replaceAll(match -> expandTrustedArgument(match, arguments));
+    Component formatted = LEGACY.deserialize(ColorFormatter.translateColors(expanded));
+    return formatted.replaceText(TextReplacementConfig.builder()
+        .match(PLACEHOLDERS)
+        .replacement((match, builder) -> renderArgument(match, arguments))
+        .build());
   }
 
-  private String requireText(String source, String path, Object value, boolean allowEmpty) {
-    if (!(value instanceof String template) || (!allowEmpty && template.isBlank())) {
-      throw invalid(source, path, allowEmpty ? "expected a string" : "expected a non-empty message string");
+  private String expandTrustedArgument(MatchResult match, MessageArgs arguments) {
+    String name = match.group(1);
+    if (name == null) {
+      return Matcher.quoteReplacement(match.group());
     }
-    return template;
+    MessageArgument argument = arguments.require(name);
+    String replacement = argument.kind() == MessageArgumentKind.UNTRUSTED
+        ? match.group() : String.valueOf(argument.value()).replace("{", "{{").replace("}", "}}");
+    return Matcher.quoteReplacement(replacement);
   }
 
-  private List<String> requireLines(String source, String path, Object value) {
-    if (!(value instanceof List<?> configured) || configured.isEmpty()) {
-      throw invalid(source, path, "expected a non-empty list of message strings");
+  private Component renderArgument(MatchResult match, MessageArgs arguments) {
+    String name = match.group(1);
+    if (name == null) {
+      return Component.text(match.group().substring(0, 1));
     }
-    List<String> lines = new ArrayList<>(configured.size());
-    for (int index = 0; index < configured.size(); index++) {
-      Object line = configured.get(index);
-      if (!(line instanceof String text) || text.isBlank()) {
-        throw invalid(source, path + "[" + index + "]", "expected a non-empty message string");
-      }
-      lines.add(text);
-    }
-    return List.copyOf(lines);
-  }
-
-  private void validateCatalogTemplates() {
-    for (MessageKey key : CATALOG.keys()) {
-      MessageValue value = key.englishValue();
-      MessageArgs arguments = sampleArguments(value.placeholders());
-      if (value instanceof TextValue text) {
-        validateTemplate("catalog:" + key.id(), text.template(), arguments);
-      } else if (value instanceof LinesValue lines) {
-        validateLines("catalog:" + key.id(), lines.lines(), arguments);
-      }
-    }
-  }
-
-  private void validateLines(String path, List<String> lines, MessageArgs arguments) {
-    for (int index = 0; index < lines.size(); index++) {
-      validateTemplate(path + "[" + index + "]", lines.get(index), arguments);
-    }
-  }
-
-  private void validateTemplate(String path, String template, MessageArgs arguments) {
-    validatePlaceholderPlacement(path, template);
-    try {
-      MINI_MESSAGE.deserialize(interpolate(template, arguments));
-    } catch (RuntimeException exception) {
-      throw new IllegalArgumentException(path + ": invalid MiniMessage", exception);
-    }
-  }
-
-  private void validatePlaceholderPlacement(String path, String template) {
-    boolean insideTag = false;
-    for (int index = 0; index < template.length(); index++) {
-      char current = template.charAt(index);
-      if (current == '\\') {
-        index++;
-        continue;
-      }
-      if (current == '<') {
-        insideTag = true;
-        continue;
-      }
-      if (current == '>') {
-        insideTag = false;
-        continue;
-      }
-      if (insideTag && current == '{' && (index + 1 >= template.length() || template.charAt(index + 1) != '{')) {
-        throw new IllegalArgumentException(path + ": message placeholders cannot be used inside MiniMessage tags");
-      }
-    }
-  }
-
-  private MessageArgs sampleArguments(Set<String> placeholders) {
-    MessageArgs.Builder builder = MessageArgs.builder();
-    for (String placeholder : placeholders) {
-      builder.untrusted(placeholder, "value");
-    }
-    return builder.build();
-  }
-
-  private String interpolate(String template, MessageArgs arguments) {
-    StringBuilder output = new StringBuilder(template.length());
-    int index = 0;
-    while (index < template.length()) {
-      char current = template.charAt(index);
-      if (current == '{' && index + 1 < template.length() && template.charAt(index + 1) == '{') {
-        output.append('{');
-        index += 2;
-        continue;
-      }
-      if (current == '}' && index + 1 < template.length() && template.charAt(index + 1) == '}') {
-        output.append('}');
-        index += 2;
-        continue;
-      }
-      if (current != '{') {
-        output.append(current);
-        index++;
-        continue;
-      }
-      int end = template.indexOf('}', index + 1);
-      String name = template.substring(index + 1, end);
-      MessageArgument argument = arguments.require(name);
-      String replacement = String.valueOf(argument.value());
-      if (argument.kind() == MessageArgumentKind.UNTRUSTED) {
-        replacement = MINI_MESSAGE.escapeTags(replacement);
-      }
-      output.append(replacement);
-      index = end + 1;
-    }
-    return output.toString();
+    return Component.text(String.valueOf(arguments.require(name).value()));
   }
 
   private IllegalArgumentException invalidReload(String source, LocalizationReloadResult result) {
@@ -577,7 +465,7 @@ public final class Messages {
     return issue.code() + " " + issue.key() + ": " + issue.detail();
   }
 
-  private IllegalArgumentException invalid(String source, String path, String detail) {
+  private static IllegalArgumentException invalid(String source, String path, String detail) {
     return new IllegalArgumentException(source + ":" + path + ": " + detail);
   }
 }

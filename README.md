@@ -4,7 +4,9 @@ HiddenOre is a mining economy and anti-xray plugin for Minecraft servers. It rep
 
 ## Language and localization
 
-Canonical English is defined in the typed Java catalog at `src/main/java/art/arcane/hiddenore/util/common/Messages.java`; HiddenOre does not ship a separate English translation bundle. Complete bundles are included for German, Spanish, Finnish, French, Hebrew, Italian, Japanese, Korean, Lithuanian, Dutch, Polish, Portuguese, Russian, Turkish, Vietnamese, Simplified Chinese, and Traditional Chinese. Set `language` at the start of `hiddenore.yml` to select one. Message entries in `language.yml` are optional sparse server overrides; omitted entries resolve from the selected bundle and then code-owned English. Sound settings remain in the same file.
+Canonical English is defined in the typed Java catalog at `src/main/java/art/arcane/hiddenore/util/common/Messages.java`. Startup creates an editable `plugins/HiddenOre/languages/en_US.toml`; other selected catalogs download when their local file is missing. Set `language` in `hiddenore.toml` to select the server default, and edit `languages/<locale>.toml` directly or use `/hiddenore language server edit [locale]` to customize messages. Missing or invalid entries use English while valid translations remain active.
+
+Messages use Minecraft color codes: `&0` through `&f` for colors, `&k` through `&o` for text decorations, `&r` to reset formatting, and `&#RRGGBB` for hex colors. Keep runtime variables such as `{block}` unchanged.
 
 ## Requirements
 
@@ -20,15 +22,15 @@ Creative players, non-pickaxe breaks, unmanaged blocks, and cancelled block-brea
 
 ### Seeded veins
 
-`veins.generation: seeded` derives virtual vein positions from the world seed, chunk coordinates, and configured rule order. No physical ore block is placed. Each discovered position is recorded in chunk persistent data and pays at most once, including across restarts.
+`veins.generation = "seeded"` derives virtual vein positions from the world seed, chunk coordinates, and each rule's material and spatial settings. No physical ore block is placed. Each discovered position is recorded in chunk persistent data and pays at most once, including across restarts.
 
-Changing the order of item rules changes their deterministic positions. Back up worlds before reordering, inserting, or deleting item rules on an established server.
+Reordering item rules leaves their deterministic positions unchanged. Changing a rule's material, vein count, size range, or height range changes its undiscovered layout; adding or removing unrelated rules affects retained layouts only at direct overlaps.
 
 ### Pure random rewards
 
-`veins.generation: pure_random` rolls each eligible break independently. There are no pre-existing positions for detection APIs to find. `veins_per_chunk` and the configured vein-size range are converted into an approximate per-break probability.
+`veins.generation = "pure_random"` rolls each eligible break independently. There are no pre-existing positions for detection APIs to find. `veins_per_chunk` and the configured vein-size range are converted into an approximate per-break probability.
 
-Player-placed managed blocks are tracked regardless of the current policy and blocked from hidden rewards by default. Keeping `allow_placed_blocks: false` is especially important in pure-random mode because it prevents place-and-break reward farming. Temporarily enabling the option does not discard placement provenance if it is disabled again later.
+Player-placed managed blocks are tracked regardless of the current policy and blocked from hidden rewards by default. Keeping `allow_placed_blocks = false` is especially important in pure-random mode because it prevents place-and-break reward farming. Temporarily enabling the option does not discard placement provenance if it is disabled again later.
 
 ## Ore removal and anti-xray
 
@@ -77,22 +79,30 @@ There are deliberately no vein, provenance, or per-player keys. The vein and pro
 
 ## Configuration safety and reloads
 
-HiddenOre validates typed mining rules, runtime settings, command messages, usage text, and reload notifications before publishing them. Invalid materials, missing sections, malformed tool tiers, invalid ranges, non-finite probabilities, unsafe vein-work limits, empty commands, and invalid execution targets reject the reload. The previous live runtime remains active and the full error is written to the console.
+HiddenOre validates mining rules and runtime settings before publishing them. Invalid materials, missing sections, malformed tool tiers, invalid ranges, non-finite probabilities, unsafe vein-work limits, empty commands, and invalid execution targets reject the update. The previous live runtime remains active and the full error is written to the console.
 
-Both `/hiddenore reload` and the config file watcher use the same serialized global reload path. File watching handles common atomic-save editors, overflow signals, and debounces repeated filesystem events. A successful reload replaces the rule-bound seeded cache and publishes mining rules, language, reward flags, notifications, and ore-removal policy in one runtime swap.
+The file watcher applies saved changes to `hiddenore.toml` and `languages/<locale>.toml` automatically. It waits for 250 ms without further edits and enforces a 3-second cooldown between reloads. Periodic scans detect changes missed by file events, including atomic-save editors. A successful configuration reload replaces the rule-bound seeded cache and publishes mining rules, language, reward flags, and ore-removal policy in one runtime swap.
+
+All settings in `hiddenore.toml` apply on save, including enabling or disabling metrics. The watcher also detects additions and deletions of locale TOML files directly inside `languages/`. Language updates retain personal choices; a player may briefly receive server-default text while the selected locale loads.
+
+`/hiddenore config` opens an inventory editor for existing settings and drop rules. Booleans toggle on click; text, numbers, and primitive lists use private chat input with `cancel` and a 60-second timeout. Whole tables and drop rules are added or removed directly in the file.
+
+Configuration-editor saves validate the complete configuration and reject edits when the original file has changed. Editor saves and server-language selection replace only the selected TOML value, preserving surrounding comments and formatting. The watcher applies saved edits automatically.
+
+Automatic reloads notify online operators with a message and the HiddenOre command theme's success sound from VolmLib.
 
 ## Commands and permissions
 
 - `/hiddenore` shows command help.
-- `/hiddenore reload` validates and reloads configuration and language files.
-- `/hiddenore debug` toggles per-player reward-roll diagnostics.
+- `/hiddenore config` opens the in-game configuration editor.
+- `/hiddenore debug mode` toggles per-player reward-roll diagnostics.
 - `hiddenore.admin` grants command access and defaults to operators.
 
 ## API and integrations
 
 `HiddenOreService` is the supported entry point. Acquire it with `getServer().getServicesManager().getRegistration(HiddenOreService.class)`; it is registered during enable and unregistered during drain. It references only `org.bukkit`, `java` and HiddenOre's own `art.arcane.hiddenore.api` types, so a consumer needs neither VolmLib nor Adventure on its classpath. It exposes managed-block checks, a vein at a block, remaining same-chunk siblings, nearby unconsumed veins, per-block placement origin, per-chunk placement provenance, consumed-vein checks, and a region-ownership probe.
 
-`originOf` answers `PLAYER_PLACED`, `PRESUMED_GENERATED` or `UNTRACKED`. `PRESUMED_GENERATED` means "this material is tracked and there is no placement record" — it does not mean worldgen produced the block, which is why the constant is named for the presumption rather than for the conclusion. Blocks placed before HiddenOre was installed, before their material was added to `blocks:`, or during a failed enable all report `PRESUMED_GENERATED`. There is no backfill. Do not build an anti-grief rule that treats it as proof.
+`originOf` answers `PLAYER_PLACED`, `PRESUMED_GENERATED` or `UNTRACKED`. `PRESUMED_GENERATED` means "this material is tracked and there is no placement record" — it does not mean worldgen produced the block, which is why the constant is named for the presumption rather than for the conclusion. Blocks placed before HiddenOre was installed, before their material was added to the `blocks` tables, or during a failed enable all report `PRESUMED_GENERATED`. There is no backfill. Do not build an anti-grief rule that treats it as proof.
 
 `provenanceOf(Chunk)` returns an immutable `ChunkProvenance` snapshot: one persistent-data read at construction, then unlimited `contains(worldX, worldY, worldZ)` queries with no further I/O. Use it instead of calling `originOf` in a loop. `contains` is total — coordinates outside the chunk or outside world height answer `false` rather than throwing, so you can walk a 3x3 chunk area against one snapshot without guarding the edges. Compare against `chunk()` yourself if you need the strict reading.
 

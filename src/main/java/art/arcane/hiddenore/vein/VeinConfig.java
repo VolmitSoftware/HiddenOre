@@ -1,6 +1,8 @@
 package art.arcane.hiddenore.vein;
 
-import org.bukkit.configuration.ConfigurationSection;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 public final class VeinConfig {
   private static final String DEFAULT_DISCOVERY_SOUND = "BLOCK_BEACON_POWER_SELECT";
@@ -15,91 +17,89 @@ public final class VeinConfig {
   public final float discoveryVolume;
   public final float discoveryPitch;
 
-  public VeinConfig(ConfigurationSection section) {
+  public VeinConfig(JsonObject section) {
     if (section == null) {
-      throw invalid("veins", "expected a configuration section");
+      throw invalid("veins", "expected a table");
     }
-    ConfigurationSection activeSection = section;
-    generation = parseGeneration(activeSection.get("generation"));
-    allowPlacedBlocks = parseAllowPlacedBlocks(activeSection.get("allow_placed_blocks"));
+    generation = parseGeneration(section.get("generation"));
+    allowPlacedBlocks = parseAllowPlacedBlocks(section.get("allow_placed_blocks"));
 
-    Object rawSoundSection = activeSection.get("discovery_sound");
+    JsonElement rawSoundSection = section.get("discovery_sound");
     if (rawSoundSection == null) {
       discoverySound = DEFAULT_DISCOVERY_SOUND;
       discoveryVolume = DEFAULT_DISCOVERY_VOLUME;
       discoveryPitch = DEFAULT_DISCOVERY_PITCH;
       return;
     }
-    if (!(rawSoundSection instanceof ConfigurationSection)) {
-      throw invalid("veins.discovery_sound", "expected a configuration section");
+    if (!(rawSoundSection instanceof JsonObject soundSection)) {
+      throw invalid("veins.discovery_sound", "expected a table");
     }
 
-    ConfigurationSection soundSection = (ConfigurationSection) rawSoundSection;
     discoverySound = parseSound(soundSection.get("sound"));
     discoveryVolume = parseVolume(soundSection.get("volume"));
     discoveryPitch = parsePitch(soundSection.get("pitch"));
   }
 
-  private static GenerationMode parseGeneration(Object raw) {
+  private static GenerationMode parseGeneration(JsonElement raw) {
     if (raw == null) {
       return GenerationMode.SEEDED;
     }
-    if (!(raw instanceof String)) {
+    if (!(raw instanceof JsonPrimitive primitive) || !primitive.isString()) {
       throw invalid("veins.generation", "expected 'seeded' or 'pure_random'");
     }
 
-    String normalized = ((String) raw).trim();
+    String normalized = primitive.getAsString().trim();
     return switch (normalized) {
       case "seeded" -> GenerationMode.SEEDED;
       case "pure_random" -> GenerationMode.PURE_RANDOM;
-      default -> throw invalid("veins.generation", "unknown generation mode '" + raw + "'");
+      default -> throw invalid("veins.generation", "unknown generation mode '" + primitive.getAsString() + "'");
     };
   }
 
-  private static boolean parseAllowPlacedBlocks(Object raw) {
+  private static boolean parseAllowPlacedBlocks(JsonElement raw) {
     if (raw == null) {
       return false;
     }
-    if (!(raw instanceof Boolean)) {
+    if (!(raw instanceof JsonPrimitive primitive) || !primitive.isBoolean()) {
       throw invalid("veins.allow_placed_blocks", "expected true or false");
     }
-    return (Boolean) raw;
+    return primitive.getAsBoolean();
   }
 
-  private static String parseSound(Object raw) {
+  private static String parseSound(JsonElement raw) {
     if (raw == null) {
       return DEFAULT_DISCOVERY_SOUND;
     }
-    if (!(raw instanceof String) || ((String) raw).isBlank()) {
+    if (!(raw instanceof JsonPrimitive primitive) || !primitive.isString() || primitive.getAsString().isBlank()) {
       throw invalid("veins.discovery_sound.sound", "expected a non-empty sound name");
     }
-    return ((String) raw).trim();
+    return primitive.getAsString().trim();
   }
 
-  private static float parseVolume(Object raw) {
+  private static float parseVolume(JsonElement raw) {
     if (raw == null) {
       return DEFAULT_DISCOVERY_VOLUME;
     }
-    if (!(raw instanceof Number)) {
+    if (!(raw instanceof JsonPrimitive primitive) || !primitive.isNumber()) {
       throw invalid("veins.discovery_sound.volume", "must be a finite number greater than or equal to 0");
     }
 
-    double value = ((Number) raw).doubleValue();
+    double value = primitive.getAsDouble();
     if (!Double.isFinite(value) || value < 0.0 || value > Float.MAX_VALUE) {
       throw invalid("veins.discovery_sound.volume", "must be a finite number greater than or equal to 0");
     }
     return (float) value;
   }
 
-  private static float parsePitch(Object raw) {
+  private static float parsePitch(JsonElement raw) {
     if (raw == null) {
       return DEFAULT_DISCOVERY_PITCH;
     }
-    if (!(raw instanceof Number)) {
+    if (!(raw instanceof JsonPrimitive primitive) || !primitive.isNumber()) {
       throw invalid("veins.discovery_sound.pitch", "must be a finite number between 0.5 and 2 inclusive");
     }
 
-    double value = ((Number) raw).doubleValue();
+    double value = primitive.getAsDouble();
     if (!Double.isFinite(value) || value < MIN_DISCOVERY_PITCH || value > MAX_DISCOVERY_PITCH) {
       throw invalid("veins.discovery_sound.pitch", "must be a finite number between 0.5 and 2 inclusive");
     }

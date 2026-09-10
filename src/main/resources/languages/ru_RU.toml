@@ -1,0 +1,248 @@
+# HiddenOre — ru_RU
+#
+# === Редактирование файла ===
+# plugins/HiddenOre/languages/ru_RU.toml
+# Этот файл можно редактировать напрямую. Локальные изменения сохраняются; для отсутствующих или неверных записей используется встроенный английский текст.
+# /hiddenore language server edit ru_RU
+#
+# === Префикс ===
+# prefix добавляется перед сообщениями чата; пустая строка скрывает его.
+#
+# === Форматирование ===
+# Цветовые коды: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Переменные ===
+# Не меняйте имена переменных и используйте только переменные исходного сообщения.
+#   {after}  Ценность после изменения
+#   {amount}  Количество выпадающих предметов
+#   {argument}  неожиданный аргумент
+#   {before}  Ценность перед изменением
+#   {block}  Тип добытого блока
+#   {chance}  Настроенная вероятность срабатывания
+#   {command}  путь команды
+#   {count}  Количество сообщений
+#   {group}  Категория редактора языка
+#   {key}  Ключ сообщения или параметра
+#   {line}  Номер строки в сообщении
+#   {locale}  локаль
+#   {material}  Тип выпадающего предмета
+#   {maximum}  Максимально допустимая стоимость
+#   {number}  Номер записи
+#   {page}  Номер текущей страницы
+#   {pages}  Общее число страниц
+#   {parameter}  имя параметра
+#   {path}  Путь к настройке
+#   {personal}  личная локаль
+#   {plugin}  Название плагина
+#   {reason}  причина ошибки
+#   {roll}  Полученное случайное число
+#   {target}  Плагин, для которого выбирается язык
+#   {type}  тип
+#   {usage}  использование команды
+#   {value}  текущее, стандартное или исходное значение
+#   {variables}  допустимые заполнители
+#   {vein}  Название рудной жилы
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cУ вас нет разрешения на использование этой команды.&r"
+player_only = "&cЭту команду может использовать только игрок.&r"
+debug_enabled = "&aРежим отладки включён.&r"
+debug_disabled = "&cРежим отладки выключен.&r"
+config_reloaded_message = "&aКонфигурация обновлена и перезагружена.&r"
+
+[debug]
+player_placed = "&cБлок {block} установлен игроком; скрытых выпадений нет.&r"
+random_drop = "&aСлучайное выпадение: {material} x{amount}&r"
+random_drop_lost = "&cСлучайное выпадение {material} потеряно, потому что уровень инструмента слишком низкий.&r"
+vein_drop = "&aРудная жила {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aРудная жила {vein}: {material} x{amount} (обнаружено)&r"
+vein_drop_lost = "&cРудная жила {vein}: {material} потеряно, потому что уровень инструмента слишком низкий.&r"
+command_hit = "&7Проверка команды: chance={chance}, roll={roll} -> &aуспех&7&r"
+command_miss = "&7Проверка команды: chance={chance}, roll={roll} -> &cнеудача&7&r"
+
+[command.parameter]
+debugdump_upload = "Загрузить отчёт на mclo.gs"
+
+[command.description]
+config = "Изменить настройки HiddenOre"
+debug_group = "HiddenOre: Средства диагностики"
+debugdump = "Создать диагностический отчёт и при желании загрузить его"
+root = "Группа команд HiddenOre"
+debug = "Переключить свой режим отладки руды"
+
+[director.help]
+no_subcommands = "На этой странице нет подкоманд."
+no_description = "Описание не указано"
+command_group = "Группа команд. Нажмите, чтобы открыть."
+category = "Категория команд"
+no_parameters = "Параметров нет. Нажмите, чтобы предварительно заполнить команду."
+parameters_hover = "Наведите курсор на параметры, чтобы узнать больше."
+
+[director.help.navigation]
+back = "Назад"
+page = "Страница"
+
+[director.help.navigation.parent]
+hover = "Вернуться к родительской группе команд"
+
+[director.help.navigation.previous]
+hover = "Предыдущая страница"
+
+[director.help.navigation.next]
+hover = "Следующая страница"
+
+[director.help.parameter]
+required = "Этот параметр является обязательным."
+optional = "Этот параметр является необязательным."
+default = "Если не задан, используется значение \"{value}\"."
+type = "Этот параметр имеет тип {type}."
+
+[director.runtime]
+usage = "Использование: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Эту команду нельзя выполнить из данного источника."
+unknown_parameter = "Неизвестный ключ параметра: {key}"
+unexpected_argument = "Неожиданный аргумент \"{argument}\". Необязательные параметры должны задаваться с ключом, например seed=123"
+unclosed_group = "Отсутствует закрывающая скобка \"]\" для параметра {key}"
+conversion_failed = "Невозможно преобразовать \"{value}\" в {type} для {parameter}"
+default_parse_failed = "Невозможно разобрать значение по умолчанию параметра {parameter}"
+missing_argument = "Отсутствует аргумент \"{parameter}\" ({type})"
+execution_failed = "Не удалось выполнить команду {command}: {reason}"
+
+[language.menu]
+your_language = "Ваш язык"
+reset_your_language = "Сбросить выбор языка"
+server_default = "Язык сервера по умолчанию"
+edit_messages = "Изменить языковые сообщения"
+use_server_default = "Использовать язык сервера по умолчанию"
+current = "Текущий: {locale}"
+current_with_personal = "Текущий: {locale} (Ваш: {personal})"
+your_description = "Изменить только сообщения, которые видите вы."
+reset_description = "Использовать язык сервера по умолчанию."
+server_description = "Изменить язык сервера по умолчанию."
+edit_description = "Открыть редактор сообщений для каждого языка."
+select_description = "Нажмите, чтобы выбрать этот язык."
+remove_personal_description = "Удалить ваш личный выбор языка."
+no_controls = "У вас нет доступа к настройкам языка."
+command = "Команда: {command}"
+selected = "выбранный"
+all-volmit-plugins = "Все плагины Volmit"
+
+[language.error]
+stopping = "Выбор языка недоступен, пока плагин останавливается."
+editor-player-only = "Откройте редактор языка в игре."
+no-providers = "Нет доступных языковых провайдеров Volmit."
+numeric-page = "Введите номер страницы числом."
+personal-player-only = "Личный язык игрока нужно выбрать в игре."
+personal-permission = "У вас нет разрешения на выбор языка."
+plugin-personal-permission = "У вас нет разрешения выбирать свой язык для {plugin}."
+plugin-server-permission = "У вас нет разрешения менять язык сервера для {plugin}."
+server-locale-required = "Выберите код языка, например en_US, для языка сервера по умолчанию."
+unavailable-for-all = "Язык {locale} доступен не для всех выбранных плагинов."
+
+[language.usage]
+editor = "Использование: /{command} language server edit [locale]"
+selection = "Использование: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Использование: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Подготовка языка {locale} для {target}..."
+save-failed = "{plugin}: не удалось сохранить выбор языка; проверьте консоль сервера."
+english-fallback = "{plugin}: {locale} недоступен; используется английский (en_US)."
+personal-selected = "{plugin}: Ваш язык сейчас {locale}."
+server-selected = "{plugin}: Язык сервера теперь {locale}."
+server-default-selected = "{plugin}: теперь ваш язык соответствует языку сервера по умолчанию."
+
+[language.editor]
+loading = "Загрузка сообщений для {locale}..."
+
+[language.editor.section]
+languages = "Языки"
+search = "Поиск"
+search-title = "{locale} / Поиск"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Найдите ключ или текст сообщения. Введите cancel, чтобы вернуться."
+value = "Введите в чат новое значение для {key}."
+current = "Текущее значение: {value}"
+variables = "Переменные: {variables}"
+guidance = "Используйте \\n для новой строки, \\\\ для обратной косой черты или введите cancel, чтобы вернуться."
+
+[language.editor.input]
+expired = "Время ввода в редакторе языка истекло."
+too-long = "Ввод должен содержать не более {maximum} символов."
+unable-to-save = "Не удалось сохранить: {reason}"
+
+[language.editor.navigation]
+back = "&eНазад&r"
+close = "&cЗакрыть&r"
+previous-page = "&eПредыдущая страница&r"
+next-page = "&eСледующая страница&r"
+
+[language.editor.search]
+messages = "Поиск сообщений"
+messages-lore = "Нажмите для поиска среди всех сообщений."
+clear = "Сбросить поиск"
+
+[language.editor.message]
+current-value = "&7Текущее значение:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Нажмите, чтобы изменить форму множественного числа.&r"
+edit-lines = "&7Нажмите, чтобы изменить отдельные строки.&r"
+edit-chat = "&7Нажмите, чтобы изменить текст в чате.&r"
+
+[language.editor.locale]
+open = "&8Нажмите, чтобы открыть этот язык.&r"
+
+[language.editor.category]
+message-count = "&7{count} сообщения&r"
+open = "&8Нажмите, чтобы открыть эту категорию.&r"
+
+[language.editor.error]
+no-permission = "У вас нет разрешения редактировать языки {plugin}."
+unable-to-edit = "Не удалось отредактировать: {reason}"
+
+[language.editor.saved]
+summary = "{locale} сохранён. Выбранные языки не изменились."
+change = "{key}: «{before}» заменено на «{after}»."
+
+[language.editor.part]
+line = "Строка {line}"
+
+[language.editor.value]
+none = "Нет"
+empty = "(пусто)"
+
+[config.editor]
+title = "{plugin} / Настройки"
+section = "Раздел: {path}"
+page = "Страница {page} из {pages}"
+entry = "Запись {number}"
+current = "Текущее значение: {value}"
+open = "Нажмите, чтобы открыть этот раздел."
+toggle = "Нажмите, чтобы переключить между true и false."
+edit = "Нажмите, чтобы ввести новое значение в чате."
+prompt = "Введите новое значение для {path}. Для возврата введите cancel."
+expired = "Время ввода настройки истекло."
+too-long = "Введите не более {maximum} символов."
+saving = "Сохранение настроек..."
+saved = "{path} сохранён. Изменения применяются автоматически."
+failed = "Не удалось изменить настройки: {reason}"
+loading = "Загрузка настроек..."
+empty = "В этом разделе нет настроек."
+player-only = "Откройте редактор настроек в игре."
+no-permission = "У вас нет прав на изменение этих настроек."
+back = "Назад"
+previous = "Предыдущая страница"
+next = "Следующая страница"
+refresh = "Обновить"
+close = "Закрыть"
+
+[config.editor.type]
+text = "Текст без кавычек по краям."
+integer = "Введите целое число."
+decimal = "Введите число, например 0.25."
+list = "Используйте список TOML, например [\"stone\", \"deepslate\"]."
+

@@ -1,0 +1,248 @@
+# HiddenOre — ko_KR
+#
+# === 파일 편집 ===
+# plugins/HiddenOre/languages/ko_KR.toml
+# 이 파일을 직접 편집할 수 있습니다. 로컬 변경은 유지되며, 누락되거나 잘못된 항목에는 내장 영어를 사용합니다.
+# /hiddenore language server edit ko_KR
+#
+# === 접두사 ===
+# prefix는 채팅 메시지 앞에 붙습니다. 빈 문자열로 설정하면 숨겨집니다.
+#
+# === 서식 ===
+# 색상 코드: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === 변수 ===
+# 변수 이름을 변경하지 말고 각 메시지에 원래 있는 변수만 사용하세요.
+#   {after}  변경 후 가치
+#   {amount}  드롭되는 아이템 수
+#   {argument}  예상하지 못한 인수
+#   {before}  변경 전의 값
+#   {block}  채굴한 블록 종류
+#   {chance}  설정된 발동 확률
+#   {command}  명령 경로
+#   {count}  메시지 수
+#   {group}  언어 편집기 분류
+#   {key}  메시지 또는 매개변수 키
+#   {line}  메시지 안의 줄 번호
+#   {locale}  로케일
+#   {material}  드롭되는 아이템 종류
+#   {maximum}  최대 허용 값
+#   {number}  항목 번호
+#   {page}  현재 페이지 번호
+#   {pages}  전체 페이지 수
+#   {parameter}  매개변수 이름
+#   {path}  설정 항목 경로
+#   {personal}  개인 로케일
+#   {plugin}  Plugin 이름
+#   {reason}  실패 이유
+#   {roll}  추출된 난수 값
+#   {target}  언어 선택 대상 플러그인
+#   {type}  형식
+#   {usage}  사용법
+#   {value}  현재값, 기본값 또는 원시값
+#   {variables}  사용 가능한 자리표시자
+#   {vein}  광맥 이름
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&c이 명령어를 사용할 권한이 없습니다.&r"
+player_only = "&c이 명령어는 플레이어만 사용할 수 있습니다.&r"
+debug_enabled = "&a디버그 모드를 활성화했습니다.&r"
+debug_disabled = "&c디버그 모드를 비활성화했습니다.&r"
+config_reloaded_message = "&a설정을 업데이트하고 다시 불러왔습니다.&r"
+
+[debug]
+player_placed = "&c플레이어가 설치한 {block}: 숨겨진 드롭 없음.&r"
+random_drop = "&a무작위 드롭: {material} x{amount}&r"
+random_drop_lost = "&c도구 등급이 너무 낮아 무작위 드롭 {material}을 잃었습니다.&r"
+vein_drop = "&a광맥 {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&a광맥 {vein}: {material} x{amount} (발견됨)&r"
+vein_drop_lost = "&c광맥 {vein}: 도구 등급이 너무 낮아 {material}을 잃었습니다.&r"
+command_hit = "&7명령어 판정: chance={chance}, roll={roll} -> &a성공&7&r"
+command_miss = "&7명령어 판정: chance={chance}, roll={roll} -> &c실패&7&r"
+
+[command.parameter]
+debugdump_upload = "보고서를 mclo.gs에 업로드"
+
+[command.description]
+config = "HiddenOre 설정 편집"
+debug_group = "HiddenOre: 진단 도구"
+debugdump = "진단 보고서를 생성하고 선택적으로 업로드"
+root = "HiddenOre 명령어 그룹"
+debug = "내 광물 디버그 모드 전환"
+
+[director.help]
+no_subcommands = "이 페이지에는 하위 명령어가 없습니다."
+no_description = "설명이 없습니다"
+command_group = "명령어 그룹입니다. 클릭하여 엽니다."
+category = "명령어 카테고리"
+no_parameters = "매개변수가 없습니다. 클릭하여 명령어를 미리 입력합니다."
+parameters_hover = "매개변수 위에 마우스를 올리면 자세한 내용을 볼 수 있습니다."
+
+[director.help.navigation]
+back = "뒤로"
+page = "페이지"
+
+[director.help.navigation.parent]
+hover = "상위 명령어 그룹으로 돌아가기"
+
+[director.help.navigation.previous]
+hover = "이전 페이지"
+
+[director.help.navigation.next]
+hover = "다음 페이지"
+
+[director.help.parameter]
+required = "이 매개변수는 필수입니다."
+optional = "이 매개변수는 선택 사항입니다."
+default = "지정하지 않으면 기본값은 \"{value}\"입니다."
+type = "이 매개변수의 유형은 {type}입니다."
+
+[director.runtime]
+usage = "사용법: {usage}"
+
+[director.runtime.error]
+invalid_origin = "이 실행 위치에서는 이 명령어를 실행할 수 없습니다."
+unknown_parameter = "알 수 없는 매개변수 키: {key}"
+unexpected_argument = "예상하지 못한 인수 \"{argument}\". 선택적 매개변수는 키와 함께 지정해야 합니다. 예: seed=123"
+unclosed_group = "매개변수 {key}의 닫는 \"]\"가 누락되었습니다"
+conversion_failed = "\"{value}\" 값을 {parameter}용 {type} 형식으로 변환할 수 없습니다"
+default_parse_failed = "매개변수 {parameter}의 기본값을 분석할 수 없습니다"
+missing_argument = "인수 \"{parameter}\" ({type})가 필요합니다"
+execution_failed = "명령어 {command} 실행에 실패했습니다: {reason}"
+
+[language.menu]
+your_language = "내 언어"
+reset_your_language = "내 언어 재설정"
+server_default = "서버 기본값"
+edit_messages = "언어 메시지 편집"
+use_server_default = "서버 기본값 사용"
+current = "현재: {locale}"
+current_with_personal = "현재: {locale} (내 언어: {personal})"
+your_description = "나에게 표시되는 메시지만 변경합니다."
+reset_description = "서버 기본 언어를 사용합니다."
+server_description = "서버 기본 언어를 변경합니다."
+edit_description = "언어별 메시지 편집기를 엽니다."
+select_description = "클릭하여 이 언어를 선택합니다."
+remove_personal_description = "개인 언어 선택을 제거합니다."
+no_controls = "사용할 수 있는 언어 설정이 없습니다."
+command = "명령어: {command}"
+selected = "선택됨"
+all-volmit-plugins = "모든 Volmit 플러그인"
+
+[language.error]
+stopping = "플러그인이 중지되는 동안에는 언어를 선택할 수 없습니다."
+editor-player-only = "게임 안에서 언어 편집기를 여세요."
+no-providers = "사용 가능한 Volmit 언어 제공자가 없습니다."
+numeric-page = "페이지 번호를 숫자로 입력하세요."
+personal-player-only = "개인 언어는 게임 안에서 선택해야 합니다."
+personal-permission = "개인 언어를 선택할 권한이 없습니다."
+plugin-personal-permission = "{plugin}의 개인 언어를 선택할 권한이 없습니다."
+plugin-server-permission = "{plugin}의 서버 언어를 변경할 권한이 없습니다."
+server-locale-required = "서버 기본 언어로 en_US 같은 언어 코드를 선택하세요."
+unavailable-for-all = "{locale} 언어는 선택한 모든 플러그인에서 지원되는 것은 아닙니다."
+
+[language.usage]
+editor = "사용법: /{command} language server edit [locale]"
+selection = "사용법: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "사용법: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "{target}의 {locale} 언어를 준비하는 중..."
+save-failed = "{plugin}: 언어 선택을 저장하지 못했습니다. 서버 콘솔을 확인하세요."
+english-fallback = "{plugin}: {locale}을 사용할 수 없어 영어(en_US)를 사용합니다."
+personal-selected = "{plugin}: 개인 언어를 {locale}으로 변경했습니다."
+server-selected = "{plugin}: 서버 언어를 {locale}으로 변경했습니다."
+server-default-selected = "{plugin}: 개인 언어가 이제 서버 기본 언어를 따릅니다."
+
+[language.editor]
+loading = "{locale} 메시지를 불러오는 중..."
+
+[language.editor.section]
+languages = "언어"
+search = "검색"
+search-title = "{locale} / 검색"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "메시지 키 또는 내용을 검색하세요. 돌아가려면 cancel을 입력하세요."
+value = "채팅에 {key}의 새 값을 입력하세요."
+current = "현재 값: {value}"
+variables = "변수: {variables}"
+guidance = "줄바꿈에는 \\n, 역슬래시에는 \\\\를 사용하세요. 돌아가려면 cancel을 입력하세요."
+
+[language.editor.input]
+expired = "언어 편집기의 입력 시간이 만료되었습니다."
+too-long = "입력은 최대 {maximum}자까지 가능합니다."
+unable-to-save = "저장하지 못했습니다: {reason}"
+
+[language.editor.navigation]
+back = "&e뒤로&r"
+close = "&c닫기&r"
+previous-page = "&e이전 페이지&r"
+next-page = "&e다음 페이지&r"
+
+[language.editor.search]
+messages = "메시지 검색"
+messages-lore = "클릭하여 모든 메시지를 검색합니다."
+clear = "검색 지우기"
+
+[language.editor.message]
+current-value = "&7현재 값:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7클릭하여 복수형을 편집합니다.&r"
+edit-lines = "&7클릭하여 개별 줄을 편집합니다.&r"
+edit-chat = "&7클릭하여 채팅에서 편집합니다.&r"
+
+[language.editor.locale]
+open = "&8클릭하여 이 언어를 엽니다.&r"
+
+[language.editor.category]
+message-count = "&7메시지 {count}개&r"
+open = "&8클릭하여 이 그룹을 엽니다.&r"
+
+[language.editor.error]
+no-permission = "{plugin}의 언어를 편집할 권한이 없습니다."
+unable-to-edit = "편집하지 못했습니다: {reason}"
+
+[language.editor.saved]
+summary = "{locale}을 저장했습니다. 언어 선택은 변경되지 않았습니다."
+change = "{key}: “{before}”에서 “{after}”로 변경했습니다."
+
+[language.editor.part]
+line = "{line}번째 줄"
+
+[language.editor.value]
+none = "없음"
+empty = "(비어 있음)"
+
+[config.editor]
+title = "{plugin} / 설정"
+section = "섹션: {path}"
+page = "{page} / {pages} 페이지"
+entry = "항목 {number}"
+current = "현재 값: {value}"
+open = "클릭하여 이 섹션을 엽니다."
+toggle = "클릭하여 true와 false를 전환합니다."
+edit = "클릭하여 채팅에 새 값을 입력합니다."
+prompt = "{path}의 새 값을 입력하세요. 돌아가려면 cancel을 입력하세요."
+expired = "설정 입력 시간이 만료되었습니다."
+too-long = "최대 {maximum}자까지 입력하세요."
+saving = "설정을 저장하는 중..."
+saved = "{path}을(를) 저장했습니다. 변경 사항은 자동으로 적용됩니다."
+failed = "설정을 편집할 수 없습니다: {reason}"
+loading = "설정을 불러오는 중..."
+empty = "이 섹션에는 설정이 없습니다."
+player-only = "게임 안에서 설정 편집기를 여세요."
+no-permission = "이 설정을 편집할 권한이 없습니다."
+back = "뒤로"
+previous = "이전 페이지"
+next = "다음 페이지"
+refresh = "새로 고침"
+close = "닫기"
+
+[config.editor.type]
+text = "텍스트 양쪽에 따옴표를 붙이지 마세요."
+integer = "정수를 입력하세요."
+decimal = "0.25와 같은 숫자를 입력하세요."
+list = "[\"stone\", \"deepslate\"]와 같은 TOML 목록을 사용하세요."
+

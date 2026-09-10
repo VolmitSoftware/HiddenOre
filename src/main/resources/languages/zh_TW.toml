@@ -1,0 +1,248 @@
+# HiddenOre — zh_TW
+#
+# === 編輯檔案 ===
+# plugins/HiddenOre/languages/zh_TW.toml
+# 可直接編輯此檔案。本機修改會保留；缺少或無效的項目使用內建英文文字。
+# /hiddenore language server edit zh_TW
+#
+# === 前綴 ===
+# prefix 加在聊天訊息前；設為空字串即可隱藏。
+#
+# === 格式 ===
+# 色彩代碼: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === 變數 ===
+# 請勿變更變數名稱，僅使用各訊息中原有的變數。
+#   {after}  變更后的值
+#   {amount}  掉落物品數量
+#   {argument}  意外引數
+#   {before}  變更前的值
+#   {block}  開採的方塊類型
+#   {chance}  設定的觸發機率
+#   {command}  指令路徑
+#   {count}  訊息數量
+#   {group}  語言編輯器類別
+#   {key}  訊息或參數的鍵
+#   {line}  訊息中的行號
+#   {locale}  地區設定
+#   {material}  掉落物品類型
+#   {maximum}  最大允許值
+#   {number}  項目編號
+#   {page}  目前頁碼
+#   {pages}  總頁數
+#   {parameter}  參數名稱
+#   {path}  設定項目路徑
+#   {personal}  個人地區設定
+#   {plugin}  插件名稱
+#   {reason}  失敗原因
+#   {roll}  抽取的隨機數值
+#   {target}  套用語言選擇的外掛
+#   {type}  類型
+#   {usage}  指令用法
+#   {value}  目前值、預設值或原始值
+#   {variables}  可用佔位符
+#   {vein}  礦脈名稱
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&c你沒有使用此指令的權限。&r"
+player_only = "&c此指令只能由玩家使用。&r"
+debug_enabled = "&a除錯模式已啟用。&r"
+debug_disabled = "&c除錯模式已停用。&r"
+config_reloaded_message = "&a設定已更新並重新載入。&r"
+
+[debug]
+player_placed = "&c{block} 由玩家放置；不會產生隱藏掉落。&r"
+random_drop = "&a隨機掉落：{material} x{amount}&r"
+random_drop_lost = "&c工具等級太低，隨機掉落 {material} 已遺失。&r"
+vein_drop = "&a礦脈 {vein}：{material} x{amount}&r"
+vein_drop_discovered = "&a礦脈 {vein}：{material} x{amount}(已發現)&r"
+vein_drop_lost = "&c礦脈 {vein}：工具等級太低，{material} 已遺失。&r"
+command_hit = "&7指令判定：chance={chance}，roll={roll} -> &a命中&7&r"
+command_miss = "&7指令判定：chance={chance}，roll={roll} -> &c未命中&7&r"
+
+[command.parameter]
+debugdump_upload = "將報告上傳至 mclo.gs"
+
+[command.description]
+config = "編輯 HiddenOre 設定"
+debug_group = "HiddenOre: 診斷工具"
+debugdump = "建立診斷報告並選擇是否上傳"
+root = "HiddenOre 指令群組"
+debug = "切換自己的礦石除錯模式"
+
+[director.help]
+no_subcommands = "此頁面沒有子命令。"
+no_description = "未提供說明"
+command_group = "命令群組。點擊以開啟。"
+category = "指令類別"
+no_parameters = "無參數。點擊以預先填入命令。"
+parameters_hover = "將滑鼠懸停在參數上以瞭解更多。"
+
+[director.help.navigation]
+back = "返回"
+page = "頁面"
+
+[director.help.navigation.parent]
+hover = "返回上層命令群組"
+
+[director.help.navigation.previous]
+hover = "上一頁"
+
+[director.help.navigation.next]
+hover = "下一頁"
+
+[director.help.parameter]
+required = "此參數為必填項。"
+optional = "此參數為可選項。"
+default = "未指定時預設為 \"{value}\"。"
+type = "此參數的類型為 {type}。"
+
+[director.runtime]
+usage = "用法: {usage}"
+
+[director.runtime.error]
+invalid_origin = "無法從此來源執行該指令。"
+unknown_parameter = "未知參數鍵: {key}"
+unexpected_argument = "意外參數 \"{argument}\"。選用參數必須使用鍵指定，例如 seed=123"
+unclosed_group = "引數 {key} 缺少閉合的 \"]\""
+conversion_failed = "無法將 \"{value}\" 轉換為 {parameter} 所需的 {type}"
+default_parse_failed = "無法解析參數 {parameter} 的預設值"
+missing_argument = "缺少參數 \"{parameter}\" ({type})"
+execution_failed = "執行指令 {command} 失敗: {reason}"
+
+[language.menu]
+your_language = "您的語言"
+reset_your_language = "重設您的語言"
+server_default = "伺服器預設語言"
+edit_messages = "編輯語言訊息"
+use_server_default = "使用伺服器預設語言"
+current = "目前：{locale}"
+current_with_personal = "目前：{locale}（您的：{personal}）"
+your_description = "只變更您看到的訊息。"
+reset_description = "使用伺服器預設語言。"
+server_description = "變更伺服器預設語言。"
+edit_description = "開啟各語言的訊息編輯器。"
+select_description = "點擊以選擇此語言。"
+remove_personal_description = "移除您的個人語言選擇。"
+no_controls = "您無權使用語言設定。"
+command = "命令: {command}"
+selected = "已選擇"
+all-volmit-plugins = "所有 Volmit 外掛"
+
+[language.error]
+stopping = "外掛停止期間無法選擇語言。"
+editor-player-only = "請在遊戲中開啟語言編輯器。"
+no-providers = "沒有可用的 Volmit 語言提供程式。"
+numeric-page = "請輸入數字頁碼。"
+personal-player-only = "玩家必須在遊戲中選擇個人語言。"
+personal-permission = "你沒有權限選擇個人語言。"
+plugin-personal-permission = "你沒有權限為 {plugin} 選擇個人語言。"
+plugin-server-permission = "你沒有權限變更 {plugin} 的伺服器語言。"
+server-locale-required = "請選擇 en_US 等語言代碼作為伺服器預設語言。"
+unavailable-for-all = "語言 {locale} 並非適用於所有選取的外掛。"
+
+[language.usage]
+editor = "用法: /{command} language server edit [locale]"
+selection = "用法: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "用法: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "正在為 {target} 準備語言 {locale}..."
+save-failed = "{plugin}：無法儲存語言選擇；請檢查伺服器主控台。"
+english-fallback = "{plugin}：{locale} 無法使用；將使用英語（en_US）。"
+personal-selected = "{plugin}：你的語言現在是 {locale}。"
+server-selected = "{plugin}：伺服器語言現在是 {locale}。"
+server-default-selected = "{plugin}：你的語言現在跟隨伺服器預設語言。"
+
+[language.editor]
+loading = "正在載入 {locale} 的訊息..."
+
+[language.editor.section]
+languages = "語言"
+search = "搜尋"
+search-title = "{locale} / 搜尋"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "搜尋訊息鍵或內容。輸入 cancel 返回。"
+value = "請在聊天中輸入 {key} 的新值。"
+current = "目前值： {value}"
+variables = "變數: {variables}"
+guidance = "使用 \\n 表示換行，\\\\ 表示反斜線，或輸入 cancel 返回。"
+
+[language.editor.input]
+expired = "語言編輯器的輸入時間已到期。"
+too-long = "輸入最多可包含 {maximum} 個字元。"
+unable-to-save = "無法儲存：{reason}"
+
+[language.editor.navigation]
+back = "&e返回&r"
+close = "&c關閉&r"
+previous-page = "&e前一頁&r"
+next-page = "&e下一頁&r"
+
+[language.editor.search]
+messages = "搜尋訊息"
+messages-lore = "點擊搜尋所有訊息。"
+clear = "清除搜尋"
+
+[language.editor.message]
+current-value = "&7目前值:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7點擊編輯複數形式。&r"
+edit-lines = "&7點擊逐行編輯。&r"
+edit-chat = "&7點擊在聊天中編輯。&r"
+
+[language.editor.locale]
+open = "&8點擊開啟此語言。&r"
+
+[language.editor.category]
+message-count = "&7{count} 則訊息&r"
+open = "&8點擊開啟此類別。&r"
+
+[language.editor.error]
+no-permission = "你沒有權限編輯 {plugin} 的語言。"
+unable-to-edit = "無法編輯：{reason}"
+
+[language.editor.saved]
+summary = "已儲存 {locale}。語言選擇保持不變。"
+change = "{key}：已將「{before}」改為「{after}」。"
+
+[language.editor.part]
+line = "第 {line} 行"
+
+[language.editor.value]
+none = "無"
+empty = "(空)"
+
+[config.editor]
+title = "{plugin} / 設定"
+section = "區段：{path}"
+page = "第 {page} 頁，共 {pages} 頁"
+entry = "項目 {number}"
+current = "目前值：{value}"
+open = "點擊開啟此區段。"
+toggle = "點擊在 true 與 false 之間切換。"
+edit = "點擊在聊天中輸入新值。"
+prompt = "請輸入 {path} 的新值。輸入 cancel 返回。"
+expired = "設定輸入已逾時。"
+too-long = "最多輸入 {maximum} 個字元。"
+saving = "正在儲存設定..."
+saved = "已儲存 {path}。變更會自動生效。"
+failed = "無法編輯設定：{reason}"
+loading = "正在載入設定..."
+empty = "此區段沒有設定項目。"
+player-only = "請在遊戲中開啟設定編輯器。"
+no-permission = "你沒有編輯此設定的權限。"
+back = "返回"
+previous = "上一頁"
+next = "下一頁"
+refresh = "重新整理"
+close = "關閉"
+
+[config.editor.type]
+text = "文字不需要在兩側加上引號。"
+integer = "請輸入整數。"
+decimal = "請輸入數字，例如 0.25。"
+list = "請使用 TOML 清單，例如 [\"stone\", \"deepslate\"]。"
+

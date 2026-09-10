@@ -116,7 +116,7 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
   }
 
   private boolean executeCommand(CommandSender sender, String label, String[] args) {
-    if (!(args.length > 0 && args[0].equalsIgnoreCase("debugdump"))
+    if (!(args.length > 1 && args[0].equalsIgnoreCase("debug") && args[1].equalsIgnoreCase("dump"))
         && !sender.hasPermission(ROOT_PERMISSION)) {
       HiddenOre.sendMessage(sender, plugin.getMessages().component(sender, Messages.NO_PERMISSION));
       return true;
@@ -152,13 +152,18 @@ public final class HiddenOreCommandService implements CommandExecutor, TabComple
   @Nullable
   @Override
   public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-    if (command.getName().equalsIgnoreCase(ROOT_COMMAND) && args.length > 1 && args[0].equalsIgnoreCase("debugdump")) {
-      return sender.hasPermission("hiddenore.debugdump") ? runDirectorTab(sender, alias, args) : List.of();
-    }
-    if (command.getName().equalsIgnoreCase(ROOT_COMMAND) && args.length == 1
-        && "debugdump".startsWith(args[0].toLowerCase(Locale.ROOT))
-        && sender.hasPermission("hiddenore.debugdump") && !sender.hasPermission(ROOT_PERMISSION)) {
-      return List.of("debugdump");
+    if (command.getName().equalsIgnoreCase(ROOT_COMMAND) && !sender.hasPermission(ROOT_PERMISSION)
+        && sender.hasPermission("hiddenore.debugdump")) {
+      if (args.length == 1 && "debug".startsWith(args[0].toLowerCase(Locale.ROOT))) {
+        return List.of("debug");
+      }
+      if (args.length == 2 && args[0].equalsIgnoreCase("debug")
+          && "dump".startsWith(args[1].toLowerCase(Locale.ROOT))) {
+        return List.of("dump");
+      }
+      if (args.length > 2 && args[0].equalsIgnoreCase("debug") && args[1].equalsIgnoreCase("dump")) {
+        return runDirectorTab(sender, alias, args);
+      }
     }
     if (command.getName().equalsIgnoreCase(ROOT_COMMAND) && args.length > 0 && args[0].equalsIgnoreCase("language")) {
       return plugin.languageSwitcher().complete(sender, Arrays.copyOfRange(args, 1, args.length));

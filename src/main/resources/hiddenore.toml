@@ -1,0 +1,185 @@
+# Saved edits apply automatically; invalid edits keep the last valid settings.
+# [section] groups settings; [[drops]] adds another rule to the drops list.
+# Keep top-level settings before the first [section].
+
+# Default language for console and players without a personal choice.
+# Example: "de_DE" uses languages/de_DE.toml.
+language = "en_US"
+# Send anonymous usage statistics to bStats.
+metrics = true
+
+# Put items in the player's inventory; overflow drops on the ground.
+auto_pickup_drops = false
+# Skip the base block drop when an item or command reward succeeds.
+suppress_block_drop_on_custom_drop = true
+
+[ore-removal]
+# Replace selected ores with their base rock in newly generated terrain.
+enabled = false
+
+# Ore settings for worlds without an exception below.
+[ore-removal.global]
+# Remove supported ores by default; false keeps them.
+default = true
+# Per-ore overrides: true removes the ore; false keeps it.
+# Options: coal/copper/iron/gold/diamond/redstone/lapis/emerald ores (including deepslate), Nether gold/quartz, ancient debris.
+NETHER_GOLD_ORE = false
+NETHER_QUARTZ_ORE = false
+ANCIENT_DEBRIS = false
+
+# World exceptions replace global settings; this example keeps all End ores.
+[ore-removal.exceptions."minecraft:the_end"]
+default = false
+
+# Keep Nether ores except the three removed below.
+[ore-removal.exceptions."minecraft:the_nether"]
+default = false
+NETHER_GOLD_ORE = true
+NETHER_QUARTZ_ORE = true
+ANCIENT_DEBRIS = true
+
+# Listed blocks give rewards when mined with a pickaxe outside Creative mode.
+# Example: add [blocks.netherrack] to manage netherrack too.
+[blocks.stone]
+# Base item to give when a reward does not suppress it.
+drop = "cobblestone"
+
+[blocks.deepslate]
+drop = "cobbled_deepslate"
+
+[veins]
+# seeded: fixed, detectable veins from the world seed; each position can pay once.
+# pure_random: fresh item rolls for each eligible break; no detectable veins.
+generation = "seeded"
+# Allow hidden rewards from player-placed blocks; false prevents place-and-remine farming.
+allow_placed_blocks = false
+
+[veins.discovery_sound]
+# Sound for first-block vein discoveries or each random item reward; unknown names use the default.
+# Use a Bukkit name or key, e.g. "minecraft:block.beacon.power_select".
+sound = "BLOCK_BEACON_POWER_SELECT"
+# Loudness: 0 silences discovery, 1 is normal, higher is louder.
+volume = 1.0
+# Pitch: 0.5 to 2.0; 1.0 is normal.
+pitch = 1.0
+
+# Copy this item example to add rewards; all item rules share a 1,024-target-block limit.
+[[drops]]
+# Bukkit item to award: one per successful block before Fortune.
+item = "coal"
+# Average veins per chunk: 0 to 64; 0 disables this item rule.
+# Seeded example: 2.2 means two veins, with a 20% chance of a third.
+veins_per_chunk = 2.2
+# Smallest target vein size in blocks: 1 to 256.
+vein_min_size = 5
+# Largest target vein size: at least vein_min_size, up to 256.
+vein_max_size = 20
+# Lowest eligible Y level, inclusive.
+min_y = 0
+# Highest eligible Y level, inclusive; seeded veins stay within world height.
+max_y = 320
+# Let Fortune increase the item count.
+fortune_multiplier = true
+# Allowed tools; wrong tiers lose the reward and consume seeded positions.
+# All supported tools are listed below.
+tool_tiers = [ "WOODEN_PICKAXE", "STONE_PICKAXE", "COPPER_PICKAXE", "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+# Random XP from 0 through this value (maximum 1,000); 0 disables XP.
+exp_drop = 2
+
+[[drops]]
+item = "raw_copper"
+veins_per_chunk = 1.6
+vein_min_size = 4
+vein_max_size = 12
+min_y = -16
+max_y = 112
+fortune_multiplier = true
+tool_tiers = [ "COPPER_PICKAXE", "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 2
+
+[[drops]]
+item = "raw_iron"
+veins_per_chunk = 1.8
+vein_min_size = 4
+vein_max_size = 12
+min_y = -64
+max_y = 320
+fortune_multiplier = false
+tool_tiers = [ "COPPER_PICKAXE", "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 0
+
+[[drops]]
+item = "raw_gold"
+veins_per_chunk = 0.6
+vein_min_size = 3
+vein_max_size = 8
+min_y = -64
+max_y = 32
+fortune_multiplier = false
+tool_tiers = [ "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 0
+
+[[drops]]
+item = "redstone"
+veins_per_chunk = 0.9
+vein_min_size = 4
+vein_max_size = 8
+min_y = -64
+max_y = 16
+fortune_multiplier = true
+tool_tiers = [ "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 1
+
+[[drops]]
+item = "lapis_lazuli"
+veins_per_chunk = 0.5
+vein_min_size = 3
+vein_max_size = 6
+min_y = -64
+max_y = 64
+fortune_multiplier = true
+tool_tiers = [ "COPPER_PICKAXE", "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 5
+
+[[drops]]
+item = "diamond"
+veins_per_chunk = 0.5
+vein_min_size = 3
+vein_max_size = 8
+min_y = -64
+max_y = 16
+fortune_multiplier = true
+tool_tiers = [ "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 7
+
+[[drops]]
+item = "emerald"
+veins_per_chunk = 0.35
+vein_min_size = 1
+vein_max_size = 2
+min_y = -16
+max_y = 320
+fortune_multiplier = true
+tool_tiers = [ "IRON_PICKAXE", "GOLDEN_PICKAXE", "DIAMOND_PICKAXE", "NETHERITE_PICKAXE" ]
+exp_drop = 7
+
+# Command rewards roll separately on eligible breaks in either generation mode.
+[[drops]]
+# Use "command" for command rewards; item rules can omit type.
+type = "command"
+# Run every listed command on a successful roll; player:/console: override execute_as.
+# Variables: %player%, %uuid%, %world%, and the mined block's %x%, %y%, %z%.
+commands = [
+  "player:say I rolled a player-level bonus!",
+  "console:say %player% rolled a server-level bonus!",
+  "give %player% diamond 1"
+]
+# Chance per eligible break: 0 never, 1 always.
+# Example: 0.0005 = 0.05%, about 1 in 2,000 breaks.
+chance = 0.0005
+# Lowest eligible Y level, inclusive.
+min_y = -64
+# Highest eligible Y level, inclusive.
+max_y = 320
+# Sender for unprefixed commands: "console" or "player" (uses the miner's permissions).
+execute_as = "console"

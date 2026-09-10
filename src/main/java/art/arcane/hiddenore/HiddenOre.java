@@ -2,6 +2,10 @@ package art.arcane.hiddenore;
 
 import art.arcane.volmlib.util.diagnostics.BukkitDebugDump;
 import art.arcane.volmlib.util.diagnostics.DebugDumpContributor;
+import art.arcane.volmlib.util.config.TomlCodec;
+import art.arcane.volmlib.util.config.TomlDocumentEditor;
+import art.arcane.volmlib.util.config.ConfigEditorDocument;
+import art.arcane.volmlib.util.config.BukkitConfigEditor;
 import art.arcane.volmlib.util.io.AtomicFileIO;
 import art.arcane.volmlib.util.localization.BukkitLanguageSwitcher;
 import art.arcane.volmlib.util.localization.LocalizationSnapshot;
@@ -23,7 +27,6 @@ import art.arcane.hiddenore.service.HiddenOreTelemetry;
 import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.common.SplashScreen;
 import art.arcane.hiddenore.util.project.ConfigWatcher;
-import art.arcane.hiddenore.util.project.SoundResolver;
 import art.arcane.hiddenore.vein.SeededVeinGenerator;
 import art.arcane.volmlib.integration.ReloadAware;
 import art.arcane.volmlib.util.bukkit.ChunkPositionSet;
@@ -32,11 +35,11 @@ import art.arcane.volmlib.util.director.theme.DirectorProduct;
 import art.arcane.volmlib.util.director.theme.DirectorThemes;
 import art.arcane.volmlib.util.plugin.ComponentMessenger;
 import art.arcane.volmlib.util.plugin.ComponentText;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.github.slimjar.app.builder.SpigotApplicationBuilder;
-import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -46,6 +49,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -60,10 +64,12 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   private static final long LOG_THROTTLE_NANOS = TimeUnit.MINUTES.toNanos(1L);
   private final Set<UUID> debugPlayers = ConcurrentHashMap.newKeySet();
   private final ConcurrentMap<String, LogThrottle> logThrottles = new ConcurrentHashMap<>();
+  private final AtomicLong configurationRevision = new AtomicLong();
   private GenerationRules generationRules;
   private RemoteLanguageCatalog remoteLanguages;
   private PluginLanguageService languageService;
   private BukkitLanguageSwitcher languageSwitcher;
+  private BukkitConfigEditor configEditor;
   private BukkitDebugDump debugDump;
   private volatile String languageLocale = "en_US";
   private ConfigWatcher configWatcher;
@@ -76,7 +82,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   // HiddenOreMetrics owns all bstats types; never reference them from this class (slimjar link trap)
   private HiddenOreMetrics metrics;
   private volatile RuntimeState runtimeState;
-  private volatile AppliedConfigSnapshot appliedConfigSnapshot;
+  private volatile String appliedConfigToml;
   private volatile boolean draining;
   private boolean serviceRegistered;
 
@@ -90,30 +96,31 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   @Override
   public void onEnable() {
     draining = false;
-    debugDump = BukkitDebugDump.create(this, new BukkitDebugDump.Options(() -> true, this::captureDebugState));
+    debugDump = BukkitDebugDump.create(this, new BukkitDebugDump.Options(() -> true, this::captureDebugState,
+        new BukkitDebugDump.Presentation("/hiddenore debug dump", "/hiddenore debug",
+            DirectorMiniMenu.Theme.fromDirectorTheme(DirectorThemes.forProduct(DirectorProduct.HIDDENORE)),
+            (key, arguments) -> getMessages().directorText(key, arguments))));
 
     try {
-      File configFile = new File(getDataFolder(), "hiddenore.yml");
+      File configFile = new File(getDataFolder(), "hiddenore.toml");
       if (!configFile.exists()) {
-        saveResource("hiddenore.yml", false);
+        saveResource("hiddenore.toml", false);
       }
-      File langFile = new File(getDataFolder(), "language.yml");
-      if (!langFile.exists()) {
-        saveResource("language.yml", false);
-      }
+      configWatcher = new ConfigWatcher(this);
       placedBlocks = new ChunkPositionSet(this, "placed_blocks");
       consumedVeins = new ChunkPositionSet(this, "consumed_veins");
       api = new HiddenOreAPI(this);
       generationRules = new GenerationRules(this);
       remoteLanguages = RemoteLanguageCatalog.load(new RemoteLanguageCatalog.Options(
           "HiddenOre", URI.create("https://raw.githubusercontent.com/VolmitSoftware/HiddenOre/"),
-          "src/main/resources/languages", ".yml", "language-source.properties",
-          getDataFolder().toPath().resolve("languages/cache"), getClass().getClassLoader()));
-      reloadAll();
+          "src/main/resources/languages", ".toml", "language-source.properties",
+          getClass().getClassLoader()));
+      String initialConfig = readConfig(configFile);
+      reloadAll(initialConfig, prepareReloadMessages(initialConfig), configurationRevision.get());
       String initialLocale = languageLocale;
       languageLocale = "en_US";
       languageService = new PluginLanguageService(new PluginLanguageService.Options(
-          getDataFolder().toPath().resolve("language-preferences.properties"), VolmitLocales::all,
+          getDataFolder().toPath().resolve("languages/language-preferences.properties"), VolmitLocales::all,
           () -> languageLocale, () -> getMessages().defaultSnapshot(), this::prepareLanguage,
           this::selectLanguage, getLogger()));
       getMessages().languageService(languageService);
@@ -129,6 +136,11 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
           return null;
         });
       }
+      configEditor = BukkitConfigEditor.register(this, new BukkitConfigEditor.Options(
+          this::loadConfigurationDocument, this::saveConfiguration,
+          new BukkitConfigEditor.Presentation("hiddenore.admin",
+              DirectorMiniMenu.Theme.fromDirectorTheme(DirectorThemes.forProduct(DirectorProduct.HIDDENORE)),
+              (key, arguments) -> getMessages().directorText(key, arguments))));
       generationRules.start();
       getServer().getPluginManager().registerEvents(new MiningListener(this), this);
       getServer().getPluginManager().registerEvents(new PlacementListener(this), this);
@@ -142,12 +154,11 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       getServer().getServicesManager().register(HiddenOreService.class, api, this, ServicePriority.Normal);
       serviceRegistered = true;
       debug("HiddenOre service registered for third-party integrations.");
-      configWatcher = new ConfigWatcher(this);
-      AppliedConfigSnapshot startupSnapshot = appliedConfigSnapshot;
+      String startupSnapshot = appliedConfigToml;
       if (startupSnapshot == null) {
         throw new IllegalStateException("HiddenOre configuration snapshot is unavailable after startup reload");
       }
-      configWatcher.startWithAppliedSnapshot(startupSnapshot.configYaml(), startupSnapshot.languageYaml());
+      configWatcher.startWithAppliedSnapshot(startupSnapshot);
       SplashScreen.print(this, true);
     } catch (Exception exception) {
       logException(Level.SEVERE, exception, "HiddenOre failed to enable.");
@@ -168,13 +179,6 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       }
     }
 
-    if (BSTATS_PLUGIN_ID > 0 && getRuntimeState().metrics()) {
-      try {
-        metrics = HiddenOreMetrics.start(this, BSTATS_PLUGIN_ID);
-      } catch (RuntimeException exception) {
-        logException(Level.WARNING, exception, "Failed to initialize HiddenOre metrics.");
-      }
-    }
   }
 
   @Override
@@ -240,6 +244,10 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       return;
     }
     draining = true;
+    if (configEditor != null) {
+      configEditor.close();
+      configEditor = null;
+    }
     // Stop the bStats scheduler first so no chart callable observes a half-drained runtime.
     if (metrics != null) {
       metrics.shutdown();
@@ -283,82 +291,71 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     return getRuntimeState().messages();
   }
 
-  public synchronized void reloadAll() {
+  public Messages prepareReloadMessages(String configToml) {
+    File configFile = new File(getDataFolder(), "hiddenore.toml");
+    JsonObject config = loadToml(configToml, configFile);
+    String locale = optionalString(config, "language", "en_US");
+    Messages preparedMessages = new Messages(remoteLanguages, getDataFolder().toPath().resolve("languages"));
+    preparedMessages.reload(runtimeState == null ? "en_US" : locale);
+    return preparedMessages;
+  }
+
+  public boolean reloadAll(String configToml, Messages preparedMessages, long expectedRevision) {
+    PluginLanguageService activeLanguages = languageService;
+    if (activeLanguages == null) {
+      return applyReloadSnapshot(configToml, preparedMessages, expectedRevision);
+    }
+    try {
+      return activeLanguages.commitUpdate(() -> applyReloadSnapshot(configToml, preparedMessages, expectedRevision));
+    } catch (IOException exception) {
+      throw new IllegalStateException("Unable to apply HiddenOre configuration changes.", exception);
+    }
+  }
+
+  private synchronized boolean applyReloadSnapshot(String configToml, Messages preparedMessages, long expectedRevision) {
     if (draining) {
       throw new IllegalStateException("HiddenOre is shutting down");
     }
-
-    File configFile = new File(getDataFolder(), "hiddenore.yml");
-    File langFile = new File(getDataFolder(), "language.yml");
-    AppliedConfigSnapshot snapshot = new AppliedConfigSnapshot(
-        readYaml(configFile, "hiddenore.yml"),
-        readYaml(langFile, "language.yml")
-    );
-    applyReloadSnapshot(configFile, langFile, snapshot);
-    ConfigWatcher watcher = configWatcher;
-    if (watcher != null) {
-      watcher.resetAfterManualReload(snapshot.configYaml(), snapshot.languageYaml());
+    if (configurationRevision.get() != expectedRevision) {
+      return false;
     }
+
+    File configFile = new File(getDataFolder(), "hiddenore.toml");
+    applyReload(configFile, loadToml(configToml, configFile), preparedMessages);
+    appliedConfigToml = configToml;
+    return true;
   }
 
-  public synchronized void reloadAll(String configYaml, String languageYaml) {
-    if (draining) {
-      throw new IllegalStateException("HiddenOre is shutting down");
-    }
-
-    File configFile = new File(getDataFolder(), "hiddenore.yml");
-    File langFile = new File(getDataFolder(), "language.yml");
-    applyReloadSnapshot(configFile, langFile, new AppliedConfigSnapshot(configYaml, languageYaml));
-  }
-
-  private void applyReloadSnapshot(File configFile, File langFile, AppliedConfigSnapshot snapshot) {
-    YamlConfiguration config = loadYaml(snapshot.configYaml(), configFile, "hiddenore.yml");
-    YamlConfiguration langConfig = loadYaml(snapshot.languageYaml(), langFile, "language.yml");
-    applyReload(configFile, langFile, config, langConfig);
-    appliedConfigSnapshot = snapshot;
-  }
-
-  private void applyReload(File configFile, File langFile, YamlConfiguration config,
-                           YamlConfiguration langConfig) {
-
-    MiningRuleManager nextRuleManager;
-    boolean autoPickup;
-    boolean suppressBlockDrop;
-    boolean metricsEnabled;
-    String language;
-    GenerationRules.GenerationPolicy generationPolicy;
-    try {
-      nextRuleManager = new MiningRuleManager(config);
-      autoPickup = optionalBoolean(config, "auto_pickup_drops", false);
-      suppressBlockDrop = optionalBoolean(config, "suppress_block_drop_on_custom_drop", false);
-      metricsEnabled = optionalBoolean(config, "metrics", true);
-      language = optionalString(config, "language", "en_US");
-      generationPolicy = GenerationRules.parsePolicy(config);
-    } catch (IllegalArgumentException exception) {
-      throw invalidConfiguration(configFile, exception);
-    }
-
-    Messages nextMessages;
-    ReloadNotification reloadNotification;
-    try {
-      boolean initializing = runtimeState == null;
-      nextMessages = new Messages(remoteLanguages, getDataFolder().toPath().resolve("languages"));
-      nextMessages.reload(langConfig, langFile.getAbsolutePath(), initializing ? "en_US" : language);
-      reloadNotification = parseReloadNotification(langConfig);
-    } catch (IllegalArgumentException exception) {
-      throw invalidConfiguration(langFile, exception);
-    }
-
-    SeededVeinGenerator nextVeinGenerator = new SeededVeinGenerator(nextRuleManager.getAllDropRules());
+  private void applyReload(File configFile, JsonObject config, Messages nextMessages) {
+    ConfigurationSettings settings = parseSettings(configFile, config);
+    SeededVeinGenerator nextVeinGenerator = new SeededVeinGenerator(settings.rules().getAllDropRules());
 
     nextMessages.languageService(languageService);
-    languageLocale = language;
+    languageLocale = settings.language();
+    runtimeState = new RuntimeState(settings.rules(), nextMessages, nextVeinGenerator, settings.generation(),
+        settings.autoPickup(), settings.suppressBlockDrop(), settings.metrics());
     if (languageService != null) {
       languageService.invalidate();
     }
-    runtimeState = new RuntimeState(nextRuleManager, nextMessages, nextVeinGenerator, generationPolicy,
-        reloadNotification, autoPickup, suppressBlockDrop, metricsEnabled);
+    updateMetrics(settings.metrics());
     HiddenOreTelemetry.countConfigReload();
+  }
+
+  private void updateMetrics(boolean enabled) {
+    if (!enabled || BSTATS_PLUGIN_ID <= 0) {
+      if (metrics != null) {
+        metrics.shutdown();
+        metrics = null;
+      }
+      return;
+    }
+    if (metrics == null) {
+      try {
+        metrics = HiddenOreMetrics.start(this, BSTATS_PLUGIN_ID);
+      } catch (RuntimeException exception) {
+        logException(Level.WARNING, exception, "Failed to initialize HiddenOre metrics.");
+      }
+    }
   }
 
   private DebugDumpContributor.Report captureDebugState() {
@@ -374,12 +371,13 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     return languageSwitcher;
   }
 
+  public BukkitConfigEditor configEditor() {
+    return configEditor;
+  }
+
   private LocalizationSnapshot prepareLanguage(String locale) {
     Messages messages = new Messages(remoteLanguages, getDataFolder().toPath().resolve("languages"));
-    AppliedConfigSnapshot snapshot = appliedConfigSnapshot;
-    File file = new File(getDataFolder(), "language.yml");
-    YamlConfiguration overrides = loadYaml(snapshot.languageYaml(), file, "language.yml");
-    messages.reload(overrides, file.getAbsolutePath(), locale);
+    messages.reload(locale);
     return messages.defaultSnapshot();
   }
 
@@ -388,11 +386,11 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   }
 
   private synchronized void selectLanguage(String locale, LocalizationSnapshot prepared) throws Exception {
-    File file = new File(getDataFolder(), "hiddenore.yml");
-    YamlConfiguration configuration = loadYaml(readYaml(file, "hiddenore.yml"), file, "hiddenore.yml");
-    configuration.set("language", locale);
-    String raw = configuration.saveToString();
-    AtomicFileIO.writeString(file.toPath(), raw);
+    if (draining) {
+      throw new IllegalStateException("HiddenOre is shutting down");
+    }
+    writeLanguage(new File(getDataFolder(), "hiddenore.toml"), locale);
+    configurationSaved();
     getMessages().install(prepared);
     languageLocale = locale;
   }
@@ -463,74 +461,119 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     return draining;
   }
 
-  private String readYaml(File file, String name) {
+  public long configurationRevision() {
+    return configurationRevision.get();
+  }
+
+  private ConfigEditorDocument loadConfigurationDocument() throws IOException {
+    File file = new File(getDataFolder(), "hiddenore.toml");
+    String source = readConfig(file);
+    parseSettings(file, loadToml(source, file));
+    return ConfigEditorDocument.fromToml(source);
+  }
+
+  private synchronized ConfigEditorDocument saveConfiguration(ConfigEditorDocument.Edit edit) throws IOException {
+    if (draining) {
+      throw new IllegalStateException("HiddenOre is shutting down");
+    }
+    File file = new File(getDataFolder(), "hiddenore.toml");
+    ConfigEditorDocument saved = writeConfiguration(file, edit);
+    configurationSaved();
+    return saved;
+  }
+
+  private void configurationSaved() {
+    configurationRevision.incrementAndGet();
+    if (configWatcher != null) {
+      configWatcher.configurationSaved();
+    }
+  }
+
+  private static String readConfig(File file) {
     try {
       return Files.readString(file.toPath(), StandardCharsets.UTF_8);
     } catch (IOException exception) {
       throw new IllegalArgumentException("Failed to load HiddenOre configuration file '" + file.getAbsolutePath()
-          + "' (" + name + "): " + exception.getMessage(), exception);
+          + "': " + exception.getMessage(), exception);
     }
   }
 
-  private YamlConfiguration loadYaml(String content, File file, String name) {
-    YamlConfiguration configuration = new YamlConfiguration();
+  static JsonObject loadToml(String content, File file) {
     try {
-      configuration.loadFromString(content);
-      return configuration;
-    } catch (InvalidConfigurationException exception) {
+      JsonElement configuration = TomlCodec.toJsonElement(content);
+      if (!configuration.isJsonObject()) {
+        throw new IOException("Expected a TOML table");
+      }
+      return configuration.getAsJsonObject();
+    } catch (IOException exception) {
       throw new IllegalArgumentException("Failed to load HiddenOre configuration file '" + file.getAbsolutePath()
-          + "' (" + name + "): " + exception.getMessage(), exception);
+          + "': " + exception.getMessage(), exception);
     }
   }
 
-  private IllegalArgumentException invalidConfiguration(File file, IllegalArgumentException cause) {
+  static void writeLanguage(File file, String locale) throws IOException {
+    String original = readConfig(file);
+    loadToml(original, file);
+    String content = TomlDocumentEditor.set(original, List.of("language"), new JsonPrimitive(locale));
+    requireUnchanged(file, original);
+    AtomicFileIO.writeString(file.toPath(), content);
+  }
+
+  static ConfigEditorDocument writeConfiguration(File file, ConfigEditorDocument.Edit edit) throws IOException {
+    String original = edit.original().source();
+    requireUnchanged(file, original);
+    String content = TomlDocumentEditor.set(original, edit.path(), edit.value());
+    parseSettings(file, loadToml(content, file));
+    ConfigEditorDocument result = ConfigEditorDocument.fromToml(content);
+    requireUnchanged(file, original);
+    AtomicFileIO.writeString(file.toPath(), content);
+    return result;
+  }
+
+  private static void requireUnchanged(File file, String original) throws IOException {
+    if (!original.equals(readConfig(file))) {
+      throw new IOException("Configuration changed while this editor was open. Reopen it and try again.");
+    }
+  }
+
+  private static ConfigurationSettings parseSettings(File file, JsonObject configuration) {
+    try {
+      return new ConfigurationSettings(new MiningRuleManager(configuration),
+          GenerationRules.parsePolicy(configuration),
+          Messages.requireLocale(optionalString(configuration, "language", "en_US"), file.getName()),
+          optionalBoolean(configuration, "auto_pickup_drops", false),
+          optionalBoolean(configuration, "suppress_block_drop_on_custom_drop", false),
+          optionalBoolean(configuration, "metrics", true));
+    } catch (IllegalArgumentException exception) {
+      throw invalidConfiguration(file, exception);
+    }
+  }
+
+  private static IllegalArgumentException invalidConfiguration(File file, IllegalArgumentException cause) {
     return new IllegalArgumentException("Invalid HiddenOre configuration file '" + file.getAbsolutePath()
         + "': " + cause.getMessage(), cause);
   }
 
-  private boolean optionalBoolean(YamlConfiguration configuration, String path, boolean defaultValue) {
-    Object value = configuration.get(path);
+  private static boolean optionalBoolean(JsonObject configuration, String path, boolean defaultValue) {
+    JsonElement value = configuration.get(path);
     if (value == null) {
       return defaultValue;
     }
-    if (!(value instanceof Boolean)) {
+    if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
       throw new IllegalArgumentException(path + ": expected true or false");
     }
-    return (Boolean) value;
+    return value.getAsBoolean();
   }
 
-  private ReloadNotification parseReloadNotification(YamlConfiguration configuration) {
-    String soundName = optionalString(configuration, "config_reloaded_sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
-    float volume = finiteFloat(configuration, "config_reloaded_sound_volume", 1.0f, 0.0f, Float.MAX_VALUE);
-    float pitch = finiteFloat(configuration, "config_reloaded_sound_pitch", 1.6f, 0.5f, 2.0f);
-    Sound sound = SoundResolver.resolve(soundName, Sound.ENTITY_EXPERIENCE_ORB_PICKUP);
-    return new ReloadNotification(sound, volume, pitch);
-  }
-
-  private String optionalString(YamlConfiguration configuration, String path, String defaultValue) {
-    Object value = configuration.get(path);
+  private static String optionalString(JsonObject configuration, String path, String defaultValue) {
+    JsonElement value = configuration.get(path);
     if (value == null) {
       return defaultValue;
     }
-    if (!(value instanceof String) || ((String) value).isBlank()) {
+    if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString() || value.getAsString().isBlank()) {
       throw new IllegalArgumentException(path + ": expected a non-empty string");
     }
-    return (String) value;
-  }
-
-  private float finiteFloat(YamlConfiguration configuration, String path, float defaultValue, float minimum, float maximum) {
-    Object value = configuration.get(path);
-    if (value == null) {
-      return defaultValue;
-    }
-    if (!(value instanceof Number)) {
-      throw new IllegalArgumentException(path + ": expected a finite number");
-    }
-    double number = ((Number) value).doubleValue();
-    if (!Double.isFinite(number) || number < minimum || number > maximum) {
-      throw new IllegalArgumentException(path + ": expected a value between " + minimum + " and " + maximum);
-    }
-    return (float) number;
+    return value.getAsString();
   }
 
   private void log(Level level, String message, Object... args) {
@@ -557,16 +600,14 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
                              Messages messages,
                              SeededVeinGenerator veinGenerator,
                              GenerationRules.GenerationPolicy generationPolicy,
-                             ReloadNotification reloadNotification,
                              boolean autoPickup,
                              boolean suppressBlockDrop,
                              boolean metrics) {
   }
 
-  public record ReloadNotification(Sound sound, float volume, float pitch) {
-  }
-
-  private record AppliedConfigSnapshot(String configYaml, String languageYaml) {
+  private record ConfigurationSettings(MiningRuleManager rules, GenerationRules.GenerationPolicy generation,
+                                       String language, boolean autoPickup, boolean suppressBlockDrop,
+                                       boolean metrics) {
   }
 
   private static final class LogThrottle {

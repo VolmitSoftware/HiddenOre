@@ -25,39 +25,117 @@ public class ConfigWatcherBaselineTest {
   @Test
   public void startupEditAfterAppliedSnapshotRemainsDetectable() throws Exception {
     Path directory = temporaryFolder.newFolder("hiddenore-startup").toPath();
-    String appliedConfig = "auto_pickup_drops: false\n";
-    String appliedLanguage = "config_reloaded_message: old\n";
-    Files.writeString(directory.resolve("hiddenore.yml"), appliedConfig, StandardCharsets.UTF_8);
-    Files.writeString(directory.resolve("language.yml"), appliedLanguage, StandardCharsets.UTF_8);
-    Map<String, String> baseline = ConfigWatcher.appliedSignatures(appliedConfig, appliedLanguage);
+    String appliedConfig = "auto_pickup_drops = false\n";
+    Files.writeString(directory.resolve("hiddenore.toml"), appliedConfig, StandardCharsets.UTF_8);
+    Map<String, String> baseline = ConfigWatcher.appliedSignatures(appliedConfig, ConfigWatcher.languageSignatures(directory));
 
     assertEquals(baseline, ConfigWatcher.diskSignatures(directory));
-    Files.writeString(directory.resolve("hiddenore.yml"), "auto_pickup_drops: true\n", StandardCharsets.UTF_8);
+    Files.writeString(directory.resolve("hiddenore.toml"), "auto_pickup_drops = true\n", StandardCharsets.UTF_8);
 
     assertNotEquals(baseline, ConfigWatcher.diskSignatures(directory));
   }
 
   @Test
-  public void manualResetUsesParsedLanguageInsteadOfNewerDiskState() throws Exception {
-    Path directory = temporaryFolder.newFolder("hiddenore-manual").toPath();
-    String appliedConfig = "auto_pickup_drops: false\n";
-    String appliedLanguage = "config_reloaded_message: applied\n";
-    Map<String, String> baseline = ConfigWatcher.appliedSignatures(appliedConfig, appliedLanguage);
-    Files.writeString(directory.resolve("hiddenore.yml"), appliedConfig, StandardCharsets.UTF_8);
-    Files.writeString(directory.resolve("language.yml"), "config_reloaded_message: newer\n", StandardCharsets.UTF_8);
+  public void appliedBaselineUsesParsedConfigInsteadOfNewerDiskState() throws Exception {
+    Path directory = temporaryFolder.newFolder("hiddenore-applied").toPath();
+    String appliedConfig = "auto_pickup_drops = false\n";
+    Map<String, String> baseline = ConfigWatcher.appliedSignatures(appliedConfig, ConfigWatcher.languageSignatures(directory));
+    Files.writeString(directory.resolve("hiddenore.toml"), "auto_pickup_drops = true\n", StandardCharsets.UTF_8);
 
     assertNotEquals(baseline, ConfigWatcher.diskSignatures(directory));
+  }
+
+  @Test
+  public void startupLanguageBaselinePreservesEditsDuringLoading() throws Exception {
+    Path directory = temporaryFolder.newFolder("hiddenore-language-startup").toPath();
+    Path languages = Files.createDirectory(directory.resolve("languages"));
+    Path locale = languages.resolve("fr_FR.toml");
+    String config = "language = 'fr_FR'\n";
+    Files.writeString(directory.resolve("hiddenore.toml"), config);
+    Files.writeString(locale, "no_permission = 'Before'\n");
+    Map<String, String> initialLanguages = ConfigWatcher.languageSignatures(directory);
+    Map<String, String> baseline = ConfigWatcher.appliedSignatures(config, initialLanguages);
+
+    assertEquals(baseline, ConfigWatcher.diskSignatures(directory));
+    Files.writeString(locale, "no_permission = 'After'\n");
+
+    assertNotEquals(baseline, ConfigWatcher.diskSignatures(directory));
+    assertEquals(initialLanguages.get("languages/fr_FR.toml"), baseline.get("languages/fr_FR.toml"));
+  }
+
+  @Test
+  public void sameMetadataPersonalLanguageEditChangesDiskSignature() throws Exception {
+    Path directory = temporaryFolder.newFolder("hiddenore-personal-language").toPath();
+    Path languages = Files.createDirectory(directory.resolve("languages"));
+    Path locale = languages.resolve("de_DE.toml");
+    Files.writeString(directory.resolve("hiddenore.toml"), "language = 'en_US'\n");
+    Files.writeString(locale, "no_permission = 'Before'\n");
+    FileTime originalModified = Files.getLastModifiedTime(locale);
+    Map<String, String> baseline = ConfigWatcher.diskSignatures(directory);
+
+    Files.writeString(locale, "no_permission = 'Edited'\n");
+    Files.setLastModifiedTime(locale, originalModified);
+
+    assertNotEquals(baseline, ConfigWatcher.diskSignatures(directory));
+  }
+
+  @Test
+  public void languageDirectoryCreationRemovalAndRecreationAreDetected() throws Exception {
+    Path directory = temporaryFolder.newFolder("hiddenore-language-directory").toPath();
+    Files.writeString(directory.resolve("hiddenore.toml"), "language = 'custom_locale'\n");
+    Map<String, String> initial = ConfigWatcher.diskSignatures(directory);
+    Path languages = Files.createDirectory(directory.resolve("languages"));
+    Path locale = languages.resolve("custom_locale.toml");
+    Files.writeString(locale, "no_permission = 'Custom'\n");
+    Map<String, String> installed = ConfigWatcher.diskSignatures(directory);
+    assertNotEquals(initial, installed);
+    assertTrue(installed.containsKey("languages/custom_locale.toml"));
+
+    Files.delete(locale);
+    Files.delete(languages);
+    assertEquals(initial, ConfigWatcher.diskSignatures(directory));
+    Files.createDirectory(languages);
+    Files.writeString(locale, "no_permission = 'Changed'\n");
+    assertNotEquals(initial, ConfigWatcher.diskSignatures(directory));
+    assertNotEquals(installed, ConfigWatcher.diskSignatures(directory));
+  }
+
+  @Test
+  public void preferencesCachesAndNestedFilesDoNotChangeLanguageBaseline() throws Exception {
+    Path directory = temporaryFolder.newFolder("hiddenore-language-exclusions").toPath();
+    Path languages = Files.createDirectory(directory.resolve("languages"));
+    Files.writeString(directory.resolve("hiddenore.toml"), "language = 'en_US'\n");
+    Map<String, String> initial = ConfigWatcher.diskSignatures(directory);
+    Files.writeString(languages.resolve("language-preferences.properties"), "player=fr_FR\n");
+    Files.writeString(languages.resolve("catalog.cache"), "updated\n");
+    Path cache = Files.createDirectory(languages.resolve("cache"));
+    Files.writeString(cache.resolve("fr_FR.toml"), "no_permission = 'Cached'\n");
+
+    assertEquals(initial, ConfigWatcher.diskSignatures(directory));
+    assertTrue(ConfigWatcher.isWatchedFile(directory, languages, Path.of("custom_locale.toml")));
+    assertTrue(ConfigWatcher.isWatchedFile(directory, directory, Path.of("hiddenore.toml")));
+    assertFalse(ConfigWatcher.isWatchedFile(directory, languages, Path.of("language-preferences.properties")));
+    assertFalse(ConfigWatcher.isWatchedFile(directory, languages, Path.of("cache/fr_FR.toml")));
+    assertFalse(ConfigWatcher.isWatchedFile(directory, cache, Path.of("fr_FR.toml")));
+    assertFalse(ConfigWatcher.isWatchedFile(directory, directory, Path.of("fr_FR.toml")));
+  }
+
+  @Test
+  public void oversizedLocaleIsIdentifiedWithoutReadingItsContent() throws Exception {
+    Path directory = temporaryFolder.newFolder("hiddenore-language-limit").toPath();
+    Path languages = Files.createDirectory(directory.resolve("languages"));
+    Files.write(languages.resolve("en_US.toml"), new byte[2 * 1024 * 1024 + 1]);
+
+    assertTrue(ConfigWatcher.languageSignatures(directory).get("languages/en_US.toml").startsWith("oversized:"));
   }
 
   @Test
   public void sameMetadataEditChangesExactDiskSignature() throws Exception {
     Path directory = temporaryFolder.newFolder("hiddenore-same-metadata").toPath();
-    Path configFile = directory.resolve("hiddenore.yml");
-    String appliedConfig = "enabled: false\n";
-    String changedConfig = "enabled: true \n";
-    String language = "config_reloaded_message: stable\n";
+    Path configFile = directory.resolve("hiddenore.toml");
+    String appliedConfig = "enabled = false\n";
+    String changedConfig = "enabled = true \n";
     Files.writeString(configFile, appliedConfig, StandardCharsets.UTF_8);
-    Files.writeString(directory.resolve("language.yml"), language, StandardCharsets.UTF_8);
     FileTime originalModified = Files.getLastModifiedTime(configFile);
     Map<String, String> baseline = ConfigWatcher.diskSignatures(directory);
 

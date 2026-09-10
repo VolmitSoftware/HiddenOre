@@ -1,0 +1,247 @@
+# HiddenOre — fi_FI
+#
+# === Tiedoston muokkaus ===
+# plugins/HiddenOre/languages/fi_FI.toml
+# Voit muokata tätä tiedostoa suoraan. Paikalliset muutokset säilyvät; puuttuvat tai virheelliset kohdat käyttävät sisäänrakennettua englantia.
+# /hiddenore language server edit fi_FI
+#
+# === Etuliite ===
+# prefix lisätään chat-viestien alkuun; tyhjä merkkijono piilottaa sen.
+#
+# === Muotoilu ===
+# Värikoodit: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Muuttujat ===
+# Säilytä muuttujien nimet ja käytä vain kunkin viestin omia muuttujia.
+#   {after}  Arvo muutoksen jälkeen
+#   {amount}  Pudotettavien esineiden määrä
+#   {argument}  odottamaton argumentti
+#   {before}  Arvo ennen muutosta
+#   {block}  Louhitun lohkon tyyppi
+#   {chance}  Määritetty laukaisutodennäköisyys
+#   {command}  komentopolku
+#   {count}  Viestien määrä
+#   {group}  Kielieditorin luokka
+#   {key}  Viestin tai parametrin avain
+#   {line}  Viestin rivinumero
+#   {locale}  kielitunnus
+#   {material}  Pudotettavan esineen tyyppi
+#   {maximum}  Suurin sallittu arvo
+#   {number}  Kohdan numero
+#   {page}  Nykyinen sivu
+#   {pages}  Sivujen kokonaismäärä
+#   {path}  Asetuksen tai osion polku
+#   {parameter}  parametrin nimi
+#   {personal}  henkilökohtainen kielitunnus
+#   {plugin}  Liitännäisen nimi
+#   {reason}  virheen syy
+#   {roll}  Arvottu satunnaisluku
+#   {target}  Kielivalinnan kohdelisäosa
+#   {type}  tyyppi
+#   {usage}  komennon käyttö
+#   {value}  nykyinen, oletus- tai raaka-arvo
+#   {variables}  sallitut paikkamerkit
+#   {vein}  Malmisuonen nimi
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cSinulla ei ole oikeutta käyttää tätä komentoa.&r"
+player_only = "&cVain pelaaja voi käyttää tätä komentoa.&r"
+debug_enabled = "&aVirheenkorjaustila käytössä.&r"
+debug_disabled = "&cVirheenkorjaustila pois käytöstä.&r"
+config_reloaded_message = "&aAsetukset päivitettiin ja ladattiin uudelleen.&r"
+
+[debug]
+player_placed = "&cPelaajan asettama {block}; ei piilotettuja pudotuksia.&r"
+random_drop = "&aSatunnainen pudotus: {material} x{amount}&r"
+random_drop_lost = "&cSatunnainen pudotus {material} menetettiin, koska työkalutaso on liian alhainen.&r"
+vein_drop = "&aMalmisuoni {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aMalmisuoni {vein}: {material} x{amount} (löydetty)&r"
+vein_drop_lost = "&cMalmisuoni {vein}: {material} menetettiin, koska työkalutaso on liian alhainen.&r"
+command_hit = "&7Komentotarkistus: chance={chance}, roll={roll} -> &aosuma&7&r"
+command_miss = "&7Komentotarkistus: chance={chance}, roll={roll} -> &cohi&7&r"
+
+[command.parameter]
+debugdump_upload = "Lähetä raportti mclo.gs-palveluun"
+
+[command.description]
+config = "Avaa HiddenOren asetuseditori"
+debug_group = "HiddenOre: Diagnostiikkatyökalut"
+debugdump = "Luo diagnostiikkaraportti ja lähetä se halutessasi"
+root = "HiddenOre-komentoryhmä"
+debug = "Vaihda oma malmien virheenkorjaustila"
+
+[config.editor]
+title = "{plugin} / Asetukset"
+section = "Osio: {path}"
+page = "Sivu {page}/{pages}"
+entry = "Kohta {number}"
+current = "Nykyinen arvo: {value}"
+open = "Avaa tämä osio napsauttamalla."
+toggle = "Vaihda arvojen true ja false välillä napsauttamalla."
+edit = "Napsauta syöttääksesi uuden arvon chatissa."
+prompt = "Syötä uusi arvo asetukselle {path}. Palaa kirjoittamalla cancel."
+expired = "Asetuksen syöttöaika umpeutui."
+too-long = "Syötä enintään {maximum} merkkiä."
+saving = "Tallennetaan asetuksia..."
+saved = "{path} tallennettu. Muutokset tulevat voimaan automaattisesti."
+failed = "Asetuksia ei voitu muokata: {reason}"
+loading = "Ladataan asetuksia..."
+empty = "Tässä osiossa ei ole asetuksia."
+player-only = "Avaa asetuseditori pelissä."
+no-permission = "Sinulla ei ole oikeutta muokata näitä asetuksia."
+back = "Takaisin"
+previous = "Edellinen sivu"
+next = "Seuraava sivu"
+refresh = "Päivitä"
+close = "Sulje"
+
+[config.editor.type]
+text = "Teksti; lainausmerkkejä ei tarvita."
+integer = "Syötä kokonaisluku."
+decimal = "Syötä luku, esimerkiksi 0.25."
+list = "Käytä TOML-listaa, esimerkiksi [\"stone\", \"deepslate\"]."
+
+[director.help]
+no_subcommands = "Tällä sivulla ei ole alikomentoja."
+no_description = "Kuvausta ei ole annettu"
+command_group = "Komentoryhmä. Avaa napsauttamalla."
+category = "Komentokategoria"
+no_parameters = "Ei parametreja. Esitäytä komento napsauttamalla."
+parameters_hover = "Vie hiiri parametrien päälle saadaksesi lisätietoja."
+
+[director.help.navigation]
+back = "Takaisin"
+page = "Sivu"
+
+[director.help.navigation.parent]
+hover = "Palaa ylempään komentoryhmään"
+
+[director.help.navigation.previous]
+hover = "Edellinen sivu"
+
+[director.help.navigation.next]
+hover = "Seuraava sivu"
+
+[director.help.parameter]
+required = "Tämä parametri on pakollinen."
+optional = "Tämä parametri on valinnainen."
+default = "Oletusarvo on \"{value}\", jos sitä ei määritetä."
+type = "Tämän parametrin tyyppi on {type}."
+
+[director.runtime]
+usage = "Käyttö: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Tätä komentoa ei voi suorittaa tästä lähteestä."
+unknown_parameter = "Tuntematon parametriavain: {key}"
+unexpected_argument = "Odottamaton argumentti \"{argument}\". Valinnaiset parametrit on annettava avaimella, esim. seed=123"
+unclosed_group = "Sulkeva \"]\" puuttuu parametrilta {key}"
+conversion_failed = "Arvoa \"{value}\" ei voi muuntaa tyypiksi {type} parametrille {parameter}"
+default_parse_failed = "Parametrin {parameter} oletusarvoa ei voi jäsentää"
+missing_argument = "Puuttuva argumentti \"{parameter}\" ({type})"
+execution_failed = "Komennon {command} suoritus epäonnistui: {reason}"
+
+[language.menu]
+your_language = "Oma kielesi"
+reset_your_language = "Palauta oma kielesi"
+server_default = "Palvelimen oletuskieli"
+edit_messages = "Muokkaa kieliviestejä"
+use_server_default = "Käytä palvelimen oletuskieltä"
+current = "Nykyinen: {locale}"
+current_with_personal = "Nykyinen: {locale} (Omasi: {personal})"
+your_description = "Vaihda vain näkemäsi viestit."
+reset_description = "Käytä palvelimen oletuskieltä."
+server_description = "Vaihda palvelimen oletuskieli."
+edit_description = "Avaa kielikohtainen viestieditori."
+select_description = "Napsauta valitaksesi tämän kielen."
+remove_personal_description = "Poista henkilökohtainen kielivalintasi."
+no_controls = "Sinulla ei ole käytettävissä kieliasetuksia."
+command = "Komento: {command}"
+selected = "valittu"
+all-volmit-plugins = "Kaikki Volmit-lisäosat"
+
+[language.error]
+stopping = "Kielivalintaa ei ole saatavilla, kun plugin pysähtyy."
+editor-player-only = "Avaa kielieditori pelissä."
+no-providers = "Yhtään Volmit-kielipalvelua ei ole saatavilla."
+numeric-page = "Anna sivunumero numerona."
+personal-player-only = "Pelaajan kieliasetukset on valittava pelissä."
+personal-permission = "Sinulla ei ole lupaa valita kieltäsi."
+plugin-personal-permission = "Sinulla ei ole oikeutta valita kieltäsi lisäosalle {plugin}."
+plugin-server-permission = "Sinulla ei ole oikeutta muuttaa lisäosan {plugin} palvelinkieltä."
+server-locale-required = "Valitse palvelimen oletuskieleksi kielikoodi, kuten en_US."
+unavailable-for-all = "Kieli {locale} ei ole saatavilla kaikille valituille lisäosille."
+
+[language.usage]
+editor = "Käyttö: /{command} language server edit [locale]"
+selection = "Käyttö: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Käyttö: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Valmistellaan kieltä {locale} kohteelle {target}..."
+save-failed = "{plugin}: kielivalintaa ei voitu tallentaa; tarkista palvelinkonsoli."
+english-fallback = "{plugin}: {locale} ei ole saatavilla; käytetään englantia (en_US)."
+personal-selected = "{plugin}: kieli on nyt {locale}."
+server-selected = "{plugin}: palvelinkieli on nyt {locale}."
+server-default-selected = "{plugin}: kielesi noudattaa nyt palvelimen oletuskieltä."
+
+[language.editor]
+loading = "Ladataan kielen {locale} viestejä..."
+
+[language.editor.section]
+languages = "Kielet"
+search = "Etsi"
+search-title = "{locale} / Etsi"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Hae viestin avainta tai tekstiä. Palaa kirjoittamalla cancel."
+value = "Kirjoita avaimen {key} uusi arvo chattiin."
+current = "Nykyinen arvo: {value}"
+variables = "Muuttujat: {variables}"
+guidance = "Käytä \\n rivinvaihtoon ja \\\\ kenoviivaan tai palaa kirjoittamalla cancel."
+
+[language.editor.input]
+expired = "Kielieditorin syöttöaika päättyi."
+too-long = "Syöte saa sisältää enintään {maximum} merkkiä."
+unable-to-save = "Tallennus epäonnistui: {reason}"
+
+[language.editor.navigation]
+back = "&eTakaisin&r"
+close = "&cSulje&r"
+previous-page = "&eEdellinen sivu&r"
+next-page = "&eSeuraava sivu&r"
+
+[language.editor.search]
+messages = "Hae viestejä"
+messages-lore = "Napsauta hakeaksesi kaikista viesteistä."
+clear = "Tyhjennä haku"
+
+[language.editor.message]
+current-value = "&7Nykyinen arvo:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Muokkaa monikkomuotoa napsauttamalla.&r"
+edit-lines = "&7Muokkaa yksittäisiä rivejä napsauttamalla.&r"
+edit-chat = "&7Muokkaa chatissa napsauttamalla.&r"
+
+[language.editor.locale]
+open = "&8Avaa tämä kieli napsauttamalla.&r"
+
+[language.editor.category]
+message-count = "&7{count} viestiä&r"
+open = "&8Avaa tämä luokka napsauttamalla.&r"
+
+[language.editor.error]
+no-permission = "Sinulla ei ole oikeutta muokata lisäosan {plugin} kieliä."
+unable-to-edit = "Muokkaus epäonnistui: {reason}"
+
+[language.editor.saved]
+summary = "{locale} tallennettu. Kielivalinnat säilyvät ennallaan."
+change = "{key}: ”{before}” muutettiin arvoon ”{after}”."
+
+[language.editor.part]
+line = "Rivi {line}"
+
+[language.editor.value]
+none = "Ei ole"
+empty = "(tyhjä)"

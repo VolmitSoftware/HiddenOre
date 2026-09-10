@@ -1,0 +1,247 @@
+# HiddenOre — it_IT
+#
+# === Modifica del file ===
+# plugins/HiddenOre/languages/it_IT.toml
+# Puoi modificare direttamente questo file. Le modifiche locali vengono conservate; le voci mancanti o non valide usano l’inglese incorporato.
+# /hiddenore language server edit it_IT
+#
+# === Prefisso ===
+# prefix precede i messaggi in chat; una stringa vuota lo nasconde.
+#
+# === Formattazione ===
+# Codici colore: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+#
+# === Variabili ===
+# Mantieni i nomi delle variabili e usa solo quelle previste dal singolo messaggio.
+#   {after}  Valore dopo il cambiamento
+#   {amount}  Numero di oggetti rilasciati
+#   {argument}  argomento inatteso
+#   {before}  Valore prima della modifica
+#   {block}  Tipo di blocco estratto
+#   {chance}  Probabilità di attivazione configurata
+#   {command}  percorso del comando
+#   {count}  Numero di messaggi
+#   {group}  Categoria dell’editor di lingua
+#   {key}  Chiave del messaggio o del parametro
+#   {line}  Numero di riga del messaggio
+#   {locale}  codice locale
+#   {material}  Tipo di oggetto rilasciato
+#   {maximum}  Valore massimo consentito
+#   {number}  Numero della voce
+#   {page}  Pagina attuale
+#   {pages}  Numero totale di pagine
+#   {path}  Percorso dell’impostazione o della sezione
+#   {parameter}  nome parametro
+#   {personal}  codice locale personale
+#   {plugin}  Nome del plugin
+#   {reason}  motivo errore
+#   {roll}  Valore casuale estratto
+#   {target}  Plugin destinatario della scelta di lingua
+#   {type}  tipo
+#   {usage}  uso del comando
+#   {value}  valore corrente, predefinito o grezzo
+#   {variables}  segnaposto validi
+#   {vein}  Nome del filone
+
+prefix = "&a[HiddenOre]&r "
+no_permission = "&cNon hai il permesso di usare questo comando.&r"
+player_only = "&cQuesto comando può essere usato solo da un giocatore.&r"
+debug_enabled = "&aModalità di debug attivata.&r"
+debug_disabled = "&cModalità di debug disattivata.&r"
+config_reloaded_message = "&aConfigurazione aggiornata e ricaricata.&r"
+
+[debug]
+player_placed = "&cBlocco piazzato da un giocatore: {block}; nessun drop nascosto.&r"
+random_drop = "&aDrop casuale: {material} x{amount}&r"
+random_drop_lost = "&cDrop casuale {material} perso perché il livello dello strumento è troppo basso.&r"
+vein_drop = "&aVena mineraria {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aVena mineraria {vein}: {material} x{amount} (scoperta)&r"
+vein_drop_lost = "&cVena mineraria {vein}: {material} perso perché il livello dello strumento è troppo basso.&r"
+command_hit = "&7Verifica comando: chance={chance}, roll={roll} -> &asuccesso&7&r"
+command_miss = "&7Verifica comando: chance={chance}, roll={roll} -> &cfallimento&7&r"
+
+[command.parameter]
+debugdump_upload = "Carica il rapporto su mclo.gs"
+
+[command.description]
+config = "Apri l’editor di configurazione di HiddenOre"
+debug_group = "HiddenOre: Strumenti diagnostici"
+debugdump = "Crea un rapporto diagnostico e caricalo facoltativamente"
+root = "Gruppo di comandi HiddenOre"
+debug = "Attiva o disattiva la tua modalità di debug dei minerali"
+
+[config.editor]
+title = "{plugin} / Configurazione"
+section = "Sezione: {path}"
+page = "Pagina {page} di {pages}"
+entry = "Voce {number}"
+current = "Valore attuale: {value}"
+open = "Fai clic per aprire questa sezione."
+toggle = "Fai clic per alternare tra true e false."
+edit = "Fai clic per inserire un nuovo valore in chat."
+prompt = "Inserisci un nuovo valore per {path}. Digita cancel per tornare indietro."
+expired = "Il tempo per inserire la configurazione è scaduto."
+too-long = "Inserisci al massimo {maximum} caratteri."
+saving = "Salvataggio della configurazione..."
+saved = "{path} salvato. Le modifiche si applicano automaticamente."
+failed = "Impossibile modificare la configurazione: {reason}"
+loading = "Caricamento della configurazione..."
+empty = "Questa sezione non contiene impostazioni."
+player-only = "Apri l’editor di configurazione nel gioco."
+no-permission = "Non hai il permesso di modificare questa configurazione."
+back = "Indietro"
+previous = "Pagina precedente"
+next = "Pagina successiva"
+refresh = "Aggiorna"
+close = "Chiudi"
+
+[config.editor.type]
+text = "Testo; non servono le virgolette."
+integer = "Inserisci un numero intero."
+decimal = "Inserisci un numero, ad esempio 0.25."
+list = "Usa un elenco TOML, ad esempio [\"stone\", \"deepslate\"]."
+
+[director.help]
+no_subcommands = "Nessun sottocomando in questa pagina."
+no_description = "Nessuna descrizione fornita"
+command_group = "Gruppo di comandi. Fai clic per aprire."
+category = "Categoria di comandi"
+no_parameters = "Nessun parametro. Fai clic per precompilare il comando."
+parameters_hover = "Passa il cursore sui parametri per saperne di più."
+
+[director.help.navigation]
+back = "Indietro"
+page = "Pagina"
+
+[director.help.navigation.parent]
+hover = "Torna al gruppo di comandi principale"
+
+[director.help.navigation.previous]
+hover = "Pagina precedente"
+
+[director.help.navigation.next]
+hover = "Pagina successiva"
+
+[director.help.parameter]
+required = "Questo parametro è obbligatorio."
+optional = "Questo parametro è facoltativo."
+default = "Il valore predefinito è \"{value}\" se non definito."
+type = "Questo parametro è di tipo {type}."
+
+[director.runtime]
+usage = "Utilizzo: {usage}"
+
+[director.runtime.error]
+invalid_origin = "Questo comando non può essere eseguito da questa origine."
+unknown_parameter = "Chiave di parametro sconosciuta: {key}"
+unexpected_argument = "Argomento imprevisto \"{argument}\". I parametri opzionali devono essere specificati con una chiave, ad es. seed=123"
+unclosed_group = "Parentesi di chiusura \"]\" mancante per il parametro {key}"
+conversion_failed = "Impossibile convertire \"{value}\" in {type} per {parameter}"
+default_parse_failed = "Impossibile analizzare il valore predefinito del parametro {parameter}"
+missing_argument = "Argomento mancante \"{parameter}\" ({type})"
+execution_failed = "Impossibile eseguire il comando {command}: {reason}"
+
+[language.menu]
+your_language = "La tua lingua"
+reset_your_language = "Reimposta la tua lingua"
+server_default = "Lingua predefinita del server"
+edit_messages = "Modifica i messaggi della lingua"
+use_server_default = "Usa la lingua predefinita del server"
+current = "Attuale: {locale}"
+current_with_personal = "Attuale: {locale} (La tua: {personal})"
+your_description = "Modifica solo i messaggi che vedi."
+reset_description = "Usa la lingua predefinita del server."
+server_description = "Cambia la lingua predefinita del server."
+edit_description = "Apri l'editor dei messaggi per ogni lingua."
+select_description = "Fai clic per selezionare questa lingua."
+remove_personal_description = "Rimuovi la tua scelta personale della lingua."
+no_controls = "Non hai accesso alle impostazioni della lingua."
+command = "Comando: {command}"
+selected = "selezionato"
+all-volmit-plugins = "Tutti i plugin Volmit"
+
+[language.error]
+stopping = "La scelta della lingua non è disponibile durante l’arresto del plugin."
+editor-player-only = "Apri l’editor di lingua nel gioco."
+no-providers = "Non sono disponibili fornitori di lingue Volmit."
+numeric-page = "Inserisci un numero di pagina."
+personal-player-only = "Le preferenze della lingua del giocatore devono essere selezionate in gioco."
+personal-permission = "Non hai il permesso di selezionare la tua lingua."
+plugin-personal-permission = "Non hai il permesso di scegliere la tua lingua per {plugin}."
+plugin-server-permission = "Non hai il permesso di cambiare la lingua del server per {plugin}."
+server-locale-required = "Scegli un codice come en_US per la lingua predefinita del server."
+unavailable-for-all = "La lingua {locale} non è disponibile per tutti i plugin selezionati."
+
+[language.usage]
+editor = "Uso: /{command} language server edit [locale]"
+selection = "Uso: /{command} language self [locale|reset] or server [locale]"
+volmit-selection = "Uso: /volmit plugins languages [locale]"
+
+[language.selection]
+preparing = "Preparazione della lingua {locale} per {target}..."
+save-failed = "{plugin}: impossibile salvare la lingua scelta; controlla la console del server."
+english-fallback = "{plugin}: {locale} non è disponibile; verrà usato l’inglese (en_US)."
+personal-selected = "{plugin}: la tua lingua è ora {locale}."
+server-selected = "{plugin}: la lingua del server ora è {locale}."
+server-default-selected = "{plugin}: la tua lingua segue ora la lingua predefinita del server."
+
+[language.editor]
+loading = "Caricamento dei messaggi in {locale}..."
+
+[language.editor.section]
+languages = "Lingue"
+search = "Ricerca"
+search-title = "{locale} / Ricerca"
+group-title = "{locale} / {group}"
+
+[language.editor.prompt]
+search = "Cerca una chiave o il testo di un messaggio. Digita cancel per tornare indietro."
+value = "Digita un nuovo valore per {key} nella chat."
+current = "Valore attuale: {value}"
+variables = "Variabili: {variables}"
+guidance = "Usa \\n per andare a capo, \\\\ per una barra inversa, oppure digita cancel per tornare indietro."
+
+[language.editor.input]
+expired = "Il tempo per inserire il testo nell’editor di lingua è scaduto."
+too-long = "Il testo può contenere al massimo {maximum} caratteri."
+unable-to-save = "Impossibile salvare: {reason}"
+
+[language.editor.navigation]
+back = "&eIndietro&r"
+close = "&cChiudi&r"
+previous-page = "&ePagina precedente&r"
+next-page = "&ePagina successiva&r"
+
+[language.editor.search]
+messages = "Cerca messaggi"
+messages-lore = "Clicca per cercare tutti i messaggi."
+clear = "Cancella la ricerca"
+
+[language.editor.message]
+current-value = "&7Valore attuale:&r"
+variables = "&8{variables}&r"
+edit-plural = "&7Clicca per modificare una forma plurale.&r"
+edit-lines = "&7Clicca per modificare le singole righe.&r"
+edit-chat = "&7Clicca per modificare nella chat.&r"
+
+[language.editor.locale]
+open = "&8Clicca per aprire questa lingua.&r"
+
+[language.editor.category]
+message-count = "&7{count} messaggi&r"
+open = "&8Clicca per aprire questa categoria.&r"
+
+[language.editor.error]
+no-permission = "Non hai il permesso di modificare le lingue di {plugin}."
+unable-to-edit = "Impossibile modificare: {reason}"
+
+[language.editor.saved]
+summary = "{locale} salvato. Le lingue selezionate restano invariate."
+change = "{key}: «{before}» è stato cambiato in «{after}»."
+
+[language.editor.part]
+line = "Riga {line}"
+
+[language.editor.value]
+none = "Nessuno"
+empty = "(vuoto)"
