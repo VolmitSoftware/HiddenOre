@@ -64,6 +64,7 @@ command_miss = "&7Opdrachtcontrole: chance={chance}, roll={roll} -> &cmis&7&r"
 debugdump_upload = "Upload het rapport naar mclo.gs"
 
 [command.description]
+version = "Toon de versie van HiddenOre"
 config = "Open de configuratie-editor van HiddenOre"
 debug_group = "HiddenOre: Diagnostische hulpmiddelen"
 debugdump = "Maak een diagnostisch rapport en upload het desgewenst"

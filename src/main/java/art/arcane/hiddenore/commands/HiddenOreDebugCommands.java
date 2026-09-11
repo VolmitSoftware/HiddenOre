@@ -4,6 +4,10 @@ import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.volmlib.util.director.annotations.Director;
 import art.arcane.volmlib.util.director.annotations.Param;
+import art.arcane.volmlib.util.director.help.DirectorMiniMenu;
+import art.arcane.volmlib.util.director.theme.DirectorProduct;
+import art.arcane.volmlib.util.director.theme.DirectorThemes;
+import art.arcane.volmlib.util.plugin.ComponentMessenger;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -13,6 +17,12 @@ public final class HiddenOreDebugCommands {
 
   public HiddenOreDebugCommands(HiddenOre plugin) {
     this.plugin = plugin;
+  }
+
+  @Director(name = "version", description = "Show the HiddenOre version", descriptionKey = "command.description.version")
+  public void version(@Param(name = "sender", contextual = true) CommandSender sender) {
+    ComponentMessenger.sendMarkup(sender, DirectorMiniMenu.version("HiddenOre", plugin.getDescription().getVersion(),
+        DirectorMiniMenu.Theme.fromDirectorTheme(DirectorThemes.forProduct(DirectorProduct.HIDDENORE))));
   }
 
   @Director(name = "dump", sync = true, description = "Create and optionally upload a diagnostic report", descriptionKey = "command.description.debugdump")

@@ -64,6 +64,7 @@ command_miss = "&7Komandos patikra: chance={chance}, roll={roll} -> &cnepavyko&7
 debugdump_upload = "Įkelti ataskaitą į mclo.gs"
 
 [command.description]
+version = "Rodyti HiddenOre versiją"
 config = "Atidaryti HiddenOre konfigūracijos rengyklę"
 debug_group = "HiddenOre: Diagnostikos įrankiai"
 debugdump = "Sukurti diagnostikos ataskaitą ir pasirinktinai ją įkelti"

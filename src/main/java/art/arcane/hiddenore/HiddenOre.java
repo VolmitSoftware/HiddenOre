@@ -99,7 +99,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     debugDump = BukkitDebugDump.create(this, new BukkitDebugDump.Options(() -> true, this::captureDebugState,
         new BukkitDebugDump.Presentation("/hiddenore debug dump", "/hiddenore debug",
             DirectorMiniMenu.Theme.fromDirectorTheme(DirectorThemes.forProduct(DirectorProduct.HIDDENORE)),
-            (key, arguments) -> getMessages().directorText(key, arguments))));
+            (key, arguments) -> ComponentText.literal(getMessages().directorText(key, arguments)))));
 
     try {
       File configFile = new File(getDataFolder(), "hiddenore.toml");

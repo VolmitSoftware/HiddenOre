@@ -15,6 +15,11 @@ public final class CommandHiddenOre {
     debug = new HiddenOreDebugCommands(plugin);
   }
 
+  @Director(name = "version", hidden = true, description = "Show the HiddenOre version", descriptionKey = "command.description.version")
+  public void version(@Param(name = "sender", contextual = true) CommandSender sender) {
+    debug.version(sender);
+  }
+
   @Director(name = "language", description = "Choose your language or the server language")
   public void language(@Param(name = "sender", contextual = true) CommandSender sender) {
     plugin.languageSwitcher().open(sender);

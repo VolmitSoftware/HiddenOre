@@ -57,6 +57,7 @@ import java.util.regex.Pattern;
 public final class Messages {
   public static final TextKey DEBUG_DUMP_DESCRIPTION = TextKey.of("command.description.debugdump", "Create and optionally upload a diagnostic report");
   public static final TextKey DEBUG_GROUP_DESCRIPTION = TextKey.of("command.description.debug_group", "HiddenOre diagnostic tools");
+  public static final TextKey VERSION_DESCRIPTION = TextKey.of("command.description.version", "Show the HiddenOre version");
   public static final TextKey DEBUG_DUMP_UPLOAD = TextKey.of("command.parameter.debugdump_upload", "Upload the report to mclo.gs");
   public static final TextKey PREFIX = TextKey.of("prefix", "&a[HiddenOre]&r ");
   public static final TextKey NO_PERMISSION = TextKey.of(
@@ -127,6 +128,7 @@ public final class Messages {
   private static final PlainTextComponentSerializer PLAIN_SERIALIZER = PlainTextComponentSerializer.plainText();
   private static final List<MessageKey> PLUGIN_KEYS = List.of(
     DEBUG_GROUP_DESCRIPTION,
+    VERSION_DESCRIPTION,
     DEBUG_DUMP_DESCRIPTION,
     DEBUG_DUMP_UPLOAD,
       PREFIX,

@@ -20,7 +20,7 @@ public class CommandHiddenOreTest {
     assertEquals(List.of("config", "debug", "language"),
         root.entries().stream().map(node -> node.getDescriptor().getName()).toList());
     assertEquals("debug", debug.node().getDescriptor().getName());
-    assertEquals(List.of("dump", "mode"),
+    assertEquals(List.of("dump", "mode", "version"),
         debug.entries().stream().map(node -> node.getDescriptor().getName()).toList());
   }
 }

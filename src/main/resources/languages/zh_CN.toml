@@ -64,6 +64,7 @@ command_miss = "&7命令判定：chance={chance}，roll={roll} -> &c未命中&7&
 debugdump_upload = "将报告上传到 mclo.gs"
 
 [command.description]
+version = "显示 HiddenOre 版本"
 config = "编辑 HiddenOre 设置"
 debug_group = "HiddenOre: 诊断工具"
 debugdump = "创建诊断报告并选择是否上传"

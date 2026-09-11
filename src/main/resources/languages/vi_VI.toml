@@ -64,6 +64,7 @@ command_miss = "&7Kiểm tra lệnh: chance={chance}, roll={roll} -> &cthất b�
 debugdump_upload = "Tải báo cáo lên mclo.gs"
 
 [command.description]
+version = "Hiển thị phiên bản HiddenOre"
 config = "Chỉnh sửa cài đặt HiddenOre"
 debug_group = "HiddenOre: Công cụ chẩn đoán"
 debugdump = "Tạo báo cáo chẩn đoán và tải lên nếu muốn"

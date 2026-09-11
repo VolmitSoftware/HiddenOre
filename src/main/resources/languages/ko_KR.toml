@@ -64,6 +64,7 @@ command_miss = "&7명령어 판정: chance={chance}, roll={roll} -> &c실패&7&r
 debugdump_upload = "보고서를 mclo.gs에 업로드"
 
 [command.description]
+version = "HiddenOre 버전 표시"
 config = "HiddenOre 설정 편집"
 debug_group = "HiddenOre: 진단 도구"
 debugdump = "진단 보고서를 생성하고 선택적으로 업로드"

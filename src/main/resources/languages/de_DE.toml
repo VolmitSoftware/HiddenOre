@@ -64,6 +64,7 @@ command_miss = "&7Befehlsprüfung: chance={chance}, roll={roll} -> &cFehlschlag&
 debugdump_upload = "Den Bericht zu mclo.gs hochladen"
 
 [command.description]
+version = "HiddenOre-Version anzeigen"
 config = "HiddenOre-Einstellungen bearbeiten"
 debug_group = "HiddenOre: Diagnosewerkzeuge"
 debugdump = "Einen Diagnosebericht erstellen und optional hochladen"

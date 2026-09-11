@@ -64,6 +64,7 @@ command_miss = "&7Komentotarkistus: chance={chance}, roll={roll} -> &cohi&7&r"
 debugdump_upload = "Lähetä raportti mclo.gs-palveluun"
 
 [command.description]
+version = "Näytä HiddenOre-versio"
 config = "Avaa HiddenOren asetuseditori"
 debug_group = "HiddenOre: Diagnostiikkatyökalut"
 debugdump = "Luo diagnostiikkaraportti ja lähetä se halutessasi"

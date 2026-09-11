@@ -64,6 +64,7 @@ command_miss = "&7コマンド判定: chance={chance}, roll={roll} -> &c失敗&7
 debugdump_upload = "レポートを mclo.gs にアップロードする"
 
 [command.description]
+version = "HiddenOre のバージョンを表示"
 config = "HiddenOreの設定を編集する"
 debug_group = "HiddenOre: 診断ツール"
 debugdump = "診断レポートを作成し、必要に応じてアップロードする"

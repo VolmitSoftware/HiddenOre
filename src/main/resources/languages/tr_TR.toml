@@ -64,6 +64,7 @@ command_miss = "&7Komut denetimi: chance={chance}, roll={roll} -> &cbaşarısız
 debugdump_upload = "Raporu mclo.gs üzerine yükle"
 
 [command.description]
+version = "HiddenOre sürümünü göster"
 config = "HiddenOre ayarlarını düzenle"
 debug_group = "HiddenOre: Tanılama araçları"
 debugdump = "Tanılama raporu oluştur ve isteğe bağlı olarak yükle"

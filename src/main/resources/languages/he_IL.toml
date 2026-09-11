@@ -64,6 +64,7 @@ command_miss = "&7בדיקת פקודה: chance={chance}, roll={roll} -> &cכי�
 debugdump_upload = "העלאת הדוח אל mclo.gs"
 
 [command.description]
+version = "הצגת הגרסה של HiddenOre"
 config = "עריכת הגדרות HiddenOre"
 debug_group = "HiddenOre: כלי אבחון"
 debugdump = "יצירת דוח אבחון והעלאתו לפי בחירה"
