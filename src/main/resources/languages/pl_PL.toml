@@ -36,9 +36,9 @@
 #   {plugin}  Nazwa wtyczki
 #   {reason}  powód błędu
 #   {roll}  Wylosowana wartość
+#   {section}  Sekcja edytora języków
 #   {target}  Wtyczka, dla której wybierany jest język
 #   {type}  typ
-#   {usage}  użycie polecenia
 #   {value}  wartość bieżąca, domyślna lub surowa
 #   {variables}  dozwolone symbole zastępcze
 #   {vein}  Nazwa żyły rudy
@@ -129,9 +129,6 @@ optional = "Ten parametr jest opcjonalny."
 default = "Domyślnie \"{value}\", jeśli nie określono."
 type = "Ten parametr jest typu {type}."
 
-[director.runtime]
-usage = "Użycie: {usage}"
-
 [director.runtime.error]
 invalid_origin = "Tego polecenia nie można wykonać z tego źródła."
 unknown_parameter = "Nieznany klucz parametru: {key}"
@@ -187,6 +184,7 @@ server-selected = "{plugin}: język serwera jest teraz {locale}."
 server-default-selected = "{plugin}: twój język jest teraz zgodny z domyślnym językiem serwera."
 
 [language.editor]
+title = "{plugin} › {section}"
 loading = "Wczytywanie wiadomości w języku {locale}..."
 
 [language.editor.section]

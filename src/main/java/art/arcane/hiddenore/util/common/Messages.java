@@ -44,10 +44,13 @@ import org.bukkit.entity.Player;
 
 import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.DirectoryStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.MatchResult;
@@ -225,6 +228,49 @@ public final class Messages {
     return manager.snapshot();
   }
 
+  public Map<String, LocalizationSnapshot> prepareInstalledLocales(Set<String> knownLocales) throws IOException {
+    if (languageDirectory == null) {
+      return Map.of();
+    }
+    Map<String, LocalizationSnapshot> prepared = new HashMap<>();
+    LocalizationSnapshot english = LocalizationSnapshot.create(
+        LocalizationCandidate.english(CATALOG, PluralSelector.oneOther()));
+    for (String locale : knownLocales) {
+      if (VolmitLocales.nonEnglish().contains(locale) && Files.notExists(languagePath(locale))) {
+        prepared.put(locale, english);
+      }
+    }
+    if (!Files.isDirectory(languageDirectory)) {
+      return Map.copyOf(prepared);
+    }
+    try (DirectoryStream<Path> files = Files.newDirectoryStream(languageDirectory, "*.toml")) {
+      for (Path file : files) {
+        String name = file.getFileName().toString();
+        String locale = name.substring(0, name.length() - ".toml".length());
+        if (!locale.matches("[A-Za-z0-9_-]{2,32}")) {
+          continue;
+        }
+        try {
+          prepared.put(locale, loadEditorSnapshot(locale));
+        } catch (Exception failure) {
+          Logger.getLogger("HiddenOre").log(Level.WARNING,
+              "Cannot prepare language " + file + "; the last valid messages remain active.", failure);
+        }
+      }
+    }
+    return Map.copyOf(prepared);
+  }
+
+  public void publishPreparedLocales(Map<String, LocalizationSnapshot> preparedLocales) {
+    if (languageService == null) {
+      return;
+    }
+    for (Map.Entry<String, LocalizationSnapshot> locale : preparedLocales.entrySet()) {
+      languageService.cache(locale.getKey(), locale.getValue());
+    }
+    languageService.cache(activeLocale, defaultSnapshot());
+  }
+
   public synchronized void install(LocalizationSnapshot prepared) {
     manager.install(prepared);
     activeLocale = prepared.overlays().isEmpty() ? ENGLISH_LOCALE : prepared.overlays().getFirst().locale();
@@ -310,18 +356,14 @@ public final class Messages {
     return builder.build();
   }
 
-  private LocalizationCandidate loadCandidate(String locale) {
+  private LocalizationCandidate loadCandidate(String locale) throws Exception {
     if (languageDirectory == null) {
       return LocalizationCandidate.english(CATALOG, PluralSelector.oneOther());
     }
     List<LocaleOverlay> overlays = new ArrayList<>();
-    try {
-      LocaleOverlay installed = loadDownloadedOverlay(locale);
-      if (installed != null) {
-        overlays.add(installed);
-      }
-    } catch (Exception failure) {
-      Logger.getLogger("HiddenOre").log(Level.WARNING, "Cannot read language " + locale + "; using English.", failure);
+    LocaleOverlay installed = loadDownloadedOverlay(locale);
+    if (installed != null) {
+      overlays.add(installed);
     }
     return new LocalizationCandidate(CATALOG, overlays, PluralSelector.oneOther());
   }
@@ -360,9 +402,9 @@ public final class Messages {
             Map.entry("plugin", "Plugin name"),
             Map.entry("reason", "Error reason"),
             Map.entry("roll", "Sampled random value"),
+            Map.entry("section", "Language editor section"),
             Map.entry("target", "Plugin receiving the language selection"),
             Map.entry("type", "Expected parameter type"),
-            Map.entry("usage", "Command syntax"),
             Map.entry("value", "Current message or parameter value"),
             Map.entry("variables", "Allowed message placeholders"),
             Map.entry("vein", "Ore vein name")

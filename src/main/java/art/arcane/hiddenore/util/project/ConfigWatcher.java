@@ -2,6 +2,8 @@ package art.arcane.hiddenore.util.project;
 
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.hiddenore.util.common.Messages;
+import art.arcane.volmlib.util.localization.LocalizationSnapshot;
+import art.arcane.volmlib.util.localization.VolmitLocales;
 import art.arcane.volmlib.util.director.theme.DirectorThemes;
 import art.arcane.volmlib.util.scheduling.SchedulerUtils;
 import net.kyori.adventure.text.Component;
@@ -53,6 +55,7 @@ public final class ConfigWatcher implements Runnable {
   private final Map<String, String> initialLanguageSignatures;
   private final Map<String, String> lastSignatures = new HashMap<>();
   private final Set<String> oversizedWarnings = new HashSet<>();
+  private final Set<String> knownLanguageLocales = new HashSet<>();
   private final Object reloadQueueLock = new Object();
   private final SignatureReconciliation signatureReconciliation = new SignatureReconciliation(
       TimeUnit.MILLISECONDS.toNanos(SIGNATURE_RECONCILIATION_MILLIS)
@@ -76,6 +79,7 @@ public final class ConfigWatcher implements Runnable {
     this.dir = plugin.getDataFolder().toPath();
     this.languageDirectory = dir.resolve("languages");
     this.initialLanguageSignatures = initialLanguageSignatures();
+    this.knownLanguageLocales.addAll(installedCanonicalLocales(initialLanguageSignatures));
     this.watchedFiles = Set.of("hiddenore.toml");
   }
 
@@ -265,7 +269,8 @@ public final class ConfigWatcher implements Runnable {
       }
 
       try {
-        if (!plugin.reloadAll(snapshot.configToml(), snapshot.messages(), snapshot.configurationRevision())) {
+        if (!plugin.reloadAll(snapshot.configToml(), snapshot.messages(), snapshot.locales(),
+            snapshot.configurationRevision())) {
           applied = true;
           return;
         }
@@ -393,8 +398,11 @@ public final class ConfigWatcher implements Runnable {
     long configurationRevision = plugin.configurationRevision();
     String configToml = readBoundedUtf8(dir.resolve("hiddenore.toml"));
     Messages messages;
+    Map<String, LocalizationSnapshot> locales;
     try {
       messages = plugin.prepareReloadMessages(configToml);
+      knownLanguageLocales.addAll(installedCanonicalLocales(expectedSignatures));
+      locales = messages.prepareInstalledLocales(knownLanguageLocales);
     } catch (RuntimeException exception) {
       reportWatcherFailure("Unable to prepare HiddenOre configuration and language hotload", exception);
       return null;
@@ -402,7 +410,7 @@ public final class ConfigWatcher implements Runnable {
     if (!expectedSignatures.equals(currentSignatures())) {
       return null;
     }
-    return new ReloadSnapshot(configToml, messages, configurationRevision);
+    return new ReloadSnapshot(configToml, messages, locales, configurationRevision);
   }
 
   private String readBoundedUtf8(Path file) throws IOException {
@@ -487,6 +495,16 @@ public final class ConfigWatcher implements Runnable {
       throw exception.getCause();
     }
     return Map.copyOf(signatures);
+  }
+
+  static Set<String> installedCanonicalLocales(Map<String, String> signatures) {
+    Set<String> locales = new HashSet<>();
+    for (String locale : VolmitLocales.nonEnglish()) {
+      if (signatures.containsKey("languages/" + locale + ".toml")) {
+        locales.add(locale);
+      }
+    }
+    return Set.copyOf(locales);
   }
 
   private Map<String, String> initialLanguageSignatures() {
@@ -613,7 +631,8 @@ public final class ConfigWatcher implements Runnable {
     player.playSound(player.getLocation(), DirectorThemes.HIDDENORE.getSuccessSound(), SoundCategory.MASTER, 0.8f, 1.2f);
   }
 
-  private record ReloadSnapshot(String configToml, Messages messages, long configurationRevision) {
+  private record ReloadSnapshot(String configToml, Messages messages,
+                                Map<String, LocalizationSnapshot> locales, long configurationRevision) {
   }
 
   static final class SignatureReconciliation {

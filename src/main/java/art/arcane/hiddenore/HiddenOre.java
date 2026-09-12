@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Set;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -116,7 +117,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
           "src/main/resources/languages", ".toml", "language-source.properties",
           getClass().getClassLoader()));
       String initialConfig = readConfig(configFile);
-      reloadAll(initialConfig, prepareReloadMessages(initialConfig), configurationRevision.get());
+      reloadAll(initialConfig, prepareReloadMessages(initialConfig), Map.of(), configurationRevision.get());
       String initialLocale = languageLocale;
       languageLocale = "en_US";
       languageService = new PluginLanguageService(new PluginLanguageService.Options(
@@ -296,23 +297,35 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     JsonObject config = loadToml(configToml, configFile);
     String locale = optionalString(config, "language", "en_US");
     Messages preparedMessages = new Messages(remoteLanguages, getDataFolder().toPath().resolve("languages"));
-    preparedMessages.reload(runtimeState == null ? "en_US" : locale);
+    if (runtimeState == null) {
+      try {
+        preparedMessages.reload("en_US");
+      } catch (IllegalArgumentException failure) {
+        logException(Level.WARNING, failure, "Unable to read English language file; using built-in English.");
+      }
+    } else {
+      preparedMessages.reload(locale);
+    }
     return preparedMessages;
   }
 
-  public boolean reloadAll(String configToml, Messages preparedMessages, long expectedRevision) {
+  public boolean reloadAll(String configToml, Messages preparedMessages,
+                          Map<String, LocalizationSnapshot> preparedLocales, long expectedRevision) {
     PluginLanguageService activeLanguages = languageService;
     if (activeLanguages == null) {
-      return applyReloadSnapshot(configToml, preparedMessages, expectedRevision);
+      return applyReloadSnapshot(configToml, preparedMessages, preparedLocales, expectedRevision);
     }
     try {
-      return activeLanguages.commitUpdate(() -> applyReloadSnapshot(configToml, preparedMessages, expectedRevision));
+      return activeLanguages.commitUpdate(() ->
+          applyReloadSnapshot(configToml, preparedMessages, preparedLocales, expectedRevision));
     } catch (IOException exception) {
       throw new IllegalStateException("Unable to apply HiddenOre configuration changes.", exception);
     }
   }
 
-  private synchronized boolean applyReloadSnapshot(String configToml, Messages preparedMessages, long expectedRevision) {
+  private synchronized boolean applyReloadSnapshot(String configToml, Messages preparedMessages,
+                                                   Map<String, LocalizationSnapshot> preparedLocales,
+                                                   long expectedRevision) {
     if (draining) {
       throw new IllegalStateException("HiddenOre is shutting down");
     }
@@ -322,6 +335,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
 
     File configFile = new File(getDataFolder(), "hiddenore.toml");
     applyReload(configFile, loadToml(configToml, configFile), preparedMessages);
+    preparedMessages.publishPreparedLocales(preparedLocales);
     appliedConfigToml = configToml;
     return true;
   }
@@ -334,9 +348,6 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     languageLocale = settings.language();
     runtimeState = new RuntimeState(settings.rules(), nextMessages, nextVeinGenerator, settings.generation(),
         settings.autoPickup(), settings.suppressBlockDrop(), settings.metrics());
-    if (languageService != null) {
-      languageService.invalidate();
-    }
     updateMetrics(settings.metrics());
     HiddenOreTelemetry.countConfigReload();
   }

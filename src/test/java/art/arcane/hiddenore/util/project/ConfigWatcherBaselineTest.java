@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -98,6 +99,19 @@ public class ConfigWatcherBaselineTest {
     Files.writeString(locale, "no_permission = 'Changed'\n");
     assertNotEquals(initial, ConfigWatcher.diskSignatures(directory));
     assertNotEquals(installed, ConfigWatcher.diskSignatures(directory));
+  }
+
+  @Test
+  public void rememberedLocaleFilesAreRestrictedToCanonicalDirectChildren() {
+    Map<String, String> signatures = Map.of(
+        "languages/fr_FR.toml", "content:1",
+        "languages/de_DE.toml", "content:2",
+        "languages/en_US.toml", "content:3",
+        "languages/custom_locale.toml", "content:4",
+        "languages/nested/it_IT.toml", "content:5",
+        "fr_FR.toml", "content:6");
+
+    assertEquals(Set.of("fr_FR", "de_DE"), ConfigWatcher.installedCanonicalLocales(signatures));
   }
 
   @Test

@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -262,6 +263,104 @@ public class MessagesTest {
     assertFalse(hasHoverEvent(component));
     assertTextStyle(component, maliciousMaterial, NamedTextColor.GREEN, false);
     assertTextStyle(component, " x", NamedTextColor.GREEN, false);
+  }
+
+  @Test
+  public void malformedLanguageFileRetainsTheLastValidSnapshot() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    Path french = languages.resolve("fr_FR.toml");
+    Files.writeString(french, "prefix = ''\nno_permission = 'Permission personnalisée'\n");
+    Messages messages = new Messages(null, languages);
+    messages.reload("fr_FR");
+    Files.writeString(french, "no_permission = 'unterminated");
+
+    assertThrows(IllegalArgumentException.class, () -> messages.reload("fr_FR"));
+    assertEquals("Permission personnalisée", text(messages.component(Messages.NO_PERMISSION)));
+    assertEquals("no_permission = 'unterminated", Files.readString(french));
+  }
+
+  @Test
+  public void installedLocalePreparationRetainsValidTranslationsAndOmitsMalformedFiles() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    Messages messages = new Messages(null, languages);
+    Path french = languages.resolve("fr_FR.toml");
+    Files.writeString(french, "no_permission = 'Permission personnalisée'\n");
+    Files.writeString(languages.resolve("de_DE.toml"), "no_permission = 'unterminated");
+
+    Map<String, LocalizationSnapshot> prepared = messages.prepareInstalledLocales(Set.of());
+
+    assertTrue(prepared.containsKey("en_US"));
+    assertTrue(prepared.containsKey("fr_FR"));
+    assertFalse(prepared.containsKey("de_DE"));
+    assertEquals("Permission personnalisée", prepared.get("fr_FR").resolve(Messages.NO_PERMISSION).template());
+    assertEquals(Messages.PLAYER_ONLY.english(), prepared.get("fr_FR").resolve(Messages.PLAYER_ONLY).template());
+    assertEquals("en_US", prepared.get("fr_FR").sourceLocale(Messages.PLAYER_ONLY));
+  }
+
+  @Test
+  public void malformedPersonalLanguageSurvivesUnrelatedDefaultReloadsUntilAValidEdit() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    Path french = languages.resolve("fr_FR.toml");
+    Files.writeString(french, "prefix = ''\nno_permission = 'Initial'\n");
+    Messages initial = new Messages(null, languages);
+    initial.reload("en_US");
+    AtomicReference<Messages> active = new AtomicReference<>(initial);
+    UUID player = UUID.randomUUID();
+    try (PluginLanguageService service = new PluginLanguageService(new PluginLanguageService.Options(
+        languages.resolve("preferences.properties"), VolmitLocales::all, () -> "en_US",
+        () -> active.get().defaultSnapshot(),
+        locale -> {
+          Messages prepared = new Messages(null, languages);
+          prepared.reload(locale);
+          return prepared.defaultSnapshot();
+        }, (locale, prepared) -> {
+          throw new AssertionError("Personal messages cannot change the server language");
+        }, Logger.getAnonymousLogger()))) {
+      initial.languageService(service);
+      service.selectPlayer(player, "fr_FR").get(5, TimeUnit.SECONDS);
+      Files.writeString(french, "prefix = ''\nno_permission = 'Live edit'\n");
+      initial.publishPreparedLocales(initial.prepareInstalledLocales(Set.of()));
+      assertEquals("Live edit", LanguageAudience.call(player,
+          () -> text(active.get().component(Messages.NO_PERMISSION))));
+
+      String malformed = "no_permission = 'unterminated";
+      Files.writeString(french, malformed);
+      initial.publishPreparedLocales(initial.prepareInstalledLocales(Set.of()));
+      assertEquals("Live edit", LanguageAudience.call(player,
+          () -> text(active.get().component(Messages.NO_PERMISSION))));
+
+      Files.writeString(languages.resolve("en_US.toml"), "prefix = ''\nno_permission = 'Server edit'\n");
+      Messages reloaded = new Messages(null, languages);
+      reloaded.reload("en_US");
+      reloaded.languageService(service);
+      active.set(reloaded);
+      reloaded.publishPreparedLocales(reloaded.prepareInstalledLocales(Set.of()));
+      assertEquals("Server edit", text(reloaded.component(Messages.NO_PERMISSION)));
+      assertEquals("Live edit", LanguageAudience.call(player,
+          () -> text(reloaded.component(Messages.NO_PERMISSION))));
+      assertEquals(malformed, Files.readString(french));
+
+      Files.writeString(french, "prefix = ''\n");
+      reloaded.publishPreparedLocales(reloaded.prepareInstalledLocales(Set.of()));
+      assertEquals("You do not have permission to use this command.", LanguageAudience.call(player,
+          () -> text(reloaded.component(Messages.NO_PERMISSION))));
+      assertEquals("Server edit", text(reloaded.component(Messages.NO_PERMISSION)));
+      assertEquals("en_US", service.defaultLocale());
+      assertEquals("fr_FR", service.playerLocale(player).orElseThrow());
+
+      Files.delete(french);
+      reloaded.publishPreparedLocales(reloaded.prepareInstalledLocales(Set.of("fr_FR")));
+      assertEquals("[HiddenOre] You do not have permission to use this command.", LanguageAudience.call(player,
+          () -> text(reloaded.component(Messages.NO_PERMISSION))));
+      assertEquals("Server edit", text(reloaded.component(Messages.NO_PERMISSION)));
+      assertEquals("fr_FR", service.playerLocale(player).orElseThrow());
+      assertFalse(Files.exists(french));
+
+      Files.writeString(french, "prefix = ''\nno_permission = 'Recreated'\n");
+      reloaded.publishPreparedLocales(reloaded.prepareInstalledLocales(Set.of("fr_FR")));
+      assertEquals("Recreated", LanguageAudience.call(player,
+          () -> text(reloaded.component(Messages.NO_PERMISSION))));
+    }
   }
 
   @Test

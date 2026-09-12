@@ -36,9 +36,9 @@
 #   {plugin}  Plugin name
 #   {reason}  hata nedeni
 #   {roll}  Çekilen rastgele değer
+#   {section}  Dil düzenleyicisi bölümü
 #   {target}  Dil seçiminin uygulandığı eklenti
 #   {type}  tür
-#   {usage}  komut kullanımı
 #   {value}  geçerli, varsayılan veya ham değer
 #   {variables}  geçerli yer tutucular
 #   {vein}  Cevher damarı adı
@@ -98,9 +98,6 @@ optional = "Bu parametre isteğe bağlıdır."
 default = "Belirtilmezse varsayılan değer \"{value}\" olur."
 type = "Bu parametrenin türü {type}."
 
-[director.runtime]
-usage = "Kullanım: {usage}"
-
 [director.runtime.error]
 invalid_origin = "Bu komut bu kaynaktan çalıştırılamaz."
 unknown_parameter = "Bilinmeyen parametre anahtarı: {key}"
@@ -156,6 +153,7 @@ server-selected = "{plugin}: sunucu dili şimdi {locale}."
 server-default-selected = "{plugin}: diliniz artık sunucunun varsayılan dilini kullanıyor."
 
 [language.editor]
+title = "{plugin} › {section}"
 loading = "{locale} mesajları yükleniyor..."
 
 [language.editor.section]
