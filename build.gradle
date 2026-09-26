@@ -21,7 +21,7 @@ plugins {
 apply plugin: 'art.arcane.volmit-packaging'
 
 group = 'art.arcane'
-version = '1.5.3-26.2'
+version = '1.5.4-26.2'
 def apiVersion = '26.1'
 def main = 'art.arcane.hiddenore.HiddenOre'
 def lib = 'art.arcane.hiddenore.libs'
@@ -177,21 +177,18 @@ void registerCustomOutputTaskUnix(String name, String path, boolean doRename = t
 }
 
 void createOutputTask(String name, String path, boolean doRename = true) {
-    def shadowJarTask = tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)
     tasks.register("build${name}", Copy) {
         group = 'development'
         outputs.upToDateWhen { false }
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn(shadowJarTask)
-        from(shadowJarTask.flatMap { it.archiveFile })
+        dependsOn('packedJar')
+        from({ tasks.named('packedJar').get().outputJar })
         into(file(path))
-        if (doRename) {
-            rename { String ignored -> 'HiddenOre.jar' }
-        }
+        rename { String fileName -> doRename ? 'HiddenOre.jar' : fileName.replaceFirst(/-packed\.jar$/, '.jar') }
         if (name == 'PsychoLT') {
             doLast {
                 project.copy {
-                    from(shadowJarTask.get().archiveFile.get().asFile)
+                    from(tasks.named('packedJar').get().outputJar.get().asFile)
                     into(project.file('../PluginOuts'))
                     rename { String ignored -> "HiddenOre-${project.version}.jar" }
                 }
@@ -203,6 +200,7 @@ void createOutputTask(String name, String path, boolean doRename = true) {
 pluginPackaging {
     artifacts {
         create('distribution') {
+            packed = true
             taskName = 'shadowJar'
             policyName = 'HiddenOre'
             prunePrefixes = ['art/arcane/volmlib/']
