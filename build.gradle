@@ -1,3 +1,4 @@
+import art.arcane.volmit.packaging.PackagingMode
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
@@ -21,7 +22,7 @@ plugins {
 apply plugin: 'art.arcane.volmit-packaging'
 
 group = 'art.arcane'
-version = '1.5.4-26.2'
+version = '1.6.0-26.2'
 def apiVersion = '26.1'
 def main = 'art.arcane.hiddenore.HiddenOre'
 def lib = 'art.arcane.hiddenore.libs'
@@ -200,6 +201,10 @@ void createOutputTask(String name, String path, boolean doRename = true) {
 pluginPackaging {
     artifacts {
         create('distribution') {
+            stripDirectories = true
+            stripLocalVariables = true
+            releaseCompression = providers.gradleProperty('compactRelease').map { it.toBoolean() }
+                    .getOrElse(!PackagingMode.resolve(providers).development())
             packed = true
             taskName = 'shadowJar'
             policyName = 'HiddenOre'
