@@ -1,5 +1,7 @@
 package art.arcane.hiddenore;
 
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 import art.arcane.volmlib.util.diagnostics.BukkitDebugDump;
 import art.arcane.volmlib.util.diagnostics.DebugDumpContributor;
 import art.arcane.volmlib.util.config.TomlCodec;
@@ -213,9 +215,10 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   }
 
   @Override
-  public void onPreUnload(ReloadAware.PreUnloadReason reason) {
+  public CompletionStage<Void> commitReload(ReloadAware.PreUnloadReason reason) {
     info("BileTools pre-unload hook fired (%s). Draining HiddenOre runtime services.", reason);
     drain();
+    return CompletableFuture.completedFuture(null);
   }
 
   public void info(String message, Object... args) {
