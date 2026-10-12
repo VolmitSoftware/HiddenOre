@@ -14,6 +14,9 @@ commands:
     description: HiddenOre base command.
     usage: /hiddenore [config|debug|language]
 permissions:
+  hiddenore.update:
+    description: Allows viewing HiddenOre in shared Volmit update notices and reports.
+    default: op
   hiddenore.debugdump:
     description: Allows creating and optionally uploading diagnostic reports.
     default: op

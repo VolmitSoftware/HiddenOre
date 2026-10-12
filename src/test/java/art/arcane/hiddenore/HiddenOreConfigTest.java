@@ -28,6 +28,41 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class HiddenOreConfigTest {
+  @Test
+  public void editorExposesOmittedUpdateNotificationsWithoutWritingUntilEdited() throws Exception {
+    File file = bundledConfiguration();
+    String original = Files.readString(file.toPath()).replaceFirst("update_notifications = true\\r?\\n", "");
+    Files.writeString(file.toPath(), original);
+
+    ConfigEditorDocument document = HiddenOre.configurationDocument(original);
+
+    assertTrue(document.value(List.of("update_notifications")).getAsBoolean());
+    assertEquals(original, document.source());
+    assertEquals(original, Files.readString(file.toPath()));
+    ConfigEditorDocument saved = HiddenOre.writeConfiguration(file,
+        document.edit(List.of("update_notifications"), new JsonPrimitive(false)));
+
+    JsonObject expected = HiddenOre.loadToml(original, file);
+    expected.addProperty("update_notifications", false);
+    assertEquals(expected, HiddenOre.loadToml(saved.source(), file));
+    assertEquals(saved.source(), Files.readString(file.toPath()));
+    assertFalse(HiddenOre.configurationDocument(saved.source()).value(List.of("update_notifications")).getAsBoolean());
+  }
+
+  @Test
+  public void updateNotificationsCanBeDisabledAndRejectNonBooleanEdits() throws Exception {
+    File file = bundledConfiguration();
+    ConfigEditorDocument document = ConfigEditorDocument.fromToml(Files.readString(file.toPath()));
+
+    ConfigEditorDocument disabled = HiddenOre.writeConfiguration(file,
+        document.edit(List.of("update_notifications"), new JsonPrimitive(false)));
+
+    assertFalse(HiddenOre.loadToml(disabled.source(), file).get("update_notifications").getAsBoolean());
+    assertThrows(IllegalArgumentException.class, () -> HiddenOre.writeConfiguration(file,
+        disabled.edit(List.of("update_notifications"), new JsonPrimitive("false"))));
+    assertEquals(disabled.source(), Files.readString(file.toPath()));
+  }
+
   @Rule
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -40,6 +75,7 @@ public class HiddenOreConfigTest {
 
     assertEquals("en_US", configuration.get("language").getAsString());
     assertTrue(configuration.get("metrics").getAsBoolean());
+    assertTrue(configuration.get("update_notifications").getAsBoolean());
     assertFalse(configuration.get("auto_pickup_drops").getAsBoolean());
     assertTrue(configuration.get("suppress_block_drop_on_custom_drop").getAsBoolean());
     assertEquals(9, rules.getAllDropRules().size());

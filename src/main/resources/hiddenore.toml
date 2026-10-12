@@ -7,6 +7,7 @@
 language = "en_US"
 # Send anonymous usage statistics to bStats.
 metrics = true
+update_notifications = true
 
 # Put items in the player's inventory; overflow drops on the ground.
 auto_pickup_drops = false

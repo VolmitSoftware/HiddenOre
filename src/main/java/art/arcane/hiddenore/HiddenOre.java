@@ -3,6 +3,7 @@ package art.arcane.hiddenore;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CompletableFuture;
 import art.arcane.volmlib.util.diagnostics.BukkitDebugDump;
+import art.arcane.volmlib.util.update.BukkitUpdateService;
 import art.arcane.volmlib.util.diagnostics.DebugDumpContributor;
 import art.arcane.volmlib.util.config.TomlCodec;
 import art.arcane.volmlib.util.config.TomlDocumentEditor;
@@ -38,6 +39,7 @@ import art.arcane.volmlib.util.director.theme.DirectorProduct;
 import art.arcane.volmlib.util.director.theme.DirectorThemes;
 import art.arcane.volmlib.util.plugin.ComponentMessenger;
 import art.arcane.volmlib.util.plugin.ComponentText;
+import art.arcane.volmlib.util.scheduling.FoliaScheduler;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -76,6 +78,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   private RemoteLanguageCatalog remoteLanguages;
   private PluginLanguageService languageService;
   private BukkitLanguageSwitcher languageSwitcher;
+  private volatile BukkitUpdateService updates;
   private BukkitConfigEditor configEditor;
   private BukkitDebugDump debugDump;
   private volatile String languageLocale = "en_US";
@@ -94,6 +97,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   private volatile String appliedConfigToml;
   private volatile boolean draining;
   private boolean serviceRegistered;
+  private CompletableFuture<Void> reloadCompletion;
 
   public HiddenOre() {
     info("Loading dependencies...");
@@ -105,6 +109,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   @Override
   public void onEnable() {
     draining = false;
+    reloadCompletion = null;
     debugDump = BukkitDebugDump.create(this, new BukkitDebugDump.Options(() -> true, this::captureDebugState,
         new BukkitDebugDump.Presentation("/hiddenore debug dump", "/hiddenore debug",
             DirectorMiniMenu.Theme.fromDirectorTheme(DirectorThemes.forProduct(DirectorProduct.HIDDENORE)),
@@ -141,6 +146,8 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
               (key, arguments) -> getMessages().directorText(key, arguments),
               new PluginLanguageEditor.Options(
                   locale -> getMessages().editorOptions().loader().load(locale), this::saveLanguageMessage)));
+      updates = BukkitUpdateService.register(this, new BukkitUpdateService.Options(
+          "VolmitSoftware", "HiddenOre", "hiddenore.update", () -> getRuntimeState().updateNotifications()));
       if (!initialLocale.equals("en_US")) {
         languageService.selectDefault(initialLocale).exceptionally(failure -> {
           logException(Level.WARNING, failure, "Unable to load the configured language; English remains active.");
@@ -194,8 +201,14 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   }
 
   @Override
-  public void onDisable() {
-    drain();
+  public synchronized void onDisable() {
+    if (reloadCompletion != null && !reloadCompletion.isDone()) {
+      reloadCompletion.completeExceptionally(new IllegalStateException("HiddenOre was disabled before reload cleanup completed"));
+    }
+    if (configEditor != null) {
+      configEditor.close();
+      configEditor = null;
+    }
     if (debugDump != null) {
       debugDump.close();
       debugDump = null;
@@ -204,6 +217,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       languageSwitcher.close();
       languageSwitcher = null;
     }
+    drain();
     if (languageService != null) {
       languageService.close();
       languageService = null;
@@ -215,10 +229,66 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   }
 
   @Override
-  public CompletionStage<Void> commitReload(ReloadAware.PreUnloadReason reason) {
+  public synchronized CompletionStage<Void> commitReload(ReloadAware.PreUnloadReason reason) {
+    if (reloadCompletion != null && !reloadCompletion.isCompletedExceptionally()) {
+      return reloadCompletion.copy();
+    }
+    if (!isEnabled()) {
+      return CompletableFuture.failedFuture(new IllegalStateException("HiddenOre is already disabled"));
+    }
     info("BileTools pre-unload hook fired (%s). Draining HiddenOre runtime services.", reason);
-    drain();
-    return CompletableFuture.completedFuture(null);
+    CompletableFuture<Void> completion = new CompletableFuture<>();
+    reloadCompletion = completion;
+    CompletableFuture<Void> configCleanup;
+    CompletableFuture<Void> languageCleanup;
+    try {
+      configCleanup = configEditor == null ? CompletableFuture.completedFuture(null) : configEditor.closeAsync();
+    } catch (Throwable failure) {
+      configCleanup = CompletableFuture.failedFuture(failure);
+    }
+    try {
+      languageCleanup = languageSwitcher == null ? CompletableFuture.completedFuture(null) : languageSwitcher.closeAsync();
+    } catch (Throwable failure) {
+      languageCleanup = CompletableFuture.failedFuture(failure);
+    }
+    CompletableFuture.allOf(configCleanup, languageCleanup).whenComplete((ignored, failure) -> {
+      if (failure != null) {
+        completion.completeExceptionally(failure);
+      } else {
+        scheduleReloadDrain(completion);
+      }
+    });
+    return completion.copy();
+  }
+
+  private void scheduleReloadDrain(CompletableFuture<Void> completion) {
+    if (completion.isDone()) {
+      return;
+    }
+    try {
+      if (!FoliaScheduler.runGlobal(this, () -> finishReloadDrain(completion))) {
+        completion.completeExceptionally(new IllegalStateException("Could not schedule HiddenOre reload cleanup"));
+      }
+    } catch (Throwable failure) {
+      completion.completeExceptionally(failure);
+    }
+  }
+
+  private synchronized void finishReloadDrain(CompletableFuture<Void> completion) {
+    if (completion.isDone()) {
+      return;
+    }
+    try {
+      if (!isEnabled()) {
+        throw new IllegalStateException("HiddenOre was disabled before reload cleanup completed");
+      }
+      drain();
+      configEditor = null;
+      languageSwitcher = null;
+      completion.complete(null);
+    } catch (Throwable failure) {
+      completion.completeExceptionally(failure);
+    }
   }
 
   public void info(String message, Object... args) {
@@ -257,9 +327,9 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       return;
     }
     draining = true;
-    if (configEditor != null) {
-      configEditor.close();
-      configEditor = null;
+    if (updates != null) {
+      updates.close();
+      updates = null;
     }
     // Stop the bStats scheduler first so no chart callable observes a half-drained runtime.
     if (metrics != null) {
@@ -359,7 +429,11 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     nextMessages.languageService(languageService);
     languageLocale = settings.language();
     runtimeState = new RuntimeState(settings.rules(), nextMessages, nextVeinGenerator, settings.generation(),
-        settings.autoPickup(), settings.suppressBlockDrop(), settings.metrics());
+        settings.autoPickup(), settings.suppressBlockDrop(), settings.metrics(), settings.updateNotifications());
+    BukkitUpdateService currentUpdates = updates;
+    if (currentUpdates != null) {
+      currentUpdates.reconfigure();
+    }
     updateMetrics(settings.metrics());
     HiddenOreTelemetry.countConfigReload();
   }
@@ -507,7 +581,11 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     File file = new File(getDataFolder(), "hiddenore.toml");
     String source = readConfig(file);
     parseSettings(file, loadToml(source, file));
-    return ConfigEditorDocument.fromToml(source);
+    return configurationDocument(source);
+  }
+
+  static ConfigEditorDocument configurationDocument(String source) throws IOException {
+    return ConfigEditorDocument.fromTomlWithDefaults(source, "update_notifications = true\n");
   }
 
   private synchronized ConfigEditorDocument saveConfiguration(ConfigEditorDocument.Edit edit) throws IOException {
@@ -562,7 +640,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     requireUnchanged(file, original);
     String content = TomlDocumentEditor.set(original, edit.path(), edit.value());
     parseSettings(file, loadToml(content, file));
-    ConfigEditorDocument result = ConfigEditorDocument.fromToml(content);
+    ConfigEditorDocument result = configurationDocument(content);
     requireUnchanged(file, original);
     AtomicFileIO.writeString(file.toPath(), content);
     return result;
@@ -581,7 +659,8 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
           Messages.requireLocale(optionalString(configuration, "language", "en_US"), file.getName()),
           optionalBoolean(configuration, "auto_pickup_drops", false),
           optionalBoolean(configuration, "suppress_block_drop_on_custom_drop", false),
-          optionalBoolean(configuration, "metrics", true));
+          optionalBoolean(configuration, "metrics", true),
+          optionalBoolean(configuration, "update_notifications", true));
     } catch (IllegalArgumentException exception) {
       throw invalidConfiguration(file, exception);
     }
@@ -640,12 +719,13 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
                              GenerationRules.GenerationPolicy generationPolicy,
                              boolean autoPickup,
                              boolean suppressBlockDrop,
-                             boolean metrics) {
+                             boolean metrics,
+                             boolean updateNotifications) {
   }
 
   private record ConfigurationSettings(MiningRuleManager rules, GenerationRules.GenerationPolicy generation,
                                        String language, boolean autoPickup, boolean suppressBlockDrop,
-                                       boolean metrics) {
+                                       boolean metrics, boolean updateNotifications) {
   }
 
   private static final class LogThrottle {

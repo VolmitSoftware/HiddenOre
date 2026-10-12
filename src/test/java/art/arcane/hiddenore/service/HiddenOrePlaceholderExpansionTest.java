@@ -132,7 +132,7 @@ public class HiddenOrePlaceholderExpansionTest {
     }
     config.add("drops", gson.toJsonTree(drops));
 
-    return new HiddenOre.RuntimeState(new MiningRuleManager(config), null, null, null, false, false, true);
+    return new HiddenOre.RuntimeState(new MiningRuleManager(config), null, null, null, false, false, true, true);
   }
 
   private static OfflinePlayer player() {
