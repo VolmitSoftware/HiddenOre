@@ -3,6 +3,7 @@ package art.arcane.hiddenore.util.common;
 import art.arcane.hiddenore.HiddenOre;
 import art.arcane.volmlib.util.plugin.ComponentLog;
 import art.arcane.volmlib.util.plugin.SplashScreenSupport;
+import org.bukkit.Bukkit;
 import net.md_5.bungee.api.ChatColor;
 
 import java.util.logging.Level;
@@ -21,7 +22,7 @@ public final class SplashScreen {
     String status = success ? "READY" : "DEGRADED";
     String pluginVersion = plugin.getDescription().getVersion();
     String releaseTrain = SplashScreenSupport.releaseTrain(pluginVersion);
-    String serverVersion = SplashScreenSupport.serverVersionWithoutMcSuffix();
+    String serverVersion = SplashScreenSupport.serverVersionWithoutMcSuffix(Bukkit.getVersion());
     String startupDate = SplashScreenSupport.startupDate();
     String supportedMcVersion = "26.1.2 - 26.3";
 
