@@ -1,5 +1,4 @@
 import art.arcane.volmit.packaging.PackagingMode
-import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
@@ -35,9 +34,6 @@ String jitpackAuthToken = authTokenProperty ?: providers.gradleProperty('jitpack
 
 def shadowJarTask = tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)
 tasks.named('slimJar').get()
-
-registerCustomOutputTaskUnix('PsychoLT', '/Users/brianfopiano/Developer/RemoteGit/[Minecraft Server]/consumers/plugin-consumers/dropins/plugins')
-registerCustomOutputTask('SwiftSwamp', 'C://VolmitSoftware/BUILDS')
 
 tasks.named('jar', org.gradle.api.tasks.bundling.Jar).configure {
     archiveClassifier.set('')
@@ -162,43 +158,6 @@ if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25)) {
     System.exit(69)
 }
 
-void registerCustomOutputTask(String name, String path, boolean doRename = true) {
-    if (!System.getProperty('os.name').toLowerCase().contains('windows')) {
-        return
-    }
-
-    createOutputTask(name, path, doRename)
-}
-
-void registerCustomOutputTaskUnix(String name, String path, boolean doRename = true) {
-    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
-        return
-    }
-
-    createOutputTask(name, path, doRename)
-}
-
-void createOutputTask(String name, String path, boolean doRename = true) {
-    tasks.register("build${name}", Copy) {
-        group = 'development'
-        outputs.upToDateWhen { false }
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn('packedJar')
-        from({ tasks.named('packedJar').get().outputJar })
-        into(file(path))
-        rename { String fileName -> doRename ? 'HiddenOre.jar' : fileName.replaceFirst(/-packed\.jar$/, '.jar') }
-        if (name == 'PsychoLT') {
-            doLast {
-                project.copy {
-                    from(tasks.named('packedJar').get().outputJar.get().asFile)
-                    into(project.file('../PluginOuts'))
-                    rename { String ignored -> "HiddenOre v${project.version} [CraftBukkit] ${project.bukkitMinecraftRange}.jar" }
-                }
-            }
-        }
-    }
-}
-
 pluginPackaging {
     artifacts {
         create('distribution') {
@@ -278,3 +237,5 @@ tasks.register('gameplayContractTest', Exec) {
 tasks.named('check').configure {
     dependsOn('gameplayContractTest')
 }
+
+apply from: 'gradle/multiplexor.gradle'
