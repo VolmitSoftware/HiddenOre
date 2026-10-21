@@ -131,4 +131,4 @@ Normal disable and BileTools hot unload serialize against reloads, reject queued
 ./gradlew build
 ```
 
-The unclassified jar under `build/libs` is the thin compile-facing artifact. The deployable shaded plugin jar uses the `plugin` classifier. Custom development output tasks continue to copy and rename the shaded artifact as `HiddenOre.jar`; deployment into a server plugin directory is intentionally left to the server operator.
+The unclassified jar under `build/libs/` is the thin compile-facing artifact. The selected runtime distribution is `build/libs/HiddenOre-<version>-plugin-packed.jar`. Multiplexor exposes it through `projects build hiddenore --target bukkit` and delivers it only to an explicit named destination. See [Project builds](https://docs.volmit.com/servermultiplexor/13-project-builds).
