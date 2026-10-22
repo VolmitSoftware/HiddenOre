@@ -1,4 +1,5 @@
 import art.arcane.volmit.packaging.PackagingMode
+import art.arcane.volmit.packaging.PackedJar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
@@ -21,7 +22,8 @@ plugins {
 apply plugin: 'art.arcane.volmit-packaging'
 
 group = 'art.arcane'
-version = '1.6.2'
+String hiddenoreVersion = providers.gradleProperty('hiddenoreVersion').get()
+version = hiddenoreVersion
 ext.bukkitMinecraftRange = providers.gradleProperty('bukkitMinecraftRange').getOrElse('26.1.2-26.3')
 def apiVersion = '26.1'
 def main = 'art.arcane.hiddenore.HiddenOre'
@@ -236,6 +238,15 @@ tasks.register('gameplayContractTest', Exec) {
 
 tasks.named('check').configure {
     dependsOn('gameplayContractTest')
+}
+
+tasks.register('prepareRelease', Sync) {
+    group = 'distribution'
+    description = 'Verifies and stages the CraftBukkit release jar.'
+    dependsOn('check', 'packedJar')
+    from(tasks.named('packedJar', PackedJar).flatMap { PackedJar archive -> archive.outputJar })
+    into(layout.buildDirectory.dir('release'))
+    rename { String name -> "HiddenOre-${project.version}-bukkit.jar" }
 }
 
 apply from: 'gradle/multiplexor.gradle'

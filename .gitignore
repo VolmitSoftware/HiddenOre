@@ -21,3 +21,5 @@ AGENTS.md
 build-lt.sh
 BUILDS/
 .run/
+
+__pycache__/

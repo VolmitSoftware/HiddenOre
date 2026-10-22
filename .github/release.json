@@ -1,0 +1,7 @@
+{
+  "name": "HiddenOre",
+  "platform": "bukkit",
+  "versionProperty": "hiddenoreVersion",
+  "betaTag": "beta",
+  "volmlibRef": "master"
+}
