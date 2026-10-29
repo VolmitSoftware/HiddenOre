@@ -38,7 +38,7 @@ def shadowJarTask = tasks.named('shadowJar', com.github.jengelman.gradle.plugins
 tasks.named('slimJar').get()
 
 tasks.named('jar', org.gradle.api.tasks.bundling.Jar).configure {
-    archiveClassifier.set('')
+    archiveClassifier.set('thin')
 }
 
 tasks.withType(org.gradle.api.tasks.bundling.Jar).configureEach {
@@ -50,7 +50,8 @@ tasks.named('build').configure {
 }
 
 shadowJarTask.configure {
-    archiveClassifier.set('plugin')
+    archiveClassifier.set('')
+    archiveFileName.set("HiddenOre v${project.version} [CraftBukkit] ${bukkitMinecraftRange}.jar")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     minimize()
     relocate('io.github.slimjar', "${lib}.slimjar")
