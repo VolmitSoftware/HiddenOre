@@ -9,36 +9,41 @@
 # prefix добавляется перед сообщениями чата; пустая строка скрывает его.
 #
 # === Форматирование ===
-# Цветовые коды: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Используйте &0-&f для цветов, &k-&o для форматирования, &r для сброса и &#RRGGBB для цветов в HEX.
+# Например: &aЗелёный текст&r. Для новой строки используйте \n внутри TOML-строк в кавычках.
 #
 # === Переменные ===
 # Не меняйте имена переменных и используйте только переменные исходного сообщения.
-#   {after}  Ценность после изменения
+#   {added}  Сообщения, добавленные обновлением языка
+#   {after}  Значение сообщения после изменения
 #   {amount}  Количество выпадающих предметов
 #   {argument}  неожиданный аргумент
-#   {before}  Ценность перед изменением
+#   {before}  Значение сообщения до изменения
 #   {block}  Тип добытого блока
 #   {chance}  Настроенная вероятность срабатывания
 #   {command}  путь команды
 #   {count}  Количество сообщений
 #   {group}  Категория редактора языка
+#   {kept}  Локальные правки, сохранённые обновлением языка
 #   {key}  Ключ сообщения или параметра
 #   {line}  Номер строки в сообщении
-#   {locale}  локаль
+#   {locale}  Код языка
 #   {material}  Тип выпадающего предмета
-#   {maximum}  Максимально допустимая стоимость
+#   {maximum}  Максимальная длина ввода в редакторе
 #   {number}  Номер записи
 #   {page}  Номер текущей страницы
 #   {pages}  Общее число страниц
 #   {parameter}  имя параметра
-#   {path}  Путь к настройке
-#   {personal}  личная локаль
+#   {path}  Настройка или раздел конфигурации
+#   {personal}  Личный код языка
 #   {plugin}  Название плагина
 #   {reason}  причина ошибки
+#   {remaining}  Оставшееся время до следующей проверки языков
 #   {roll}  Полученное случайное число
 #   {section}  Раздел редактора языков
 #   {target}  Плагин, для которого выбирается язык
-#   {type}  тип
+#   {type}  Ожидаемый тип параметра
+#   {updated}  Сообщения, изменённые обновлением языка
 #   {value}  текущее, стандартное или исходное значение
 #   {variables}  допустимые заполнители
 #   {vein}  Название рудной жилы
@@ -55,8 +60,8 @@ player_placed = "&cБлок {block} установлен игроком; скр�
 random_drop = "&aСлучайное выпадение: {material} x{amount}&r"
 random_drop_lost = "&cСлучайное выпадение {material} потеряно, потому что уровень инструмента слишком низкий.&r"
 vein_drop = "&aРудная жила {vein}: {material} x{amount}&r"
-vein_drop_discovered = "&aРудная жила {vein}: {material} x{amount} (обнаружено)&r"
-vein_drop_lost = "&cРудная жила {vein}: {material} потеряно, потому что уровень инструмента слишком низкий.&r"
+vein_drop_discovered = "&aРудная жила {vein}: {material} x{amount} (жила обнаружена)&r"
+vein_drop_lost = "&cРудная жила {vein}: выпадение {material} потеряно, потому что уровень инструмента слишком низкий.&r"
 command_hit = "&7Проверка команды: chance={chance}, roll={roll} -> &aуспех&7&r"
 command_miss = "&7Проверка команды: chance={chance}, roll={roll} -> &cнеудача&7&r"
 
@@ -66,7 +71,7 @@ debugdump_upload = "Загрузить отчёт на mclo.gs"
 [command.description]
 version = "Показать версию HiddenOre"
 config = "Изменить настройки HiddenOre"
-debug_group = "HiddenOre: Средства диагностики"
+debug_group = "HiddenOre: средства диагностики"
 debugdump = "Создать диагностический отчёт и при желании загрузить его"
 root = "Группа команд HiddenOre"
 debug = "Переключить свой режим отладки руды"
@@ -124,8 +129,8 @@ select_description = "Нажмите, чтобы выбрать этот язы�
 remove_personal_description = "Удалить ваш личный выбор языка."
 no_controls = "У вас нет доступа к настройкам языка."
 command = "Команда: {command}"
-selected = "выбранный"
-all-volmit-plugins = "Все плагины Volmit"
+selected = "выбран"
+all-volmit-plugins = "всех плагинов Volmit"
 
 [language.error]
 stopping = "Выбор языка недоступен, пока плагин останавливается."
@@ -141,16 +146,25 @@ unavailable-for-all = "Язык {locale} доступен не для всех �
 
 [language.usage]
 editor = "Использование: /{command} language server edit [locale]"
-selection = "Использование: /{command} language self [locale|reset] or server [locale]"
+selection = "Использование: /{command} language self [locale|reset] или server [locale]"
 volmit-selection = "Использование: /volmit plugins languages [locale]"
+update = "Использование: /{command} language update"
 
 [language.selection]
 preparing = "Подготовка языка {locale} для {target}..."
 save-failed = "{plugin}: не удалось сохранить выбор языка; проверьте консоль сервера."
 english-fallback = "{plugin}: {locale} недоступен; используется английский (en_US)."
-personal-selected = "{plugin}: Ваш язык сейчас {locale}."
-server-selected = "{plugin}: Язык сервера теперь {locale}."
+personal-selected = "{plugin}: теперь ваш язык — {locale}."
+server-selected = "{plugin}: язык сервера теперь — {locale}."
 server-default-selected = "{plugin}: теперь ваш язык соответствует языку сервера по умолчанию."
+
+[language.update]
+checking = "{plugin}: проверка изменений в репозитории языков..."
+unchanged = "{plugin}: установленные языки уже соответствуют репозиторию."
+applied = "{plugin}: {locale} обновлён ({added} добавлено, {updated} изменено, {kept} локальных правок сохранено)."
+cooldown = "{plugin}: репозиторий языков недавно проверялся; повторите попытку через {remaining}."
+locale-failed = "{plugin}: {locale} не обновлён: {reason}"
+failed = "{plugin}: обновление языков не удалось: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -196,7 +210,7 @@ edit-chat = "&7Нажмите, чтобы изменить текст в чат�
 open = "&8Нажмите, чтобы открыть этот язык.&r"
 
 [language.editor.category]
-message-count = "&7{count} сообщения&r"
+message-count = "&7Сообщений: {count}&r"
 open = "&8Нажмите, чтобы открыть эту категорию.&r"
 
 [language.editor.error]
@@ -232,7 +246,7 @@ failed = "Не удалось изменить настройки: {reason}"
 loading = "Загрузка настроек..."
 empty = "В этом разделе нет настроек."
 player-only = "Откройте редактор настроек в игре."
-no-permission = "У вас нет прав на изменение этих настроек."
+no-permission = "У вас нет разрешения на изменение этих настроек."
 back = "Назад"
 previous = "Предыдущая страница"
 next = "Следующая страница"

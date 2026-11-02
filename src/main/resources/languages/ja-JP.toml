@@ -9,10 +9,12 @@
 # prefix はチャットメッセージの前に付きます。空の文字列にすると非表示になります。
 #
 # === 書式 ===
-# カラーコード: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# &0-&fは色、&k-&oは書式、&rはリセット、&#RRGGBBは16進数カラーに使用します。
+# 例: &a緑のテキスト&r。引用符で囲んだTOML文字列で改行するには\nを使用します。
 #
 # === 変数 ===
 # 変数名を変更せず、各メッセージに元からある変数だけを使用してください。
+#   {added}  言語更新で追加されたメッセージ
 #   {after}  変更後の値
 #   {amount}  ドロップするアイテム数
 #   {argument}  予期しない引数
@@ -22,23 +24,26 @@
 #   {command}  コマンド経路
 #   {count}  メッセージ数
 #   {group}  言語エディターのカテゴリ
+#   {kept}  言語更新で保持されたローカル編集
 #   {key}  メッセージまたはパラメーターのキー
 #   {line}  メッセージ内の行番号
-#   {locale}  ロケール
+#   {locale}  言語コード
 #   {material}  ドロップするアイテムの種類
-#   {maximum}  最大許容値
+#   {maximum}  エディター入力の最大文字数
 #   {number}  項目番号
 #   {page}  現在のページ番号
 #   {pages}  ページの総数
 #   {parameter}  パラメーター名
 #   {path}  設定項目のパス
-#   {personal}  個人設定のロケール
+#   {personal}  個人の言語コード
 #   {plugin}  プラグイン名
 #   {reason}  失敗理由
+#   {remaining}  次回の言語確認が可能になるまでの時間
 #   {roll}  抽選された乱数値
 #   {section}  言語エディターのセクション
 #   {target}  言語選択の対象プラグイン
 #   {type}  型
+#   {updated}  言語更新で変更されたメッセージ
 #   {value}  現在値、既定値、または入力値
 #   {variables}  使用可能なプレースホルダー
 #   {vein}  鉱脈名
@@ -53,10 +58,10 @@ config_reloaded_message = "&a設定を更新して再読み込みしました。
 [debug]
 player_placed = "&cプレイヤーが設置した{block}には隠しドロップがありません。&r"
 random_drop = "&aランダムドロップ: {material} x{amount}&r"
-random_drop_lost = "&cツールの段階が低すぎるため、ランダムドロップ{material}を失いました。&r"
+random_drop_lost = "&cツールのランクが低すぎるため、ランダムドロップ{material}を失いました。&r"
 vein_drop = "&a鉱脈{vein}: {material} x{amount}&r"
 vein_drop_discovered = "&a鉱脈{vein}: {material} x{amount}(発見済み)&r"
-vein_drop_lost = "&c鉱脈{vein}: ツールの段階が低すぎるため{material}を失いました。&r"
+vein_drop_lost = "&c鉱脈{vein}: ツールのランクが低すぎるため{material}を失いました。&r"
 command_hit = "&7コマンド判定: chance={chance}, roll={roll} -> &a成功&7&r"
 command_miss = "&7コマンド判定: chance={chance}, roll={roll} -> &c失敗&7&r"
 
@@ -77,7 +82,7 @@ no_description = "説明はありません"
 command_group = "コマンドグループ。クリックして開きます。"
 category = "コマンド分類"
 no_parameters = "パラメーターはありません。クリックしてコマンドを入力します。"
-parameters_hover = "パラメータにカーソルを合わせると詳細が表示されます。"
+parameters_hover = "パラメーターにカーソルを合わせると詳細が表示されます。"
 
 [director.help.navigation]
 back = "戻る"
@@ -93,16 +98,16 @@ hover = "前のページ"
 hover = "次のページ"
 
 [director.help.parameter]
-required = "このパラメータは必須です。"
-optional = "このパラメータは任意です。"
+required = "このパラメーターは必須です。"
+optional = "このパラメーターは任意です。"
 default = "未指定の場合は \"{value}\" になります。"
-type = "このパラメータの型は {type} です。"
+type = "このパラメーターの型は {type} です。"
 
 [director.runtime.error]
 invalid_origin = "この実行元からはコマンドを実行できません。"
 unknown_parameter = "不明なパラメーターキー: {key}"
 unexpected_argument = "予期しない引数 \"{argument}\"。オプションのパラメーターはキー付きで指定してください。例: seed=123"
-unclosed_group = "パラメータ {key} の閉じかっこ \"]\" がありません"
+unclosed_group = "パラメーター {key} の閉じかっこ \"]\" がありません"
 conversion_failed = "\"{value}\" を {parameter} 用の {type} に変換できません"
 default_parse_failed = "パラメーター {parameter} のデフォルト値を解析できません"
 missing_argument = "引数 \"{parameter}\" ({type}) が必要です"
@@ -116,7 +121,7 @@ edit_messages = "言語メッセージを編集"
 use_server_default = "サーバーのデフォルトを使用"
 current = "現在: {locale}"
 current_with_personal = "現在: {locale} (あなた: {personal})"
-your_description = "表示されるメッセージだけを変更します。"
+your_description = "自分に表示されるメッセージだけを変更します。"
 reset_description = "サーバーのデフォルト言語を使用します。"
 server_description = "サーバーのデフォルト言語を変更します。"
 edit_description = "言語ごとのメッセージエディターを開きます。"
@@ -136,21 +141,30 @@ personal-player-only = "プレイヤーの個人言語はゲーム内で選択�
 personal-permission = "個人言語を選択する権限がありません。"
 plugin-personal-permission = "{plugin}の個人言語を選択する権限がありません。"
 plugin-server-permission = "{plugin}のサーバー言語を変更する権限がありません。"
-server-locale-required = "サーバーの既定の言語としてen_USなどの言語コードを選択してください。"
+server-locale-required = "サーバーのデフォルト言語としてen_USなどの言語コードを選択してください。"
 unavailable-for-all = "選択したすべてのプラグインで言語{locale}を利用できるわけではありません。"
 
 [language.usage]
 editor = "使い方: /{command} language server edit [locale]"
-selection = "使い方: /{command} language self [locale|reset] or server [locale]"
+selection = "使い方: /{command} language self [locale|reset] または server [locale]"
 volmit-selection = "使い方: /volmit plugins languages [locale]"
+update = "使い方: /{command} language update"
 
 [language.selection]
 preparing = "{target}の言語{locale}を準備しています..."
 save-failed = "{plugin}: 言語の選択を保存できませんでした。サーバーコンソールを確認してください。"
-english-fallback = "{plugin}: {locale}は利用できないため、英語（en_US）を使用します。"
+english-fallback = "{plugin}: {locale}は利用できないため、英語 (en_US) を使用します。"
 personal-selected = "{plugin}: 個人言語を{locale}に変更しました。"
 server-selected = "{plugin}: サーバー言語を{locale}に変更しました。"
-server-default-selected = "{plugin}: 個人言語はサーバーの既定の言語に従うようになりました。"
+server-default-selected = "{plugin}: 個人言語はサーバーのデフォルト言語に従うようになりました。"
+
+[language.update]
+checking = "{plugin}: 言語リポジトリの変更を確認しています..."
+unchanged = "{plugin}: インストール済みの言語はすでにリポジトリと一致しています。"
+applied = "{plugin}: {locale}を更新しました (追加 {added}、変更 {updated}、保持したローカル編集 {kept})。"
+cooldown = "{plugin}: 言語リポジトリは最近確認されたばかりです。{remaining}後にもう一度お試しください。"
+locale-failed = "{plugin}: {locale}は更新されませんでした: {reason}"
+failed = "{plugin}: 言語の更新に失敗しました: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -197,7 +211,7 @@ open = "&8クリックしてこの言語を開きます。&r"
 
 [language.editor.category]
 message-count = "&7{count}件のメッセージ&r"
-open = "&8クリックしてこのグループを開きます。&r"
+open = "&8クリックしてこのカテゴリを開きます。&r"
 
 [language.editor.error]
 no-permission = "{plugin}の言語を編集する権限がありません。"

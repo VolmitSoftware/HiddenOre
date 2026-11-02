@@ -9,10 +9,12 @@
 # prefix jest dodawany przed wiadomościami czatu; pusty ciąg go ukrywa.
 #
 # === Formatowanie ===
-# Kody kolorów: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Użyj &0-&f dla kolorów, &k-&o dla formatowania, &r do resetu i &#RRGGBB dla kolorów szesnastkowych.
+# Na przykład: &aZielony tekst&r. Użyj \n w tekstach TOML w cudzysłowach, aby przejść do nowego wiersza.
 #
 # === Zmienne ===
 # Zachowaj nazwy zmiennych i używaj tylko tych, które występują w danej wiadomości.
+#   {added}  Wiadomości dodane przez aktualizację języka
 #   {after}  Wartość po zmianie
 #   {amount}  Liczba upuszczanych przedmiotów
 #   {argument}  nieoczekiwany argument
@@ -22,43 +24,46 @@
 #   {command}  ścieżka polecenia
 #   {count}  Liczba wiadomości
 #   {group}  Kategoria edytora języka
+#   {kept}  Lokalne edycje zachowane przez aktualizację języka
 #   {key}  Klucz wiadomości lub parametru
 #   {line}  Numer wiersza wiadomości
-#   {locale}  ustawienia regionalne
+#   {locale}  Kod języka
 #   {material}  Typ upuszczanego przedmiotu
-#   {maximum}  Maksymalna dopuszczalna wartość
+#   {maximum}  Maksymalna długość tekstu w edytorze
 #   {number}  Numer wpisu
 #   {page}  Bieżąca strona
 #   {pages}  Łączna liczba stron
-#   {path}  Ścieżka ustawienia lub sekcji
 #   {parameter}  nazwa parametru
-#   {personal}  osobiste ustawienie regionalne
+#   {path}  Ścieżka ustawienia lub sekcji
+#   {personal}  Osobisty kod języka
 #   {plugin}  Nazwa wtyczki
 #   {reason}  powód błędu
+#   {remaining}  Pozostały czas do następnego sprawdzenia języków
 #   {roll}  Wylosowana wartość
 #   {section}  Sekcja edytora języków
 #   {target}  Wtyczka, dla której wybierany jest język
 #   {type}  typ
+#   {updated}  Wiadomości zmienione przez aktualizację języka
 #   {value}  wartość bieżąca, domyślna lub surowa
 #   {variables}  dozwolone symbole zastępcze
 #   {vein}  Nazwa żyły rudy
 
 prefix = "&a[HiddenOre]&r "
-no_permission = "&cNie masz uprawnień do użycia tej komendy.&r"
-player_only = "&cTej komendy może użyć tylko gracz.&r"
+no_permission = "&cNie masz uprawnień do użycia tego polecenia.&r"
+player_only = "&cTego polecenia może użyć tylko gracz.&r"
 debug_enabled = "&aTryb debugowania włączony.&r"
 debug_disabled = "&cTryb debugowania wyłączony.&r"
 config_reloaded_message = "&aKonfiguracja zaktualizowana i przeładowana.&r"
 
 [debug]
-player_placed = "&cBlok {block} umieszczony przez gracza; brak ukrytych dropów.&r"
-random_drop = "&aLosowy drop: {material} x{amount}&r"
-random_drop_lost = "&cLosowy drop {material} utracony, ponieważ poziom narzędzia jest za niski.&r"
+player_placed = "&cBlok {block} umieszczony przez gracza; brak ukrytych upuszczonych przedmiotów.&r"
+random_drop = "&aLosowo upuszczony przedmiot: {material} x{amount}&r"
+random_drop_lost = "&cLosowo upuszczony przedmiot {material} utracony, ponieważ poziom narzędzia jest za niski.&r"
 vein_drop = "&aŻyła rudy {vein}: {material} x{amount}&r"
 vein_drop_discovered = "&aŻyła rudy {vein}: {material} x{amount} (odkryta)&r"
 vein_drop_lost = "&cŻyła rudy {vein}: utracono {material}, ponieważ poziom narzędzia jest za niski.&r"
-command_hit = "&7Test komendy: chance={chance}, roll={roll} -> &atrafienie&7&r"
-command_miss = "&7Test komendy: chance={chance}, roll={roll} -> &cpudło&7&r"
+command_hit = "&7Test polecenia: chance={chance}, roll={roll} -> &atrafienie&7&r"
+command_miss = "&7Test polecenia: chance={chance}, roll={roll} -> &cpudło&7&r"
 
 [command.parameter]
 debugdump_upload = "Prześlij raport do mclo.gs"
@@ -68,7 +73,7 @@ version = "Pokaż wersję HiddenOre"
 config = "Otwórz edytor konfiguracji HiddenOre"
 debug_group = "HiddenOre: Narzędzia diagnostyczne"
 debugdump = "Utwórz raport diagnostyczny i opcjonalnie go prześlij"
-root = "Grupa komend HiddenOre"
+root = "Grupa poleceń HiddenOre"
 debug = "Przełącz własny tryb debugowania rud"
 
 [config.editor]
@@ -143,20 +148,20 @@ execution_failed = "Nie udało się wykonać polecenia {command}: {reason}"
 your_language = "Twój język"
 reset_your_language = "Zresetuj swój język"
 server_default = "Domyślny język serwera"
-edit_messages = "Edytuj komunikaty językowe"
+edit_messages = "Edytuj wiadomości językowe"
 use_server_default = "Użyj domyślnego języka serwera"
 current = "Bieżący: {locale}"
 current_with_personal = "Bieżący: {locale} (Twój: {personal})"
-your_description = "Zmień tylko komunikaty, które widzisz."
+your_description = "Zmień tylko wiadomości, które widzisz."
 reset_description = "Użyj domyślnego języka serwera."
 server_description = "Zmień domyślny język serwera."
-edit_description = "Otwórz edytor komunikatów dla każdego języka."
+edit_description = "Otwórz edytor wiadomości dla każdego języka."
 select_description = "Kliknij, aby wybrać ten język."
 remove_personal_description = "Usuń swój osobisty wybór języka."
 no_controls = "Nie masz dostępu do ustawień języka."
 command = "Polecenie: {command}"
 selected = "wybrany"
-all-volmit-plugins = "Wszystkie wtyczki Volmit"
+all-volmit-plugins = "wszystkich wtyczek Volmit"
 
 [language.error]
 stopping = "Wybór języka jest niedostępny podczas zatrzymywania wtyczki."
@@ -164,7 +169,7 @@ editor-player-only = "Otwórz edytor języka w grze."
 no-providers = "Brak dostępnych dostawców języków Volmit."
 numeric-page = "Podaj numer strony."
 personal-player-only = "Preferencje językowe gracza muszą być wybrane w grze."
-personal-permission = "Nie masz pozwolenia na wybranie języka."
+personal-permission = "Nie masz uprawnień do wyboru swojego języka."
 plugin-personal-permission = "Nie masz uprawnienia do wyboru swojego języka we wtyczce {plugin}."
 plugin-server-permission = "Nie masz uprawnienia do zmiany języka serwera we wtyczce {plugin}."
 server-locale-required = "Wybierz kod języka, np. en_US, jako domyślny język serwera."
@@ -172,8 +177,9 @@ unavailable-for-all = "Język {locale} nie jest dostępny we wszystkich wybranyc
 
 [language.usage]
 editor = "Użycie: /{command} language server edit [locale]"
-selection = "Użycie: /{command} language self [locale|reset] or server [locale]"
+selection = "Użycie: /{command} language self [locale|reset] lub server [locale]"
 volmit-selection = "Użycie: /volmit plugins languages [locale]"
+update = "Użycie: /{command} language update"
 
 [language.selection]
 preparing = "Przygotowywanie języka {locale} dla {target}..."
@@ -181,7 +187,15 @@ save-failed = "{plugin}: nie udało się zapisać wyboru języka; sprawdź konso
 english-fallback = "{plugin}: {locale} jest niedostępny; używany będzie angielski (en_US)."
 personal-selected = "{plugin}: Twój język jest teraz {locale}."
 server-selected = "{plugin}: język serwera jest teraz {locale}."
-server-default-selected = "{plugin}: twój język jest teraz zgodny z domyślnym językiem serwera."
+server-default-selected = "{plugin}: Twój język jest teraz zgodny z domyślnym językiem serwera."
+
+[language.update]
+checking = "{plugin}: Sprawdzanie zmian w repozytorium języków..."
+unchanged = "{plugin}: Zainstalowane języki są już zgodne z repozytorium."
+applied = "{plugin}: Zaktualizowano {locale} ({added} dodanych, {updated} zmienionych, {kept} lokalnych edycji zachowanych)."
+cooldown = "{plugin}: Repozytorium języków sprawdzono niedawno; spróbuj ponownie za {remaining}."
+locale-failed = "{plugin}: {locale} nie został zaktualizowany: {reason}"
+failed = "{plugin}: Aktualizacja języków nie powiodła się: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"

@@ -12,7 +12,10 @@ import art.arcane.volmlib.util.localization.LocalizationSnapshot;
 import art.arcane.volmlib.util.localization.MessageArgs;
 import art.arcane.volmlib.util.localization.LanguageAudience;
 import art.arcane.volmlib.util.localization.PluginLanguageService;
-import art.arcane.volmlib.util.localization.RemoteLanguageCatalog;
+import art.arcane.volmlib.util.localization.LanguageCatalogMerge;
+import art.arcane.volmlib.util.localization.LanguageUpstreamSync;
+import art.arcane.volmlib.util.localization.TomlLanguageEditor;
+import art.arcane.volmlib.util.localization.TomlLanguageParser;
 import art.arcane.volmlib.util.localization.LocalizationReloadResult;
 import art.arcane.volmlib.util.localization.MessageKey;
 import art.arcane.volmlib.util.localization.VolmitLocales;
@@ -31,7 +34,14 @@ import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,7 +73,7 @@ public class MessagesTest {
   public void editorPersistsEnglishMessagesInTheLanguageFile() throws Exception {
     Path data = temporaryFolder.newFolder().toPath();
     Path languages = Files.createDirectories(data.resolve("languages"));
-    Messages messages = new Messages(null, languages);
+    Messages messages = new Messages(languages(languages));
     messages.reload("en_US");
     PluginLanguageEditor.Options editor = messages.editorOptions();
     LocalizationSnapshot original = editor.loader().load("en_US");
@@ -87,11 +97,8 @@ public class MessagesTest {
     Path data = temporaryFolder.newFolder().toPath();
     Path languages = Files.createDirectories(data.resolve("languages"));
     Files.writeString(languages.resolve("fr_FR.toml"), "no_permission = \"Permission\"\n");
-    try (RemoteLanguageCatalog remote = RemoteLanguageCatalog.load(new RemoteLanguageCatalog.Options(
-        "HiddenOre", URI.create("https://raw.githubusercontent.com/VolmitSoftware/HiddenOre/"),
-        "src/main/resources/languages", ".toml", "language-source.properties",
-        Messages.class.getClassLoader()))) {
-      Messages messages = new Messages(remote, languages);
+    try (HiddenOreLanguages source = languages(languages)) {
+      Messages messages = new Messages(source);
       PluginLanguageEditor.Options editor = messages.editorOptions();
       LocalizationSnapshot original = editor.loader().load("fr_FR");
       Path file = languages.resolve("fr_FR.toml");
@@ -123,7 +130,7 @@ public class MessagesTest {
   @Test
   public void everyDownloadableLocaleFullyCoversTheTypedCatalog() throws Exception {
     Path languages = temporaryFolder.newFolder().toPath();
-    Messages messages = new Messages(null, languages);
+    Messages messages = new Messages(languages(languages));
     for (String locale : VolmitLocales.nonEnglish()) {
       Files.copy(Path.of("src/main/resources/languages", locale + ".toml"), languages.resolve(locale + ".toml"));
       LocalizationReloadResult result = messages.reload(locale);
@@ -156,14 +163,11 @@ public class MessagesTest {
     Files.copy(Path.of("src/main/resources/languages/de_DE.toml"), directory.resolve("de_DE.toml"));
     Messages messages = new Messages();
     UUID player = UUID.randomUUID();
-    try (RemoteLanguageCatalog remote = RemoteLanguageCatalog.load(new RemoteLanguageCatalog.Options(
-        "HiddenOre", URI.create("https://raw.githubusercontent.com/VolmitSoftware/HiddenOre/"),
-        "src/main/resources/languages", ".toml", "language-source.properties",
-        Messages.class.getClassLoader()));
+    try (HiddenOreLanguages source = languages(directory);
          PluginLanguageService service = new PluginLanguageService(new PluginLanguageService.Options(
              directory.resolve("preferences.properties"), VolmitLocales::all, () -> "en_US", messages::defaultSnapshot,
              locale -> {
-               Messages selected = new Messages(remote, directory);
+               Messages selected = new Messages(source);
                selected.reload(locale);
                return selected.defaultSnapshot();
              }, (locale, prepared) -> messages.install(prepared), Logger.getAnonymousLogger()))) {
@@ -199,7 +203,7 @@ public class MessagesTest {
     language.put("command.description.debug", "Erz-Debug-Modus umschalten");
 
     saveLanguageFile(file, language);
-    Messages messages = new Messages(null, languages);
+    Messages messages = new Messages(languages(languages));
     LocalizationReloadResult result = messages.reload("de_DE");
     language.put("prefix", "Changed after reload");
     language.put("no_permission", "Changed after reload");
@@ -234,12 +238,12 @@ public class MessagesTest {
   @Test
   public void startupCreatesEditableEnglishAndPreservesEdits() throws Exception {
     Path languages = temporaryFolder.newFolder().toPath();
-    new Messages(null, languages);
+    new Messages(languages(languages));
     Path english = languages.resolve("en_US.toml");
     assertTrue(Files.readString(english).contains("{material}  Dropped item type"));
     assertTrue(Files.readString(english).contains("&a[HiddenOre]&r "));
     Files.writeString(english, "no_permission = \"&cCustom English\"\n");
-    Messages messages = new Messages(null, languages);
+    Messages messages = new Messages(languages(languages));
     messages.reload("en_US");
     assertEquals("&cCustom English", ((TextValue) messages.snapshot().value(Messages.NO_PERMISSION)).template());
     assertEquals("no_permission = \"&cCustom English\"\n", Files.readString(english));
@@ -270,7 +274,7 @@ public class MessagesTest {
     Path languages = temporaryFolder.newFolder().toPath();
     Path french = languages.resolve("fr_FR.toml");
     Files.writeString(french, "prefix = ''\nno_permission = 'Permission personnalisée'\n");
-    Messages messages = new Messages(null, languages);
+    Messages messages = new Messages(languages(languages));
     messages.reload("fr_FR");
     Files.writeString(french, "no_permission = 'unterminated");
 
@@ -282,7 +286,7 @@ public class MessagesTest {
   @Test
   public void installedLocalePreparationRetainsValidTranslationsAndOmitsMalformedFiles() throws Exception {
     Path languages = temporaryFolder.newFolder().toPath();
-    Messages messages = new Messages(null, languages);
+    Messages messages = new Messages(languages(languages));
     Path french = languages.resolve("fr_FR.toml");
     Files.writeString(french, "no_permission = 'Permission personnalisée'\n");
     Files.writeString(languages.resolve("de_DE.toml"), "no_permission = 'unterminated");
@@ -302,7 +306,7 @@ public class MessagesTest {
     Path languages = temporaryFolder.newFolder().toPath();
     Path french = languages.resolve("fr_FR.toml");
     Files.writeString(french, "prefix = ''\nno_permission = 'Initial'\n");
-    Messages initial = new Messages(null, languages);
+    Messages initial = new Messages(languages(languages));
     initial.reload("en_US");
     AtomicReference<Messages> active = new AtomicReference<>(initial);
     UUID player = UUID.randomUUID();
@@ -310,7 +314,7 @@ public class MessagesTest {
         languages.resolve("preferences.properties"), VolmitLocales::all, () -> "en_US",
         () -> active.get().defaultSnapshot(),
         locale -> {
-          Messages prepared = new Messages(null, languages);
+          Messages prepared = new Messages(languages(languages));
           prepared.reload(locale);
           return prepared.defaultSnapshot();
         }, (locale, prepared) -> {
@@ -330,7 +334,7 @@ public class MessagesTest {
           () -> text(active.get().component(Messages.NO_PERMISSION))));
 
       Files.writeString(languages.resolve("en_US.toml"), "prefix = ''\nno_permission = 'Server edit'\n");
-      Messages reloaded = new Messages(null, languages);
+      Messages reloaded = new Messages(languages(languages));
       reloaded.reload("en_US");
       reloaded.languageService(service);
       active.set(reloaded);
@@ -366,7 +370,7 @@ public class MessagesTest {
   @Test
   public void everyLanguageUsesTheStandardHeaderAndDocumentsItsVariables() throws Exception {
     Path languages = temporaryFolder.newFolder().toPath();
-    new Messages(null, languages);
+    new Messages(languages(languages));
     Set<String> expected = new HashSet<>();
     for (MessageKey key : Messages.catalog().keys()) {
       expected.addAll(key.placeholders());
@@ -539,11 +543,123 @@ public class MessagesTest {
     }
   }
 
+  @Test
+  public void customLanguageMetaNamesTheLocaleAndFallsBackThroughItsBase() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    Files.writeString(languages.resolve("de_DE.toml"),
+        "no_permission = \"Keine Berechtigung.\"\nplayer_only = \"Nur Spieler.\"\n");
+    Files.writeString(languages.resolve("pirate.toml"),
+        "no_permission = \"Arr, no.\"\n\n[meta]\nname = \"Pirate Speak\"\nbase = \"de_DE\"\n");
+    try (HiddenOreLanguages source = languages(languages)) {
+      Messages messages = new Messages(source);
+      assertTrue(messages.reload("pirate").applied());
+
+      assertEquals("Arr, no.", messages.snapshot().resolve(Messages.NO_PERMISSION).template());
+      assertEquals("Nur Spieler.", messages.snapshot().resolve(Messages.PLAYER_ONLY).template());
+      assertEquals("de_DE", messages.snapshot().sourceLocale(Messages.PLAYER_ONLY));
+      assertEquals("en_US", messages.snapshot().sourceLocale(Messages.DEBUG_ENABLED));
+      assertTrue(source.availableLocales().contains("pirate"));
+      assertTrue(source.availableLocales().contains("de_DE"));
+      assertEquals("Pirate Speak", source.displayName("pirate"));
+      assertEquals("Pirate Speak", source.displayNames().displayName("pirate"));
+      assertEquals(VolmitLocales.displayName("de_DE").orElseThrow(), source.displayName("de_DE"));
+      assertEquals(null, source.displayNames().displayName("de_DE"));
+      assertEquals("custom_id", source.displayName("custom_id"));
+    }
+  }
+
+  @Test
+  public void englishReferenceGainsNewCatalogKeysWhileKeepingEdits() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    new Messages(languages(languages));
+    Path english = languages.resolve("en_US.toml");
+    Path sidecar = languages.resolve(".upstream/en_US.toml");
+    String olderReference = TomlLanguageEditor.remove(Files.readString(sidecar), Messages.NO_PERMISSION.id()).content();
+    Files.writeString(sidecar, olderReference);
+    Files.writeString(english, TomlLanguageEditor.upsertText(olderReference, Messages.PREFIX.id(), "&6[Ore]&r ").content());
+
+    Messages messages = new Messages(languages(languages));
+    messages.reload("en_US");
+    Map<String, String> values = TomlLanguageParser.parseText(Files.readString(english));
+
+    assertTrue(values.containsKey(Messages.NO_PERMISSION.id()));
+    assertEquals("&6[Ore]&r ", values.get(Messages.PREFIX.id()));
+    assertEquals("[Ore] You do not have permission to use this command.", text(messages.component(Messages.NO_PERMISSION)));
+    assertTrue(Files.readString(sidecar).contains(Messages.NO_PERMISSION.id()));
+  }
+
+  @Test
+  public void upstreamSyncInstallsMergesAndKeepsEditsAndCustomFiles() throws Exception {
+    Path languages = temporaryFolder.newFolder().toPath();
+    LoopbackRepository repository = new LoopbackRepository();
+    repository.files.put(LoopbackRepository.REVISION_ONE + "/fr_FR",
+        "# fr v1\n\nprefix = \"&6[Minerai]&r \"\nno_permission = \"&cPermission refusée.&r\"\n");
+    List<String> selfWrites = new CopyOnWriteArrayList<>();
+    List<String> applied = new CopyOnWriteArrayList<>();
+    try (HiddenOreLanguages source = repository.languages(languages)) {
+      source.selfWrite((file, content) -> selfWrites.add(file.getFileName().toString()));
+      source.bind(null, (locale, content, result) -> applied.add(locale));
+      new Messages(source).reload("en_US");
+
+      assertTrue(source.requestInstall("fr_FR").get(10L, TimeUnit.SECONDS).contains("Minerai"));
+      Path french = languages.resolve("fr_FR.toml");
+      assertTrue(Files.isRegularFile(french));
+      assertTrue(Files.isRegularFile(languages.resolve(".upstream/fr_FR.toml")));
+      assertTrue(Files.isRegularFile(languages.resolve(".upstream/upstream.properties")));
+      assertTrue(selfWrites.contains("fr_FR.toml"));
+      assertTrue(selfWrites.contains("en_US.toml"));
+
+      Files.writeString(french, TomlLanguageEditor.upsertText(Files.readString(french), Messages.PREFIX.id(),
+          "&6[Mine]&r ").content());
+      String custom = "no_permission = \"Arr, no.\"\n\n[meta]\nname = \"Pirate Speak\"\nbase = \"fr_FR\"\n";
+      Files.writeString(languages.resolve("pirate.toml"), custom);
+      repository.revision.set(LoopbackRepository.REVISION_TWO);
+      repository.files.put(LoopbackRepository.REVISION_TWO + "/fr_FR",
+          "# fr v2\n\nprefix = \"&6[Minerai v2]&r \"\nno_permission = \"&cPermission refusée.&r\"\n"
+              + "player_only = \"&cJoueurs seulement.&r\"\n");
+
+      LanguageUpstreamSync.SyncReport report = source.updateAction().update().get(10L, TimeUnit.SECONDS);
+
+      assertTrue(report.failure().isEmpty());
+      assertEquals(List.of("fr_FR"), report.changedLocales());
+      LanguageCatalogMerge.MergeResult merged = report.merged().get("fr_FR");
+      assertEquals(List.of(Messages.PREFIX.id()), merged.kept());
+      assertEquals(List.of(Messages.PLAYER_ONLY.id()), merged.added());
+      String content = Files.readString(french);
+      assertTrue(content.startsWith("# fr v2"));
+      assertTrue(content.contains("[Mine]"));
+      assertTrue(content.contains("Joueurs seulement."));
+      assertFalse(content.contains("Minerai v2"));
+      assertTrue(Files.readString(languages.resolve(".upstream/fr_FR.toml")).contains("Minerai v2"));
+      assertEquals(custom, Files.readString(languages.resolve("pirate.toml")));
+      assertEquals(List.of("fr_FR"), applied);
+      assertTrue(source.upstreamStatus().orElseThrow().revision().orElseThrow().equals(LoopbackRepository.REVISION_TWO));
+
+      Messages pirate = new Messages(source);
+      pirate.reload("pirate");
+      assertEquals("Arr, no.", pirate.snapshot().resolve(Messages.NO_PERMISSION).template());
+      assertEquals("&cJoueurs seulement.&r", pirate.snapshot().resolve(Messages.PLAYER_ONLY).template());
+      assertEquals("&6[Mine]&r ", pirate.snapshot().resolve(Messages.PREFIX).template());
+
+      LanguageUpstreamSync.SyncReport unchanged = source.updateAction().update().get(10L, TimeUnit.SECONDS);
+
+      assertTrue(unchanged.unchanged());
+      assertTrue(unchanged.changedLocales().isEmpty());
+      assertEquals(content, Files.readString(french));
+    } finally {
+      repository.close();
+    }
+  }
+
+  private static HiddenOreLanguages languages(Path directory) {
+    return new HiddenOreLanguages(directory, Logger.getAnonymousLogger());
+  }
+
   private Messages messagesWithLanguage(String locale, Map<String, Object> language) throws IOException {
     Path languages = temporaryFolder.newFolder().toPath();
 
     saveLanguageFile(languages.resolve(locale + ".toml"), language);
-    return new Messages(null, languages);
+    return new Messages(languages(languages));
   }
 
   private void saveLanguageFile(Path file, Map<String, Object> values) throws IOException {
@@ -612,6 +728,61 @@ public class MessagesTest {
   }
 
   private record TextStyle(TextColor color, boolean bold) {
+  }
+
+  private static final class LoopbackRepository {
+    private static final String REVISION_ONE = "1111111111111111111111111111111111111111";
+    private static final String REVISION_TWO = "2222222222222222222222222222222222222222";
+
+    private final HttpServer server;
+    private final AtomicReference<String> revision = new AtomicReference<>(REVISION_ONE);
+    private final Map<String, String> files = new ConcurrentHashMap<>();
+
+    private LoopbackRepository() throws IOException {
+      server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+      server.createContext("/api/", this::api);
+      server.createContext("/raw/", this::raw);
+      server.start();
+    }
+
+    private HiddenOreLanguages languages(Path directory) {
+      URI root = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/");
+      return new HiddenOreLanguages(directory, Logger.getAnonymousLogger(), root.resolve("api/"), root.resolve("raw/"),
+          Duration.ZERO);
+    }
+
+    private void close() {
+      server.stop(0);
+    }
+
+    private void api(HttpExchange exchange) throws IOException {
+      String etag = "\"" + revision.get() + "\"";
+      if (etag.equals(exchange.getRequestHeaders().getFirst("If-None-Match"))) {
+        exchange.sendResponseHeaders(304, -1);
+        exchange.close();
+        return;
+      }
+      exchange.getResponseHeaders().set("ETag", etag);
+      respond(exchange, "[{\"sha\":\"" + revision.get() + "\"}]");
+    }
+
+    private void raw(HttpExchange exchange) throws IOException {
+      String[] parts = exchange.getRequestURI().getPath().split("/");
+      String content = files.get(parts[4] + "/" + parts[parts.length - 1].replace(".toml", ""));
+      if (content == null) {
+        exchange.sendResponseHeaders(404, -1);
+        exchange.close();
+        return;
+      }
+      respond(exchange, content);
+    }
+
+    private static void respond(HttpExchange exchange, String body) throws IOException {
+      byte[] response = body.getBytes(StandardCharsets.UTF_8);
+      exchange.sendResponseHeaders(200, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    }
   }
 
   @Director(name = "hiddenore", description = "HiddenOre command root", descriptionKey = "command.description.root")

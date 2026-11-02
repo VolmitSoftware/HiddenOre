@@ -33,6 +33,45 @@ String volmLibCoordinate = providers.gradleProperty('volmLibCoordinate')
     .get()
 String authTokenProperty = providers.gradleProperty('authToken').orNull
 String jitpackAuthToken = authTokenProperty ?: providers.gradleProperty('jitpackAuthToken').orNull
+String languageSourceRepository = providers.gradleProperty('languageSourceRepository').orElse('VolmitSoftware/HiddenOre').get()
+String languageSourceBranch = providers.gradleProperty('languageSourceBranch').orElse(providers.provider {
+    try {
+        Process process = new ProcessBuilder('git', 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD')
+                .directory(projectDir)
+                .redirectErrorStream(true)
+                .start()
+        String output = process.inputStream.text.trim()
+        if (process.waitFor() == 0 && output.startsWith('origin/')) {
+            return output.substring('origin/'.length())
+        }
+    } catch (IOException | InterruptedException ignored) {
+    }
+    return 'master'
+}).get()
+if (!(languageSourceRepository ==~ /[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+/)) {
+    throw new GradleException('languageSourceRepository must be a GitHub owner/repository')
+}
+if (!(languageSourceBranch ==~ /[A-Za-z0-9][A-Za-z0-9._\/-]{0,127}/) || languageSourceBranch.contains('..')) {
+    throw new GradleException('languageSourceBranch must be a Git branch name')
+}
+String languageSourcePath = 'src/main/resources/languages'
+String languageSourceResource = 'hiddenore-language-source.properties'
+List<File> languageSourceFiles = fileTree(languageSourcePath) {
+    include('*.toml')
+}.files.toList().sort { File left, File right -> left.name <=> right.name }
+List<String> languageSourceLocales = new ArrayList<>(languageSourceFiles.size())
+for (File languageSourceFile : languageSourceFiles) {
+    String locale = languageSourceFile.name.substring(0, languageSourceFile.name.length() - '.toml'.length())
+    languageSourceLocales.add(locale)
+}
+def languageSourceManifestTask = tasks.register('generateLanguageSourceManifest', WriteProperties) {
+    destinationFile.set(layout.buildDirectory.file("generated/language-source/${languageSourceResource}"))
+    property('repository', languageSourceRepository)
+    property('branch', languageSourceBranch)
+    property('path', languageSourcePath)
+    property('extension', '.toml')
+    property('locales', languageSourceLocales.join(','))
+}
 
 def shadowJarTask = tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar)
 tasks.named('slimJar').get()
@@ -62,6 +101,9 @@ shadowJarTask.configure {
 }
 
 tasks.named('processResources').configure {
+    dependsOn(languageSourceManifestTask)
+    exclude('languages/*.toml')
+    from(languageSourceManifestTask)
     def pluginProperties = [
         name      : rootProject.name,
         version   : project.version,
@@ -212,6 +254,55 @@ tasks.register('compilePaper263Compatibility', JavaCompile) {
 
 tasks.named('check').configure {
     dependsOn(tasks.named('compilePaper263Compatibility'))
+}
+
+tasks.register('verifyLanguagePackaging') {
+    dependsOn(shadowJarTask)
+    inputs.file(shadowJarTask.flatMap { it.archiveFile })
+    doLast {
+        File artifact = shadowJarTask.get().archiveFile.get().asFile
+        java.util.zip.ZipFile archive = new java.util.zip.ZipFile(artifact)
+        Set<String> bundledLanguages = new TreeSet<>()
+        Properties languageManifest = null
+        try {
+            Enumeration<? extends java.util.zip.ZipEntry> entries = archive.entries()
+            while (entries.hasMoreElements()) {
+                java.util.zip.ZipEntry entry = entries.nextElement()
+                String path = entry.name
+                if (!entry.directory && path.startsWith('languages/') && path.endsWith('.toml')) {
+                    bundledLanguages.add(path.substring('languages/'.length(), path.length() - '.toml'.length()))
+                }
+                if (!entry.directory && path == languageSourceResource) {
+                    languageManifest = new Properties()
+                    archive.getInputStream(entry).withCloseable { InputStream input -> languageManifest.load(input) }
+                }
+            }
+        } finally {
+            archive.close()
+        }
+        if (!bundledLanguages.isEmpty()) {
+            throw new GradleException("Runtime artifact contains language resources: ${bundledLanguages}")
+        }
+        if (languageManifest == null) {
+            throw new GradleException("Runtime artifact is missing ${languageSourceResource}")
+        }
+        if (languageManifest.getProperty('repository') != languageSourceRepository
+                || languageManifest.getProperty('branch') != languageSourceBranch
+                || languageManifest.getProperty('path') != languageSourcePath
+                || languageManifest.getProperty('extension') != '.toml'
+                || languageManifest.getProperty('locales') != languageSourceLocales.join(',')) {
+            throw new GradleException('Runtime language source manifest does not match the build source set')
+        }
+        if (languageManifest.stringPropertyNames().any { String key ->
+            key == 'revision' || key == 'mode' || key.startsWith('sha256.')
+        }) {
+            throw new GradleException('Runtime language source manifest must track the repository branch, not a pinned revision')
+        }
+    }
+}
+
+tasks.named('check').configure {
+    dependsOn(tasks.named('verifyLanguagePackaging'))
 }
 
 sourceSets {

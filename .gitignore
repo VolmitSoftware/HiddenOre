@@ -23,3 +23,4 @@ BUILDS/
 .run/
 
 __pycache__/
+/qa/

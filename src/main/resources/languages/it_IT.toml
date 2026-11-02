@@ -9,10 +9,12 @@
 # prefix precede i messaggi in chat; una stringa vuota lo nasconde.
 #
 # === Formattazione ===
-# Codici colore: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Usa &0-&f per i colori, &k-&o per la formattazione, &r per reimpostare e &#RRGGBB per i colori esadecimali.
+# Ad esempio: &aTesto verde&r. Usa \n nelle stringhe TOML tra virgolette per andare a capo.
 #
 # === Variabili ===
 # Mantieni i nomi delle variabili e usa solo quelle previste dal singolo messaggio.
+#   {added}  Messaggi aggiunti da un aggiornamento della lingua
 #   {after}  Valore dopo il cambiamento
 #   {amount}  Numero di oggetti rilasciati
 #   {argument}  argomento inatteso
@@ -22,26 +24,29 @@
 #   {command}  percorso del comando
 #   {count}  Numero di messaggi
 #   {group}  Categoria dell’editor di lingua
+#   {kept}  Modifiche locali conservate da un aggiornamento della lingua
 #   {key}  Chiave del messaggio o del parametro
 #   {line}  Numero di riga del messaggio
-#   {locale}  codice locale
+#   {locale}  Codice della lingua
 #   {material}  Tipo di oggetto rilasciato
-#   {maximum}  Valore massimo consentito
+#   {maximum}  Lunghezza massima dell’input nell’editor
 #   {number}  Numero della voce
 #   {page}  Pagina attuale
 #   {pages}  Numero totale di pagine
-#   {path}  Percorso dell’impostazione o della sezione
 #   {parameter}  nome parametro
-#   {personal}  codice locale personale
+#   {path}  Percorso dell’impostazione o della sezione
+#   {personal}  Codice della lingua personale
 #   {plugin}  Nome del plugin
 #   {reason}  motivo errore
+#   {remaining}  Tempo rimanente prima del prossimo controllo delle lingue
 #   {roll}  Valore casuale estratto
-#   {section}  Sezione dell’editor delle lingue
+#   {section}  Sezione dell’editor di lingua
 #   {target}  Plugin destinatario della scelta di lingua
 #   {type}  tipo
+#   {updated}  Messaggi modificati da un aggiornamento della lingua
 #   {value}  valore corrente, predefinito o grezzo
 #   {variables}  segnaposto validi
-#   {vein}  Nome del filone
+#   {vein}  Nome della vena mineraria
 
 prefix = "&a[HiddenOre]&r "
 no_permission = "&cNon hai il permesso di usare questo comando.&r"
@@ -115,7 +120,7 @@ back = "Indietro"
 page = "Pagina"
 
 [director.help.navigation.parent]
-hover = "Torna al gruppo di comandi principale"
+hover = "Torna al gruppo di comandi superiore"
 
 [director.help.navigation.previous]
 hover = "Pagina precedente"
@@ -155,8 +160,8 @@ select_description = "Fai clic per selezionare questa lingua."
 remove_personal_description = "Rimuovi la tua scelta personale della lingua."
 no_controls = "Non hai accesso alle impostazioni della lingua."
 command = "Comando: {command}"
-selected = "selezionato"
-all-volmit-plugins = "Tutti i plugin Volmit"
+selected = "selezionata"
+all-volmit-plugins = "tutti i plugin Volmit"
 
 [language.error]
 stopping = "La scelta della lingua non è disponibile durante l’arresto del plugin."
@@ -172,8 +177,9 @@ unavailable-for-all = "La lingua {locale} non è disponibile per tutti i plugin 
 
 [language.usage]
 editor = "Uso: /{command} language server edit [locale]"
-selection = "Uso: /{command} language self [locale|reset] or server [locale]"
+selection = "Uso: /{command} language self [locale|reset] oppure server [locale]"
 volmit-selection = "Uso: /volmit plugins languages [locale]"
+update = "Uso: /{command} language update"
 
 [language.selection]
 preparing = "Preparazione della lingua {locale} per {target}..."
@@ -182,6 +188,14 @@ english-fallback = "{plugin}: {locale} non è disponibile; verrà usato l’ingl
 personal-selected = "{plugin}: la tua lingua è ora {locale}."
 server-selected = "{plugin}: la lingua del server ora è {locale}."
 server-default-selected = "{plugin}: la tua lingua segue ora la lingua predefinita del server."
+
+[language.update]
+checking = "{plugin}: controllo delle modifiche nel repository delle lingue..."
+unchanged = "{plugin}: le lingue installate corrispondono già al repository."
+applied = "{plugin}: {locale} aggiornato ({added} aggiunti, {updated} modificati, {kept} modifiche locali conservate)."
+cooldown = "{plugin}: il repository delle lingue è stato controllato di recente; riprova tra {remaining}."
+locale-failed = "{plugin}: {locale} non è stato aggiornato: {reason}"
+failed = "{plugin}: aggiornamento delle lingue non riuscito: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"

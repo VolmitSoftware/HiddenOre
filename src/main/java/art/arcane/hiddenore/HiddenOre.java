@@ -14,8 +14,8 @@ import art.arcane.volmlib.util.localization.BukkitLanguageSwitcher;
 import art.arcane.volmlib.util.localization.LocalizationSnapshot;
 import art.arcane.volmlib.util.localization.PluginLanguageService;
 import art.arcane.volmlib.util.localization.PluginLanguageEditor;
-import art.arcane.volmlib.util.localization.RemoteLanguageCatalog;
-import art.arcane.volmlib.util.localization.VolmitLocales;
+import art.arcane.volmlib.util.localization.LanguageCatalogMerge;
+import art.arcane.volmlib.util.localization.LanguageDirectory;
 import art.arcane.hiddenore.api.HiddenOreAPI;
 import art.arcane.hiddenore.api.HiddenOreService;
 import art.arcane.hiddenore.generation.GenerationRules;
@@ -28,6 +28,7 @@ import art.arcane.hiddenore.service.HiddenOreCommandService;
 import art.arcane.hiddenore.service.HiddenOreIntegrationService;
 import art.arcane.hiddenore.service.HiddenOrePlaceholderService;
 import art.arcane.hiddenore.service.HiddenOreTelemetry;
+import art.arcane.hiddenore.util.common.HiddenOreLanguages;
 import art.arcane.hiddenore.util.common.Messages;
 import art.arcane.hiddenore.util.common.SplashScreen;
 import art.arcane.hiddenore.util.project.ConfigWatcher;
@@ -50,10 +51,10 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.net.URI;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   private final ConcurrentMap<String, LogThrottle> logThrottles = new ConcurrentHashMap<>();
   private final AtomicLong configurationRevision = new AtomicLong();
   private GenerationRules generationRules;
-  private RemoteLanguageCatalog remoteLanguages;
+  private HiddenOreLanguages languages;
   private PluginLanguageService languageService;
   private BukkitLanguageSwitcher languageSwitcher;
   private volatile BukkitUpdateService updates;
@@ -127,33 +128,27 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       consumedVeins = new ChunkPositionSet(this, CONSUMED_VEINS_KEY);
       api = new HiddenOreAPI(this);
       generationRules = new GenerationRules(this);
-      remoteLanguages = RemoteLanguageCatalog.load(new RemoteLanguageCatalog.Options(
-          "HiddenOre", URI.create("https://raw.githubusercontent.com/VolmitSoftware/HiddenOre/"),
-          "src/main/resources/languages", ".toml", "language-source.properties",
-          getClass().getClassLoader()));
+      languages = new HiddenOreLanguages(getDataFolder().toPath().resolve("languages"), getLogger());
+      languages.selfWrite(this::languageWritten);
       String initialConfig = readConfig(configFile);
       reloadAll(initialConfig, prepareReloadMessages(initialConfig), Map.of(), configurationRevision.get());
       String initialLocale = languageLocale;
       languageLocale = "en_US";
       languageService = new PluginLanguageService(new PluginLanguageService.Options(
-          getDataFolder().toPath().resolve("languages/language-preferences.properties"), VolmitLocales::all,
+          getDataFolder().toPath().resolve("languages/language-preferences.properties"), languages::availableLocales,
           () -> languageLocale, () -> getMessages().defaultSnapshot(), this::prepareLanguage,
           this::selectLanguage, getLogger()));
       getMessages().languageService(languageService);
+      languages.bind(languageService, this::languageApplied);
       languageSwitcher = BukkitLanguageSwitcher.register(this, languageService,
           new BukkitLanguageSwitcher.Options("hiddenore", "hiddenore.admin",
               DirectorMiniMenu.Theme.fromDirectorTheme(DirectorThemes.forProduct(DirectorProduct.HIDDENORE)),
               (key, arguments) -> getMessages().directorText(key, arguments),
               new PluginLanguageEditor.Options(
-                  locale -> getMessages().editorOptions().loader().load(locale), this::saveLanguageMessage)));
+                  locale -> getMessages().editorOptions().loader().load(locale), this::saveLanguageMessage),
+              null, languages.updateAction(), languages.displayNames()));
       updates = BukkitUpdateService.register(this, new BukkitUpdateService.Options(
           "VolmitSoftware", "HiddenOre", "hiddenore.update", () -> getRuntimeState().updateNotifications()));
-      if (!initialLocale.equals("en_US")) {
-        languageService.selectDefault(initialLocale).exceptionally(failure -> {
-          logException(Level.WARNING, failure, "Unable to load the configured language; English remains active.");
-          return null;
-        });
-      }
       configEditor = BukkitConfigEditor.register(this, new BukkitConfigEditor.Options(
           this::loadConfigurationDocument, this::saveConfiguration,
           new BukkitConfigEditor.Presentation("hiddenore.admin",
@@ -178,6 +173,10 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
         throw new IllegalStateException("HiddenOre configuration snapshot is unavailable after startup reload");
       }
       configWatcher.startWithAppliedSnapshot(startupSnapshot);
+      languages.sourceFailure().ifPresent(failure -> logException(Level.WARNING, failure,
+          "Language source is unavailable; code-owned English and installed local language files remain active."));
+      languages.startUpstreamCheck();
+      requestConfiguredLanguage(initialLocale);
       SplashScreen.print(this, true);
     } catch (Exception exception) {
       logException(Level.SEVERE, exception, "HiddenOre failed to enable.");
@@ -222,9 +221,9 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
       languageService.close();
       languageService = null;
     }
-    if (remoteLanguages != null) {
-      remoteLanguages.close();
-      remoteLanguages = null;
+    if (languages != null) {
+      languages.close();
+      languages = null;
     }
   }
 
@@ -378,7 +377,7 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
     File configFile = new File(getDataFolder(), "hiddenore.toml");
     JsonObject config = loadToml(configToml, configFile);
     String locale = optionalString(config, "language", "en_US");
-    Messages preparedMessages = new Messages(remoteLanguages, getDataFolder().toPath().resolve("languages"));
+    Messages preparedMessages = new Messages(languages);
     if (runtimeState == null) {
       try {
         preparedMessages.reload("en_US");
@@ -456,7 +455,11 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   }
 
   private DebugDumpContributor.Report captureDebugState() {
-    String state = "Language: " + languageLocale + "\nDraining: " + draining + "\nDebug players: " + debugPlayers.size();
+    HiddenOreLanguages activeLanguages = languages;
+    String state = "Language: " + languageLocale
+        + "\nLanguage source: " + (activeLanguages == null ? "unavailable" : activeLanguages.sourceDescription())
+        + "\nLanguage sync: " + (activeLanguages == null ? "unavailable" : activeLanguages.sourceState())
+        + "\nDraining: " + draining + "\nDebug players: " + debugPlayers.size();
     return () -> state;
   }
 
@@ -473,9 +476,60 @@ public class HiddenOre extends JavaPlugin implements ReloadAware {
   }
 
   private LocalizationSnapshot prepareLanguage(String locale) {
-    Messages messages = new Messages(remoteLanguages, getDataFolder().toPath().resolve("languages"));
+    Messages messages = new Messages(languages);
     messages.reload(locale);
     return messages.defaultSnapshot();
+  }
+
+  private void requestConfiguredLanguage(String locale) {
+    if (LanguageDirectory.sameLocale(locale, "en_US")) {
+      return;
+    }
+    if (languages.directory().exists(locale) || !languages.isRepositoryLocale(locale)) {
+      selectConfiguredLanguage(locale);
+      return;
+    }
+    languages.requestInstall(locale).whenComplete((content, failure) -> {
+      if (failure != null) {
+        logException(Level.WARNING, failure, "Unable to install language %s; English remains active.", locale);
+        return;
+      }
+      if (isEnabled() && !draining) {
+        selectConfiguredLanguage(locale);
+      }
+    });
+  }
+
+  private void selectConfiguredLanguage(String locale) {
+    PluginLanguageService activeLanguages = languageService;
+    if (activeLanguages == null) {
+      return;
+    }
+    activeLanguages.selectDefault(locale).exceptionally(failure -> {
+      logException(Level.WARNING, failure, "Unable to load the configured language; English remains active.");
+      return null;
+    });
+  }
+
+  private void languageWritten(Path file, String content) {
+    ConfigWatcher watcher = configWatcher;
+    if (watcher != null) {
+      watcher.languageWritten(file, content);
+    }
+  }
+
+  private void languageApplied(String locale, String content, LanguageCatalogMerge.MergeResult result) {
+    if (draining || runtimeState == null) {
+      return;
+    }
+    LocalizationSnapshot prepared = prepareLanguage(locale);
+    PluginLanguageService activeLanguages = languageService;
+    if (activeLanguages != null) {
+      activeLanguages.cache(locale, prepared);
+    }
+    if (LanguageDirectory.sameLocale(locale, languageLocale)) {
+      getMessages().install(prepared);
+    }
   }
 
   private synchronized LocalizationSnapshot saveLanguageMessage(PluginLanguageEditor.Edit edit) throws Exception {

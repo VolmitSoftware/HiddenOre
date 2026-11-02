@@ -9,36 +9,41 @@
 # prefix pridedamas prieš pokalbio pranešimus; tuščia eilutė jį paslepia.
 #
 # === Formatavimas ===
-# Spalvų kodai: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Naudokite &0-&f spalvoms, &k-&o formatavimui, &r atstatymui ir &#RRGGBB šešioliktainėms spalvoms.
+# Pavyzdžiui: &aŽalias tekstas&r. Naujai eilutei kabutėse esančiose TOML eilutėse naudokite \n.
 #
 # === Kintamieji ===
 # Nekeiskite kintamųjų pavadinimų ir naudokite tik konkrečiame pranešime esančius kintamuosius.
-#   {after}  Vertė po pakeitimo
+#   {added}  Kalbos atnaujinimo pridėti pranešimai
+#   {after}  Reikšmė po pakeitimo
 #   {amount}  Iškrentančių daiktų skaičius
 #   {argument}  netikėtas argumentas
-#   {before}  Vertė prieš pakeitimą
+#   {before}  Reikšmė prieš pakeitimą
 #   {block}  Iškasto bloko tipas
 #   {chance}  Nustatyta suveikimo tikimybė
 #   {command}  komandos kelias
 #   {count}  Pranešimų skaičius
 #   {group}  Kalbos rengyklės kategorija
+#   {kept}  Kalbos atnaujinimo išsaugoti vietiniai pakeitimai
 #   {key}  Pranešimo arba parametro raktas
 #   {line}  Pranešimo eilutės numeris
-#   {locale}  lokalė
+#   {locale}  Kalbos kodas
 #   {material}  Iškrentančio daikto tipas
-#   {maximum}  Didžiausia leidžiama vertė
+#   {maximum}  Didžiausias rengyklės įvesties ilgis
 #   {number}  Įrašo numeris
 #   {page}  Dabartinis puslapis
 #   {pages}  Bendras puslapių skaičius
-#   {path}  Nustatymo arba skyriaus kelias
 #   {parameter}  parametro vardas
-#   {personal}  asmeninė lokalė
-#   {plugin}  Įskiepio pavadinimas
+#   {path}  Nustatymo arba skyriaus kelias
+#   {personal}  Asmeninis kalbos kodas
+#   {plugin}  Papildinio pavadinimas
 #   {reason}  klaidos priežastis
+#   {remaining}  Likęs laikas iki kito kalbų tikrinimo
 #   {roll}  Sugeneruota atsitiktinė reikšmė
-#   {section}  Kalbų redaktoriaus skiltis
+#   {section}  Kalbų rengyklės skiltis
 #   {target}  Papildinys, kuriam parenkama kalba
 #   {type}  tipas
+#   {updated}  Kalbos atnaujinimo pakeisti pranešimai
 #   {value}  dabartinė, numatytoji arba neapdorota reikšmė
 #   {variables}  galimi vietos žymekliai
 #   {vein}  Rūdos gyslos pavadinimas
@@ -115,7 +120,7 @@ back = "Atgal"
 page = "Puslapis"
 
 [director.help.navigation.parent]
-hover = "Grįžti į pirminę komandų grupę"
+hover = "Grįžti į aukštesnio lygio komandų grupę"
 
 [director.help.navigation.previous]
 hover = "Ankstesnis puslapis"
@@ -150,17 +155,17 @@ current_with_personal = "Dabartinė: {locale} (Jūsų: {personal})"
 your_description = "Keiskite tik jums rodomus pranešimus."
 reset_description = "Naudokite numatytąją serverio kalbą."
 server_description = "Keiskite numatytąją serverio kalbą."
-edit_description = "Atverkite kiekvienos kalbos pranešimų redaktorių."
+edit_description = "Atverkite kiekvienos kalbos pranešimų rengyklę."
 select_description = "Spustelėkite, kad pasirinktumėte šią kalbą."
 remove_personal_description = "Pašalinkite asmeninį kalbos pasirinkimą."
 no_controls = "Jums nepasiekiami kalbos nustatymai."
 command = "Komanda: {command}"
 selected = "pasirinkta"
-all-volmit-plugins = "Visi Volmit papildiniai"
+all-volmit-plugins = "visi Volmit papildiniai"
 
 [language.error]
 stopping = "Stabdant papildinį kalbos pasirinkimas nepasiekiamas."
-editor-player-only = "Atverti kalbos rengyklę žaidime."
+editor-player-only = "Atverkite kalbos rengyklę žaidime."
 no-providers = "Nėra prieinamų Volmit kalbų teikėjų."
 numeric-page = "Įveskite puslapio numerį."
 personal-player-only = "Žaidžiant turi būti pasirinkti žaidėjų kalbos nustatymai."
@@ -172,16 +177,25 @@ unavailable-for-all = "Kalba {locale} prieinama ne visiems pasirinktiems papildi
 
 [language.usage]
 editor = "Naudojimas: /{command} language server edit [locale]"
-selection = "Naudojimas: /{command} language self [locale|reset] or server [locale]"
+selection = "Naudojimas: /{command} language self [locale|reset] arba server [locale]"
 volmit-selection = "Naudojimas: /volmit plugins languages [locale]"
+update = "Naudojimas: /{command} language update"
 
 [language.selection]
-preparing = "Ruošiama kalba {locale} papildiniui {target}..."
+preparing = "Ruošiama kalba {locale} ({target})..."
 save-failed = "{plugin}: nepavyko išsaugoti kalbos pasirinkimo; patikrinkite serverio konsolę."
 english-fallback = "{plugin}: {locale} neprieinama; naudojama anglų kalba (en_US)."
 personal-selected = "{plugin}: dabar jūsų kalba {locale}."
 server-selected = "{plugin}: serverio kalba yra dabar {locale}."
 server-default-selected = "{plugin}: jūsų kalba dabar atitinka numatytąją serverio kalbą."
+
+[language.update]
+checking = "{plugin}: Tikrinami kalbų saugyklos pakeitimai..."
+unchanged = "{plugin}: Įdiegtos kalbos jau atitinka saugyklą."
+applied = "{plugin}: {locale} atnaujinta ({added} pridėta, {updated} pakeista, {kept} vietinių pakeitimų išsaugota)."
+cooldown = "{plugin}: Kalbų saugykla neseniai patikrinta; bandykite dar kartą po {remaining}."
+locale-failed = "{plugin}: {locale} neatnaujinta: {reason}"
+failed = "{plugin}: Kalbų atnaujinimas nepavyko: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -224,10 +238,10 @@ edit-lines = "&7Spustelėkite norėdami redaguoti atskiras eilutes.&r"
 edit-chat = "&7Spustelėkite norėdami redaguoti pokalbyje.&r"
 
 [language.editor.locale]
-open = "&8Spauskite norėdami atverti šią kalbą.&r"
+open = "&8Spustelėkite norėdami atverti šią kalbą.&r"
 
 [language.editor.category]
-message-count = "&7{count} pranešimai&r"
+message-count = "&7Pranešimų: {count}&r"
 open = "&8Spustelėkite norėdami atverti šią kategoriją.&r"
 
 [language.editor.error]

@@ -9,10 +9,12 @@
 # prefix được thêm trước tin nhắn trò chuyện; chuỗi rỗng sẽ ẩn nó.
 #
 # === Định dạng ===
-# Mã màu: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Dùng &0-&f cho màu, &k-&o cho định dạng, &r để đặt lại và &#RRGGBB cho màu hex.
+# Ví dụ: &aChữ xanh lá&r. Dùng \n trong chuỗi TOML có dấu ngoặc kép để xuống dòng.
 #
 # === Biến ===
 # Giữ nguyên tên biến và chỉ dùng những biến có sẵn trong từng thông báo.
+#   {added}  Thông báo được thêm bởi bản cập nhật ngôn ngữ
 #   {after}  Giá trị sau khi thay đổi
 #   {amount}  Số lượng vật phẩm rơi
 #   {argument}  đối số ngoài dự kiến
@@ -21,24 +23,27 @@
 #   {chance}  Xác suất kích hoạt đã cấu hình
 #   {command}  đường dẫn lệnh
 #   {count}  Số lượng thông báo
-#   {group}  Danh mục trong trình sửa ngôn ngữ
+#   {group}  Danh mục trong trình chỉnh sửa ngôn ngữ
+#   {kept}  Chỉnh sửa cục bộ được giữ bởi bản cập nhật ngôn ngữ
 #   {key}  Khóa thông báo hoặc tham số
 #   {line}  Số dòng trong thông báo
-#   {locale}  mã vùng
+#   {locale}  Mã ngôn ngữ
 #   {material}  Loại vật phẩm rơi
-#   {maximum}  Giá trị được chấp nhận tối đa
+#   {maximum}  Độ dài nhập tối đa trong trình chỉnh sửa
 #   {number}  Số thứ tự mục
 #   {page}  Số trang hiện tại
 #   {pages}  Tổng số trang
 #   {parameter}  tên tham số
 #   {path}  Đường dẫn cài đặt
-#   {personal}  mã vùng cá nhân
-#   {plugin}  Tên phần bổ sung
+#   {personal}  Mã ngôn ngữ cá nhân
+#   {plugin}  Tên plugin
 #   {reason}  lý do lỗi
+#   {remaining}  Thời gian còn lại đến lần kiểm tra ngôn ngữ tiếp theo
 #   {roll}  Giá trị ngẫu nhiên được lấy
 #   {section}  Mục trong trình chỉnh sửa ngôn ngữ
 #   {target}  Plugin được chọn ngôn ngữ
 #   {type}  kiểu
+#   {updated}  Thông báo được thay đổi bởi bản cập nhật ngôn ngữ
 #   {value}  giá trị hiện tại, mặc định hoặc thô
 #   {variables}  chỗ giữ chỗ hợp lệ
 #   {vein}  Tên mạch quặng
@@ -123,13 +128,13 @@ edit_description = "Mở trình chỉnh sửa thông báo cho từng ngôn ngữ
 select_description = "Nhấp để chọn ngôn ngữ này."
 remove_personal_description = "Xóa lựa chọn ngôn ngữ cá nhân của bạn."
 no_controls = "Bạn không có quyền dùng các tùy chọn ngôn ngữ."
-command = "Câu lệnh: {command}"
+command = "Lệnh: {command}"
 selected = "Đã chọn"
-all-volmit-plugins = "Tất cả plugin Volmit"
+all-volmit-plugins = "tất cả plugin Volmit"
 
 [language.error]
-stopping = "Không có khả năng chọn ngôn ngữ trong khi bổ sung đang dừng."
-editor-player-only = "Mở trình soạn thảo ngôn ngữ trong trò chơi."
+stopping = "Không thể chọn ngôn ngữ trong khi plugin đang dừng."
+editor-player-only = "Mở trình chỉnh sửa ngôn ngữ trong trò chơi."
 no-providers = "Không có nhà cung cấp ngôn ngữ Volmit nào khả dụng."
 numeric-page = "Nhập số trang bằng chữ số."
 personal-player-only = "Bạn phải chọn ngôn ngữ cá nhân trong trò chơi."
@@ -141,8 +146,9 @@ unavailable-for-all = "Ngôn ngữ {locale} không khả dụng cho tất cả p
 
 [language.usage]
 editor = "Cách dùng: /{command} language server edit [locale]"
-selection = "Cách dùng: /{command} language self [locale|reset] or server [locale]"
+selection = "Cách dùng: /{command} language self [locale|reset] hoặc server [locale]"
 volmit-selection = "Cách dùng: /volmit plugins languages [locale]"
+update = "Cách dùng: /{command} language update"
 
 [language.selection]
 preparing = "Đang chuẩn bị ngôn ngữ {locale} cho {target}..."
@@ -152,9 +158,17 @@ personal-selected = "{plugin}: ngôn ngữ của bạn hiện là {locale}."
 server-selected = "{plugin}: ngôn ngữ máy chủ hiện là {locale}."
 server-default-selected = "{plugin}: ngôn ngữ của bạn hiện theo ngôn ngữ mặc định của máy chủ."
 
+[language.update]
+checking = "{plugin}: đang kiểm tra thay đổi trong kho ngôn ngữ..."
+unchanged = "{plugin}: các ngôn ngữ đã cài đặt đã khớp với kho."
+applied = "{plugin}: đã cập nhật {locale} ({added} được thêm, {updated} được thay đổi, giữ lại {kept} chỉnh sửa cục bộ)."
+cooldown = "{plugin}: kho ngôn ngữ vừa được kiểm tra; hãy thử lại sau {remaining}."
+locale-failed = "{plugin}: {locale} chưa được cập nhật: {reason}"
+failed = "{plugin}: cập nhật ngôn ngữ thất bại: {reason}"
+
 [language.editor]
 title = "{plugin} › {section}"
-loading = "Đang tải tin nhắn cho {locale}..."
+loading = "Đang tải thông báo cho {locale}..."
 
 [language.editor.section]
 languages = "Ngôn ngữ"
@@ -163,7 +177,7 @@ search-title = "{locale} / Tìm kiếm"
 group-title = "{locale} / {group}"
 
 [language.editor.prompt]
-search = "Tìm khóa hoặc nội dung tin nhắn. Nhập cancel để quay lại."
+search = "Tìm khóa hoặc nội dung thông báo. Nhập cancel để quay lại."
 value = "Nhập giá trị mới cho {key} trong trò chuyện."
 current = "Giá trị hiện tại: {value}"
 variables = "Biến: {variables}"
@@ -178,26 +192,26 @@ unable-to-save = "Không thể lưu: {reason}"
 back = "&eQuay lại&r"
 close = "&cĐóng&r"
 previous-page = "&eTrang trước&r"
-next-page = "&eTrang kế&r"
+next-page = "&eTrang sau&r"
 
 [language.editor.search]
-messages = "Tìm tin nhắn"
-messages-lore = "Nhấn vào để tìm kiếm mọi tin nhắn."
+messages = "Tìm thông báo"
+messages-lore = "Nhấp để tìm kiếm mọi thông báo."
 clear = "Xóa tìm kiếm"
 
 [language.editor.message]
-current-value = "&7Giá trị hiện có:&r"
+current-value = "&7Giá trị hiện tại:&r"
 variables = "&8{variables}&r"
 edit-plural = "&7Nhấp để chỉnh sửa một dạng số nhiều.&r"
 edit-lines = "&7Nhấp để chỉnh sửa từng dòng.&r"
 edit-chat = "&7Nhấp để chỉnh sửa trong trò chuyện.&r"
 
 [language.editor.locale]
-open = "&8Nhấn vào để mở ngôn ngữ này.&r"
+open = "&8Nhấp để mở ngôn ngữ này.&r"
 
 [language.editor.category]
-message-count = "&7{count} tin nhắn&r"
-open = "&8Nhấn vào để mở phân loại này.&r"
+message-count = "&7{count} thông báo&r"
+open = "&8Nhấp để mở danh mục này.&r"
 
 [language.editor.error]
 no-permission = "Bạn không có quyền chỉnh sửa ngôn ngữ của {plugin}."

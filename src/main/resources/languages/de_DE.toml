@@ -9,36 +9,41 @@
 # prefix steht vor Chatnachrichten; eine leere Zeichenfolge blendet ihn aus.
 #
 # === Formatierung ===
-# Farbcodes: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# &0-&f für Farben, &k-&o für Formatierungen, &r zum Zurücksetzen und &#RRGGBB für Hex-Farben verwenden.
+# Beispiel: &aGrüner Text&r. \n in TOML-Strings mit Anführungszeichen erzeugt einen Zeilenumbruch.
 #
 # === Variablen ===
 # Variablennamen unverändert lassen und nur die Variablen der jeweiligen Nachricht verwenden.
+#   {added}  Durch eine Sprachaktualisierung hinzugefügte Nachrichten
 #   {after}  Wert nach der Änderung
-#   {amount}  Anzahl der fallen gelassenen Gegenstände
+#   {amount}  Anzahl der fallengelassenen Gegenstände
 #   {argument}  unerwartetes Argument
 #   {before}  Wert vor der Änderung
 #   {block}  Typ des abgebauten Blocks
 #   {chance}  Eingestellte Auslösewahrscheinlichkeit
 #   {command}  Befehlspfad
 #   {count}  Anzahl der Nachrichten
-#   {group}  Kategorie des Spracheneditors
+#   {group}  Kategorie des Spracheditors
+#   {kept}  Bei einer Sprachaktualisierung behaltene lokale Änderungen
 #   {key}  Nachrichten- oder Parameterschlüssel
 #   {line}  Zeilennummer innerhalb einer Nachricht
 #   {locale}  Sprachkennung
 #   {material}  Typ des fallengelassenen Gegenstands
-#   {maximum}  Zulässiger Höchstwert
+#   {maximum}  Maximale Länge der Editor-Eingabe
 #   {number}  Nummer des Eintrags
 #   {page}  Aktuelle Seite
 #   {pages}  Gesamtzahl der Seiten
 #   {parameter}  Parametername
-#   {path}  Pfad der Konfigurationseinstellung
+#   {path}  Konfigurationseinstellung oder -abschnitt
 #   {personal}  persönliche Sprachkennung
-#   {plugin}  Plugin Name
+#   {plugin}  Plugin-Name
 #   {reason}  Fehlergrund
+#   {remaining}  Verbleibende Wartezeit bis zur nächsten Sprachprüfung
 #   {roll}  Gezogener Zufallswert
-#   {section}  Bereich des Spracheneditors
+#   {section}  Bereich des Spracheditors
 #   {target}  Plugin für die Sprachauswahl
 #   {type}  Parametertyp
+#   {updated}  Durch eine Sprachaktualisierung geänderte Nachrichten
 #   {value}  aktueller, Standard- oder Rohwert
 #   {variables}  gültige Platzhalter
 #   {vein}  Name der Erzader
@@ -109,31 +114,31 @@ missing_argument = "Fehlendes Argument \"{parameter}\" ({type})"
 execution_failed = "Befehl {command} konnte nicht ausgeführt werden: {reason}"
 
 [language.menu]
-your_language = "Ihre Sprache"
+your_language = "Deine Sprache"
 reset_your_language = "Eigene Sprachauswahl zurücksetzen"
 server_default = "Serverstandard"
 edit_messages = "Sprachnachrichten bearbeiten"
 use_server_default = "Serverstandard verwenden"
 current = "Aktuell: {locale}"
-current_with_personal = "Aktuell: {locale} (Ihre: {personal})"
-your_description = "Ändern Sie nur die Nachrichten, die Sie sehen."
-reset_description = "Verwenden Sie die Standardsprache des Servers."
-server_description = "Ändern Sie die Standardsprache des Servers."
-edit_description = "Öffnen Sie den Nachrichteneditor für jede Sprache."
-select_description = "Klicken Sie, um diese Sprache auszuwählen."
-remove_personal_description = "Entfernen Sie Ihre persönliche Sprachauswahl."
-no_controls = "Für Sie sind keine Spracheinstellungen verfügbar."
+current_with_personal = "Aktuell: {locale} (Deine: {personal})"
+your_description = "Ändere nur die Nachrichten, die du siehst."
+reset_description = "Verwende die Standardsprache des Servers."
+server_description = "Ändere die Standardsprache des Servers."
+edit_description = "Öffne den Nachrichteneditor für jede Sprache."
+select_description = "Klicken, um diese Sprache auszuwählen."
+remove_personal_description = "Entferne deine persönliche Sprachauswahl."
+no_controls = "Für dich sind keine Spracheinstellungen verfügbar."
 command = "Befehl: {command}"
 selected = "ausgewählt"
-all-volmit-plugins = "Alle Volmit-Plugins"
+all-volmit-plugins = "alle Volmit-Plugins"
 
 [language.error]
 stopping = "Sprachauswahl ist nicht verfügbar, während das Plugin stoppt."
-editor-player-only = "Öffnen Sie den Spracheditor im Spiel."
+editor-player-only = "Öffne den Spracheditor im Spiel."
 no-providers = "Es sind keine Volmit-Sprachanbieter verfügbar."
 numeric-page = "Gib die Seitennummer als Zahl ein."
 personal-player-only = "Die Spracheinstellungen der Spieler müssen im Spiel ausgewählt werden."
-personal-permission = "Sie haben keine Berechtigung, Ihre Sprache auszuwählen."
+personal-permission = "Du hast keine Berechtigung, deine Sprache auszuwählen."
 plugin-personal-permission = "Du darfst deine Sprache für {plugin} nicht ändern."
 plugin-server-permission = "Du darfst die Serversprache für {plugin} nicht ändern."
 server-locale-required = "Wähle einen Sprachcode wie en_US als Serverstandard."
@@ -141,8 +146,9 @@ unavailable-for-all = "Die Sprache {locale} ist nicht für alle ausgewählten Pl
 
 [language.usage]
 editor = "Syntax: /{command} language server edit [locale]"
-selection = "Syntax: /{command} language self [locale|reset] or server [locale]"
+selection = "Syntax: /{command} language self [locale|reset] oder server [locale]"
 volmit-selection = "Syntax: /volmit plugins languages [locale]"
+update = "Syntax: /{command} language update"
 
 [language.selection]
 preparing = "Sprache {locale} wird für {target} vorbereitet..."
@@ -151,6 +157,14 @@ english-fallback = "{plugin}: {locale} ist nicht verfügbar; Englisch (en_US) wi
 personal-selected = "{plugin}: Deine Sprache ist jetzt {locale}."
 server-selected = "{plugin}: Serversprache ist jetzt {locale}."
 server-default-selected = "{plugin}: Deine Sprache folgt jetzt dem Serverstandard."
+
+[language.update]
+checking = "{plugin}: Das Sprach-Repository wird auf Änderungen geprüft..."
+unchanged = "{plugin}: Installierte Sprachen entsprechen bereits dem Repository."
+applied = "{plugin}: {locale} aktualisiert ({added} neu, {updated} geändert, {kept} lokale Änderungen behalten)."
+cooldown = "{plugin}: Das Sprach-Repository wurde kürzlich geprüft; versuche es in {remaining} erneut."
+locale-failed = "{plugin}: {locale} wurde nicht aktualisiert: {reason}"
+failed = "{plugin}: Sprachaktualisierung fehlgeschlagen: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"

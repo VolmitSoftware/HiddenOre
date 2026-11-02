@@ -78,7 +78,7 @@ public final class ConfigWatcher implements Runnable {
     this.plugin = plugin;
     this.dir = plugin.getDataFolder().toPath();
     this.languageDirectory = dir.resolve("languages");
-    this.initialLanguageSignatures = initialLanguageSignatures();
+    this.initialLanguageSignatures = new HashMap<>(initialLanguageSignatures());
     this.knownLanguageLocales.addAll(installedCanonicalLocales(initialLanguageSignatures));
     this.watchedFiles = Set.of("hiddenore.toml");
   }
@@ -88,7 +88,10 @@ public final class ConfigWatcher implements Runnable {
       return;
     }
 
-    Map<String, String> appliedSignatures = appliedSignatures(configToml, initialLanguageSignatures);
+    Map<String, String> appliedSignatures;
+    synchronized (reloadQueueLock) {
+      appliedSignatures = appliedSignatures(configToml, initialLanguageSignatures);
+    }
     running = true;
     signatureReconciliation.reset(System.nanoTime());
     synchronized (reloadQueueLock) {
@@ -151,6 +154,18 @@ public final class ConfigWatcher implements Runnable {
       pendingReload = null;
       reloadPending = false;
       lastSignatures.remove("hiddenore.toml");
+    }
+  }
+
+  public void languageWritten(Path file, String content) {
+    if (!LANGUAGE_FILE.matcher(file.getFileName().toString()).matches()) {
+      return;
+    }
+    String key = "languages/" + file.getFileName();
+    String signature = contentSignature(content);
+    synchronized (reloadQueueLock) {
+      initialLanguageSignatures.put(key, signature);
+      lastSignatures.put(key, signature);
     }
   }
 
@@ -228,7 +243,7 @@ public final class ConfigWatcher implements Runnable {
         if (shouldReload) {
           long generation = currentReloadGeneration();
           Map<String, String> stableSignatures = awaitQuietPeriod(watcher);
-          if (running && plugin.isEnabled()) {
+          if (running && plugin.isEnabled() && !matchesApplied(stableSignatures)) {
             ReloadSnapshot snapshot = captureReloadSnapshot(stableSignatures);
             if (snapshot != null) {
               acceptReloadSnapshot(stableSignatures, snapshot, generation);
@@ -247,6 +262,9 @@ public final class ConfigWatcher implements Runnable {
     }
     long generation = currentReloadGeneration();
     Map<String, String> stableSignatures = awaitQuietPeriod(null);
+    if (matchesApplied(stableSignatures)) {
+      return;
+    }
     ReloadSnapshot snapshot = captureReloadSnapshot(stableSignatures);
     if (snapshot == null) {
       return;
@@ -384,6 +402,12 @@ public final class ConfigWatcher implements Runnable {
     } catch (IOException exception) {
       reportWatcherFailure("Unable to inspect HiddenOre language hotload targets", exception);
       return false;
+    }
+  }
+
+  private boolean matchesApplied(Map<String, String> signatures) {
+    synchronized (reloadQueueLock) {
+      return signatures.equals(lastSignatures);
     }
   }
 

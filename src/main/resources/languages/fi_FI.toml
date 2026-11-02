@@ -9,36 +9,41 @@
 # prefix lisätään chat-viestien alkuun; tyhjä merkkijono piilottaa sen.
 #
 # === Muotoilu ===
-# Värikoodit: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Käytä &0-&f värejä, &k-&o muotoilua, &r palautusta ja &#RRGGBB heksadesimaalivärejä varten.
+# Esimerkiksi: &aVihreä teksti&r. Käytä lainausmerkeissä olevissa TOML-merkkijonoissa \n rivinvaihtoon.
 #
 # === Muuttujat ===
 # Säilytä muuttujien nimet ja käytä vain kunkin viestin omia muuttujia.
+#   {added}  Kielipäivityksen lisäämät viestit
 #   {after}  Arvo muutoksen jälkeen
 #   {amount}  Pudotettavien esineiden määrä
 #   {argument}  odottamaton argumentti
 #   {before}  Arvo ennen muutosta
-#   {block}  Louhitun lohkon tyyppi
+#   {block}  Louhitun kuution tyyppi
 #   {chance}  Määritetty laukaisutodennäköisyys
 #   {command}  komentopolku
 #   {count}  Viestien määrä
 #   {group}  Kielieditorin luokka
+#   {kept}  Kielipäivityksessä säilytetyt paikalliset muokkaukset
 #   {key}  Viestin tai parametrin avain
 #   {line}  Viestin rivinumero
 #   {locale}  kielitunnus
 #   {material}  Pudotettavan esineen tyyppi
-#   {maximum}  Suurin sallittu arvo
+#   {maximum}  Editorin syötteen enimmäispituus
 #   {number}  Kohdan numero
 #   {page}  Nykyinen sivu
 #   {pages}  Sivujen kokonaismäärä
-#   {path}  Asetuksen tai osion polku
 #   {parameter}  parametrin nimi
+#   {path}  Asetuksen tai osion polku
 #   {personal}  henkilökohtainen kielitunnus
-#   {plugin}  Liitännäisen nimi
+#   {plugin}  Lisäosan nimi
 #   {reason}  virheen syy
+#   {remaining}  Jäljellä oleva aika seuraavaan kielitarkistukseen
 #   {roll}  Arvottu satunnaisluku
 #   {section}  Kielieditorin osio
 #   {target}  Kielivalinnan kohdelisäosa
 #   {type}  tyyppi
+#   {updated}  Kielipäivityksen muuttamat viestit
 #   {value}  nykyinen, oletus- tai raaka-arvo
 #   {variables}  sallitut paikkamerkit
 #   {vein}  Malmisuonen nimi
@@ -156,15 +161,15 @@ remove_personal_description = "Poista henkilökohtainen kielivalintasi."
 no_controls = "Sinulla ei ole käytettävissä kieliasetuksia."
 command = "Komento: {command}"
 selected = "valittu"
-all-volmit-plugins = "Kaikki Volmit-lisäosat"
+all-volmit-plugins = "kaikki Volmit-lisäosat"
 
 [language.error]
-stopping = "Kielivalintaa ei ole saatavilla, kun plugin pysähtyy."
+stopping = "Kielivalintaa ei ole saatavilla, kun lisäosaa pysäytetään."
 editor-player-only = "Avaa kielieditori pelissä."
 no-providers = "Yhtään Volmit-kielipalvelua ei ole saatavilla."
 numeric-page = "Anna sivunumero numerona."
 personal-player-only = "Pelaajan kieliasetukset on valittava pelissä."
-personal-permission = "Sinulla ei ole lupaa valita kieltäsi."
+personal-permission = "Sinulla ei ole oikeutta valita kieltäsi."
 plugin-personal-permission = "Sinulla ei ole oikeutta valita kieltäsi lisäosalle {plugin}."
 plugin-server-permission = "Sinulla ei ole oikeutta muuttaa lisäosan {plugin} palvelinkieltä."
 server-locale-required = "Valitse palvelimen oletuskieleksi kielikoodi, kuten en_US."
@@ -172,16 +177,25 @@ unavailable-for-all = "Kieli {locale} ei ole saatavilla kaikille valituille lis�
 
 [language.usage]
 editor = "Käyttö: /{command} language server edit [locale]"
-selection = "Käyttö: /{command} language self [locale|reset] or server [locale]"
+selection = "Käyttö: /{command} language self [locale|reset] tai server [locale]"
 volmit-selection = "Käyttö: /volmit plugins languages [locale]"
+update = "Käyttö: /{command} language update"
 
 [language.selection]
 preparing = "Valmistellaan kieltä {locale} kohteelle {target}..."
 save-failed = "{plugin}: kielivalintaa ei voitu tallentaa; tarkista palvelinkonsoli."
 english-fallback = "{plugin}: {locale} ei ole saatavilla; käytetään englantia (en_US)."
-personal-selected = "{plugin}: kieli on nyt {locale}."
+personal-selected = "{plugin}: kielesi on nyt {locale}."
 server-selected = "{plugin}: palvelinkieli on nyt {locale}."
 server-default-selected = "{plugin}: kielesi noudattaa nyt palvelimen oletuskieltä."
+
+[language.update]
+checking = "{plugin}: Tarkistetaan kielivaraston muutoksia..."
+unchanged = "{plugin}: Asennetut kielet vastaavat jo varastoa."
+applied = "{plugin}: {locale} päivitetty ({added} lisätty, {updated} muutettu, {kept} paikallista muokkausta säilytetty)."
+cooldown = "{plugin}: Kielivarasto tarkistettiin äskettäin; yritä uudelleen {remaining} kuluttua."
+locale-failed = "{plugin}: {locale} ei päivittynyt: {reason}"
+failed = "{plugin}: Kielipäivitys epäonnistui: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -242,5 +256,5 @@ change = "{key}: ”{before}” muutettiin arvoon ”{after}”."
 line = "Rivi {line}"
 
 [language.editor.value]
-none = "Ei ole"
+none = "Ei mitään"
 empty = "(tyhjä)"

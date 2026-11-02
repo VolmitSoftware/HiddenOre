@@ -9,10 +9,12 @@
 # prefix é acrescentado antes das mensagens do chat; uma cadeia vazia oculta-o.
 #
 # === Formatação ===
-# Códigos de cor: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Use &0-&f para cores, &k-&o para formatação, &r para repor e &#RRGGBB para cores hexadecimais.
+# Por exemplo: &aTexto verde&r. Use \n dentro de cadeias TOML entre aspas para mudar de linha.
 #
 # === Variáveis ===
 # Mantenha os nomes das variáveis e use apenas as que pertencem a cada mensagem.
+#   {added}  Mensagens adicionadas por uma atualização de idioma
 #   {after}  Valor após a alteração
 #   {amount}  Quantidade de itens largados
 #   {argument}  argumento inesperado
@@ -22,41 +24,44 @@
 #   {command}  caminho do comando
 #   {count}  Número de mensagens
 #   {group}  Categoria do editor de idiomas
+#   {kept}  Edições locais mantidas por uma atualização de idioma
 #   {key}  Chave da mensagem ou do parâmetro
 #   {line}  Número da linha da mensagem
-#   {locale}  região
+#   {locale}  Código de idioma
 #   {material}  Tipo de item largado
-#   {maximum}  Valor máximo autorizado
+#   {maximum}  Comprimento máximo da entrada do editor
 #   {number}  Número da entrada
 #   {page}  Página atual
 #   {pages}  Número total de páginas
-#   {path}  Caminho da definição ou da secção
 #   {parameter}  nome do parâmetro
-#   {personal}  região pessoal
-#   {plugin}  Nome do plug-in
+#   {path}  Caminho da definição ou da secção
+#   {personal}  Código de idioma pessoal
+#   {plugin}  Nome do plugin
 #   {reason}  motivo da falha
+#   {remaining}  Tempo restante até à próxima verificação de idiomas
 #   {roll}  Valor aleatório sorteado
 #   {section}  Secção do editor de idiomas
 #   {target}  Plugin a que se aplica a escolha de idioma
 #   {type}  tipo
+#   {updated}  Mensagens alteradas por uma atualização de idioma
 #   {value}  valor atual, predefinido ou bruto
 #   {variables}  marcadores válidos
 #   {vein}  Nome do filão
 
 prefix = "&a[HiddenOre]&r "
-no_permission = "&cNão tens permissão para usar este comando.&r"
+no_permission = "&cNão tem permissão para usar este comando.&r"
 player_only = "&cEste comando só pode ser usado por um jogador.&r"
 debug_enabled = "&aModo de depuração ativado.&r"
 debug_disabled = "&cModo de depuração desativado.&r"
 config_reloaded_message = "&aConfiguração atualizada e recarregada.&r"
 
 [debug]
-player_placed = "&cColocado por um jogador: {block}; sem drops ocultos.&r"
-random_drop = "&aDrop aleatório: {material} x{amount}&r"
-random_drop_lost = "&cO drop aleatório {material} perdeu-se porque o nível da ferramenta é demasiado baixo.&r"
-vein_drop = "&aVeio de minério {vein}: {material} x{amount}&r"
-vein_drop_discovered = "&aVeio de minério {vein}: {material} x{amount} (descoberto)&r"
-vein_drop_lost = "&cVeio de minério {vein}: {material} perdeu-se porque o nível da ferramenta é demasiado baixo.&r"
+player_placed = "&cColocado por um jogador: {block}; sem itens largados ocultos.&r"
+random_drop = "&aItem aleatório largado: {material} x{amount}&r"
+random_drop_lost = "&cO item aleatório {material} perdeu-se porque o nível da ferramenta é demasiado baixo.&r"
+vein_drop = "&aFilão {vein}: {material} x{amount}&r"
+vein_drop_discovered = "&aFilão {vein}: {material} x{amount} (descoberto)&r"
+vein_drop_lost = "&cFilão {vein}: {material} perdeu-se porque o nível da ferramenta é demasiado baixo.&r"
 command_hit = "&7Verificação do comando: chance={chance}, roll={roll} -> &aacerto&7&r"
 command_miss = "&7Verificação do comando: chance={chance}, roll={roll} -> &cfalha&7&r"
 
@@ -69,7 +74,7 @@ config = "Abrir o editor de configuração do HiddenOre"
 debug_group = "HiddenOre: Ferramentas de diagnóstico"
 debugdump = "Criar um relatório de diagnóstico e carregá-lo opcionalmente"
 root = "Grupo de comandos do HiddenOre"
-debug = "Alternar o teu modo de depuração de minérios"
+debug = "Alternar o seu modo de depuração de minérios"
 
 [config.editor]
 title = "{plugin} / Configuração"
@@ -115,7 +120,7 @@ back = "Voltar"
 page = "Página"
 
 [director.help.navigation.parent]
-hover = "Voltar ao grupo de comandos principal"
+hover = "Voltar ao grupo de comandos superior"
 
 [director.help.navigation.previous]
 hover = "Página anterior"
@@ -126,7 +131,7 @@ hover = "Página seguinte"
 [director.help.parameter]
 required = "Este parâmetro é obrigatório."
 optional = "Este parâmetro é opcional."
-default = "Predefinição \"{value}\" se não for definido."
+default = "Assume \"{value}\" por predefinição se não for definido."
 type = "Este parâmetro é do tipo {type}."
 
 [director.runtime.error]
@@ -140,23 +145,23 @@ missing_argument = "Falta o argumento \"{parameter}\" ({type})"
 execution_failed = "Falha ao executar o comando {command}: {reason}"
 
 [language.menu]
-your_language = "O teu idioma"
-reset_your_language = "Repor o teu idioma"
+your_language = "O seu idioma"
+reset_your_language = "Repor o seu idioma"
 server_default = "Idioma predefinido do servidor"
 edit_messages = "Editar mensagens do idioma"
 use_server_default = "Usar o idioma predefinido do servidor"
 current = "Atual: {locale}"
-current_with_personal = "Atual: {locale} (O teu: {personal})"
-your_description = "Altera apenas as mensagens que vês."
+current_with_personal = "Atual: {locale} (O seu: {personal})"
+your_description = "Altera apenas as mensagens que vê."
 reset_description = "Usa o idioma predefinido do servidor."
 server_description = "Altera o idioma predefinido do servidor."
 edit_description = "Abre o editor de mensagens de cada idioma."
-select_description = "Clica para selecionar este idioma."
-remove_personal_description = "Remove a tua escolha pessoal de idioma."
-no_controls = "Não tens acesso às opções de idioma."
+select_description = "Clique para selecionar este idioma."
+remove_personal_description = "Remove a sua escolha pessoal de idioma."
+no_controls = "Não tem acesso às opções de idioma."
 command = "Comando: {command}"
 selected = "selecionado"
-all-volmit-plugins = "Todos os plugins Volmit"
+all-volmit-plugins = "todos os plugins Volmit"
 
 [language.error]
 stopping = "A escolha de idioma não está disponível enquanto o plugin está a parar."
@@ -164,16 +169,17 @@ editor-player-only = "Abra o editor de idiomas dentro do jogo."
 no-providers = "Não há fornecedores de idiomas Volmit disponíveis."
 numeric-page = "Introduza um número de página."
 personal-player-only = "As preferências do idioma do jogador devem ser selecionadas no jogo."
-personal-permission = "Você não tem permissão para selecionar seu idioma."
+personal-permission = "Não tem permissão para escolher o seu idioma."
 plugin-personal-permission = "Não tem permissão para escolher o seu idioma em {plugin}."
 plugin-server-permission = "Não tem permissão para alterar o idioma do servidor em {plugin}."
 server-locale-required = "Escolha um código como en_US para o idioma predefinido do servidor."
 unavailable-for-all = "O idioma {locale} não está disponível para todos os plugins selecionados."
 
 [language.usage]
-editor = "Uso: /{command} language server edit [locale]"
-selection = "Uso: /{command} language self [locale|reset] or server [locale]"
-volmit-selection = "Uso: /volmit plugins languages [locale]"
+editor = "Utilização: /{command} language server edit [locale]"
+selection = "Utilização: /{command} language self [locale|reset] ou server [locale]"
+volmit-selection = "Utilização: /volmit plugins languages [locale]"
+update = "Utilização: /{command} language update"
 
 [language.selection]
 preparing = "A preparar o idioma {locale} para {target}..."
@@ -183,14 +189,22 @@ personal-selected = "{plugin}: o seu idioma agora é {locale}."
 server-selected = "{plugin}: o idioma do servidor agora é {locale}."
 server-default-selected = "{plugin}: o seu idioma segue agora o idioma predefinido do servidor."
 
+[language.update]
+checking = "{plugin}: A verificar alterações no repositório de idiomas..."
+unchanged = "{plugin}: Os idiomas instalados já correspondem ao repositório."
+applied = "{plugin}: {locale} atualizado ({added} adicionados, {updated} alterados, {kept} edições locais mantidas)."
+cooldown = "{plugin}: O repositório de idiomas foi verificado recentemente; tente novamente dentro de {remaining}."
+locale-failed = "{plugin}: {locale} não foi atualizado: {reason}"
+failed = "{plugin}: A atualização de idiomas falhou: {reason}"
+
 [language.editor]
 title = "{plugin} › {section}"
 loading = "A carregar as mensagens de {locale}..."
 
 [language.editor.section]
 languages = "Idiomas"
-search = "Procurar"
-search-title = "{locale} / Procurar"
+search = "Pesquisar"
+search-title = "{locale} / Pesquisar"
 group-title = "{locale} / {group}"
 
 [language.editor.prompt]

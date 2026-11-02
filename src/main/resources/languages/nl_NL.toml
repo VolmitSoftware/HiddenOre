@@ -9,10 +9,12 @@
 # prefix staat vóór chatberichten; een lege tekenreeks verbergt het.
 #
 # === Opmaak ===
-# Kleurcodes: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# Gebruik &0-&f voor kleuren, &k-&o voor opmaak, &r om te resetten en &#RRGGBB voor hexkleuren.
+# Bijvoorbeeld: &aGroene tekst&r. Gebruik \n in TOML-tekenreeksen tussen aanhalingstekens voor een nieuwe regel.
 #
 # === Variabelen ===
 # Behoud de namen van variabelen en gebruik alleen de variabelen die bij het bericht horen.
+#   {added}  Berichten toegevoegd door een taalupdate
 #   {after}  Waarde na de wijziging
 #   {amount}  Aantal gedropte voorwerpen
 #   {argument}  onverwacht argument
@@ -22,23 +24,26 @@
 #   {command}  opdrachtpad
 #   {count}  Aantal berichten
 #   {group}  Categorie in de taaleditor
+#   {kept}  Lokale bewerkingen behouden door een taalupdate
 #   {key}  Bericht- of parametersleutel
 #   {line}  Regelnummer binnen een bericht
-#   {locale}  landinstelling
+#   {locale}  Taalcode
 #   {material}  Type van het gedropte voorwerp
-#   {maximum}  Maximaal toegestane waarde
+#   {maximum}  Maximale lengte van de invoer in de editor
 #   {number}  Nummer van de vermelding
 #   {page}  Huidige pagina
 #   {pages}  Totaal aantal pagina’s
-#   {path}  Pad naar de instelling of sectie
 #   {parameter}  parameternaam
-#   {personal}  persoonlijke landinstelling
+#   {path}  Pad naar de instelling of sectie
+#   {personal}  Persoonlijke taalcode
 #   {plugin}  Pluginnaam
 #   {reason}  foutreden
+#   {remaining}  Resterende tijd tot de volgende taalcontrole
 #   {roll}  Getrokken willekeurige waarde
 #   {section}  Sectie van de taaleditor
 #   {target}  Plugin waarvoor de taal wordt gekozen
 #   {type}  type
+#   {updated}  Berichten gewijzigd door een taalupdate
 #   {value}  huidige, standaard- of ruwe waarde
 #   {variables}  geldige tijdelijke aanduidingen
 #   {vein}  Naam van de ertsader
@@ -106,7 +111,7 @@ list = "Gebruik een TOML-lijst, bijvoorbeeld [\"stone\", \"deepslate\"]."
 no_subcommands = "Geen subopdrachten op deze pagina."
 no_description = "Geen beschrijving opgegeven"
 command_group = "Opdrachtgroep. Klik om te openen."
-category = "Commandocategorie"
+category = "Opdrachtcategorie"
 no_parameters = "Geen parameters. Klik om de opdracht vooraf in te vullen."
 parameters_hover = "Beweeg de muis over de parameters voor meer informatie."
 
@@ -154,17 +159,17 @@ edit_description = "Open de berichteneditor voor elke taal."
 select_description = "Klik om deze taal te selecteren."
 remove_personal_description = "Verwijder jouw persoonlijke taalkeuze."
 no_controls = "Je hebt geen toegang tot taalinstellingen."
-command = "Commando: {command}"
+command = "Opdracht: {command}"
 selected = "geselecteerd"
-all-volmit-plugins = "Alle Volmit-plugins"
+all-volmit-plugins = "alle Volmit-plugins"
 
 [language.error]
 stopping = "Taalselectie is niet beschikbaar terwijl de plugin stopt."
-editor-player-only = "Open de taalbewerker in het spel."
+editor-player-only = "Open de taaleditor in het spel."
 no-providers = "Er zijn geen Volmit-taalaanbieders beschikbaar."
 numeric-page = "Voer een paginanummer in."
 personal-player-only = "Spelertaalvoorkeuren moeten in het spel worden geselecteerd."
-personal-permission = "U hebt geen toestemming om uw taal te selecteren."
+personal-permission = "Je hebt geen toestemming om je taal te selecteren."
 plugin-personal-permission = "Je hebt geen toestemming om je taal voor {plugin} te kiezen."
 plugin-server-permission = "Je hebt geen toestemming om de servertaal voor {plugin} te wijzigen."
 server-locale-required = "Kies een taalcode zoals en_US voor de standaardtaal van de server."
@@ -172,16 +177,25 @@ unavailable-for-all = "De taal {locale} is niet voor alle geselecteerde plugins 
 
 [language.usage]
 editor = "Gebruik: /{command} language server edit [locale]"
-selection = "Gebruik: /{command} language self [locale|reset] or server [locale]"
+selection = "Gebruik: /{command} language self [locale|reset] of server [locale]"
 volmit-selection = "Gebruik: /volmit plugins languages [locale]"
+update = "Gebruik: /{command} language update"
 
 [language.selection]
 preparing = "Taal {locale} wordt voorbereid voor {target}..."
 save-failed = "{plugin}: de taalkeuze kon niet worden opgeslagen; controleer de serverconsole."
 english-fallback = "{plugin}: {locale} is niet beschikbaar; Engels (en_US) wordt gebruikt."
-personal-selected = "{plugin}: uw taal is nu {locale}."
+personal-selected = "{plugin}: je taal is nu {locale}."
 server-selected = "{plugin}: servertaal is nu {locale}."
 server-default-selected = "{plugin}: je taal volgt nu de standaardtaal van de server."
+
+[language.update]
+checking = "{plugin}: de taalrepository wordt gecontroleerd op wijzigingen..."
+unchanged = "{plugin}: geïnstalleerde talen komen al overeen met de repository."
+applied = "{plugin}: {locale} bijgewerkt ({added} toegevoegd, {updated} gewijzigd, {kept} lokale bewerkingen behouden)."
+cooldown = "{plugin}: de taalrepository is onlangs gecontroleerd; probeer het over {remaining} opnieuw."
+locale-failed = "{plugin}: {locale} is niet bijgewerkt: {reason}"
+failed = "{plugin}: taalupdate mislukt: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -201,7 +215,7 @@ variables = "Variabelen: {variables}"
 guidance = "Gebruik \\n voor een nieuwe regel, \\\\ voor een backslash, of typ cancel om terug te gaan."
 
 [language.editor.input]
-expired = "De invoer voor de taalbewerker is verlopen."
+expired = "De invoer voor de taaleditor is verlopen."
 too-long = "De invoer mag maximaal {maximum} tekens bevatten."
 unable-to-save = "Opslaan mislukt: {reason}"
 

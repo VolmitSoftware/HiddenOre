@@ -9,10 +9,12 @@
 # prefix נוסף לפני הודעות הצ׳אט; מחרוזת ריקה מסתירה אותו.
 #
 # === עיצוב ===
-# קודי צבע: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# יש להשתמש ב־&0-&f לצבעים, ב־&k-&o לעיצוב, ב־&r לאיפוס וב־&#RRGGBB לצבעי הקס.
+# לדוגמה: &aטקסט ירוק&r. לשורה חדשה יש להשתמש ב־\n בתוך מחרוזות TOML במירכאות.
 #
 # === משתנים ===
 # יש לשמור על שמות המשתנים ולהשתמש רק במשתנים הקיימים בכל הודעה.
+#   {added}  הודעות שנוספו בעדכון שפה
 #   {after}  ערך לאחר השינוי
 #   {amount}  מספר הפריטים שנופלים
 #   {argument}  ארגומנט לא צפוי
@@ -22,23 +24,26 @@
 #   {command}  נתיב פקודה
 #   {count}  מספר ההודעות
 #   {group}  קטגוריה בעורך השפה
+#   {kept}  עריכות מקומיות שנשמרו בעדכון שפה
 #   {key}  מפתח הודעה או פרמטר
 #   {line}  מספר השורה בהודעה
-#   {locale}  אזור שפה
+#   {locale}  קוד שפה
 #   {material}  סוג הפריט שנופל
-#   {maximum}  ערך מותר מקסימלי
+#   {maximum}  אורך הקלט המרבי בעורך
 #   {number}  מספר הרשומה
 #   {page}  מספר העמוד הנוכחי
 #   {pages}  מספר העמודים הכולל
 #   {parameter}  שם פרמטר
 #   {path}  נתיב ההגדרה
-#   {personal}  אזור השפה האישי
-#   {plugin}  שם Plugin
+#   {personal}  קוד השפה האישי
+#   {plugin}  שם התוסף
 #   {reason}  סיבת כשל
+#   {remaining}  הזמן שנותר עד בדיקת השפות הבאה
 #   {roll}  הערך האקראי שהוגרל
 #   {section}  מקטע בעורך השפות
 #   {target}  התוסף שעבורו נבחרת השפה
 #   {type}  סוג
+#   {updated}  הודעות ששונו בעדכון שפה
 #   {value}  ערך נוכחי, ברירת מחדל או גולמי
 #   {variables}  מצייני מקום תקינים
 #   {vein}  שם עורק העפרה
@@ -74,10 +79,10 @@ debug = "הפעלה או השבתה של מצב ניפוי העפרות שלך"
 [director.help]
 no_subcommands = "אין פקודות משנה בעמוד זה."
 no_description = "לא סופק תיאור"
-command_group = "קבוצת פקודות. לחצו כדי לפתוח."
+command_group = "קבוצת פקודות. לחיצה לפתיחה."
 category = "קטגוריית פקודות"
-no_parameters = "אין פרמטרים. לחצו כדי למלא את הפקודה מראש."
-parameters_hover = "רחפו מעל הפרמטרים כדי ללמוד עוד."
+no_parameters = "אין פרמטרים. לחיצה למילוי הפקודה מראש."
+parameters_hover = "ריחוף מעל הפרמטרים מציג מידע נוסף."
 
 [director.help.navigation]
 back = "חזרה"
@@ -116,24 +121,24 @@ edit_messages = "עריכת הודעות השפה"
 use_server_default = "שימוש בברירת המחדל של השרת"
 current = "נוכחית: {locale}"
 current_with_personal = "נוכחית: {locale} (שלך: {personal})"
-your_description = "שנה רק את ההודעות שאתה רואה."
-reset_description = "השתמש בשפת ברירת המחדל של השרת."
-server_description = "שנה את שפת ברירת המחדל של השרת."
-edit_description = "פתח את עורך ההודעות לכל שפה."
-select_description = "לחץ כדי לבחור בשפה זו."
-remove_personal_description = "הסר את בחירת השפה האישית שלך."
+your_description = "שינוי ההודעות שמוצגות לך בלבד."
+reset_description = "שימוש בשפת ברירת המחדל של השרת."
+server_description = "שינוי שפת ברירת המחדל של השרת."
+edit_description = "פתיחת עורך ההודעות לכל שפה."
+select_description = "לחיצה לבחירת שפה זו."
+remove_personal_description = "הסרת בחירת השפה האישית שלך."
 no_controls = "אין לך גישה להגדרות שפה."
 command = "פקודה: {command}"
 selected = "נבחר"
 all-volmit-plugins = "כל תוספי Volmit"
 
 [language.error]
-stopping = "בחירת שפה אינה זמינה בזמן שהתוסף מפסיק."
-editor-player-only = "פתח את עורך השפה במשחק."
+stopping = "בחירת שפה אינה זמינה בזמן שהתוסף נעצר."
+editor-player-only = "יש לפתוח את עורך השפה במשחק."
 no-providers = "אין ספקי שפה זמינים של Volmit."
 numeric-page = "יש להזין מספר עמוד."
 personal-player-only = "יש לבחור העדפות שפה של שחקן במשחק."
-personal-permission = "אין לך רשות לבחור את השפה שלך."
+personal-permission = "אין לך הרשאה לבחור את השפה שלך."
 plugin-personal-permission = "אין לך הרשאה לבחור שפה אישית עבור {plugin}."
 plugin-server-permission = "אין לך הרשאה לשנות את שפת השרת עבור {plugin}."
 server-locale-required = "יש לבחור קוד שפה כגון en_US כשפת ברירת המחדל של השרת."
@@ -141,8 +146,9 @@ unavailable-for-all = "השפה {locale} אינה זמינה לכל התוספי
 
 [language.usage]
 editor = "שימוש: /{command} language server edit [locale]"
-selection = "שימוש: /{command} language self [locale|reset] or server [locale]"
+selection = "שימוש: /{command} language self [locale|reset] או server [locale]"
 volmit-selection = "שימוש: /volmit plugins languages [locale]"
+update = "שימוש: /{command} language update"
 
 [language.selection]
 preparing = "מכין את השפה {locale} עבור {target}..."
@@ -151,6 +157,14 @@ english-fallback = "{plugin}: השפה {locale} אינה זמינה; נעשה ש
 personal-selected = "{plugin}: השפה שלך עכשיו {locale}."
 server-selected = "{plugin}: שפת השרת עכשיו {locale}."
 server-default-selected = "{plugin}: השפה שלך תואמת כעת לשפת ברירת המחדל של השרת."
+
+[language.update]
+checking = "{plugin}: בודק שינויים במאגר השפות..."
+unchanged = "{plugin}: השפות המותקנות כבר תואמות למאגר."
+applied = "{plugin}: {locale} עודכן ({added} נוספו, {updated} שונו, {kept} עריכות מקומיות נשמרו)."
+cooldown = "{plugin}: מאגר השפות נבדק לאחרונה; יש לנסות שוב בעוד {remaining}."
+locale-failed = "{plugin}: {locale} לא עודכן: {reason}"
+failed = "{plugin}: עדכון השפות נכשל: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -176,9 +190,9 @@ unable-to-save = "לא ניתן לשמור: {reason}"
 
 [language.editor.navigation]
 back = "&eחזרה&r"
-close = "&cסגור&r"
+close = "&cסגירה&r"
 previous-page = "&eהעמוד הקודם&r"
-next-page = "&eדף הבא&r"
+next-page = "&eהעמוד הבא&r"
 
 [language.editor.search]
 messages = "חיפוש הודעות"
@@ -193,11 +207,11 @@ edit-lines = "&7לחיצה לעריכת שורות בודדות.&r"
 edit-chat = "&7לחיצה לעריכה בצ׳אט.&r"
 
 [language.editor.locale]
-open = "&8לחץ לפתוח את השפה.&r"
+open = "&8לחיצה לפתיחת השפה.&r"
 
 [language.editor.category]
 message-count = "&7{count} הודעות&r"
-open = "&8לחץ לפתוח קטגוריה זו.&r"
+open = "&8לחיצה לפתיחת קטגוריה זו.&r"
 
 [language.editor.error]
 no-permission = "אין לך הרשאה לערוך את השפות של {plugin}."

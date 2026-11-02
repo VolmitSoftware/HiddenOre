@@ -13,16 +13,16 @@ import art.arcane.volmlib.util.localization.PluginLanguageEditor;
 import art.arcane.volmlib.util.localization.LanguageFileEditor;
 import art.arcane.volmlib.util.localization.LanguageReferenceRenderer;
 import art.arcane.volmlib.util.localization.LanguageFileHeader;
+import art.arcane.volmlib.util.localization.LanguageDirectory;
+import art.arcane.volmlib.util.localization.LanguageMeta;
 import art.arcane.volmlib.util.localization.TomlLanguageEditor;
 import art.arcane.volmlib.util.localization.TomlLanguageParser;
-import art.arcane.volmlib.util.localization.RemoteLanguageCatalog;
 import art.arcane.volmlib.util.localization.LocalizationCandidate;
 import art.arcane.volmlib.util.localization.LocalizationIssue;
 import art.arcane.volmlib.util.localization.LocalizationManager;
 import art.arcane.volmlib.util.localization.LocalizationReloadResult;
 import art.arcane.volmlib.util.localization.LocalizationSnapshot;
 import art.arcane.volmlib.util.localization.LocalizationValidator;
-import art.arcane.volmlib.util.io.AtomicFileIO;
 import art.arcane.volmlib.util.localization.MessageArgs;
 import art.arcane.volmlib.util.localization.MessageArgument;
 import art.arcane.volmlib.util.localization.MessageArgumentKind;
@@ -44,11 +44,13 @@ import org.bukkit.entity.Player;
 
 import java.nio.file.Path;
 import java.nio.file.Files;
-import java.nio.file.DirectoryStream;
+import java.nio.file.LinkOption;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -126,6 +128,7 @@ public final class Messages {
   public static final TextKey COMMAND_CONFIG_DESCRIPTION = TextKey.of("command.description.config", "Edit HiddenOre settings");
 
   private static final String ENGLISH_LOCALE = VolmitLocales.ENGLISH;
+  private static final int MAXIMUM_BASE_DEPTH = 4;
   private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
   private static final Pattern PLACEHOLDERS = Pattern.compile("\\{\\{|\\}\\}|\\{([^{}]+)\\}");
   private static final PlainTextComponentSerializer PLAIN_SERIALIZER = PlainTextComponentSerializer.plainText();
@@ -155,21 +158,19 @@ public final class Messages {
   private static final MessageCatalog CATALOG = createCatalog();
 
   private final LocalizationManager manager;
-  private final RemoteLanguageCatalog remoteCatalog;
-  private final Path languageDirectory;
+  private final HiddenOreLanguages languages;
   private PluginLanguageService languageService;
   private String activeLocale = ENGLISH_LOCALE;
 
   public Messages() {
-    this(null, null);
+    this(null);
   }
 
-  public Messages(RemoteLanguageCatalog remoteCatalog, Path languageDirectory) {
-    this.remoteCatalog = remoteCatalog;
-    this.languageDirectory = languageDirectory;
+  public Messages(HiddenOreLanguages languages) {
+    this.languages = languages;
     manager = new LocalizationManager(LocalizationCandidate.english(CATALOG, PluralSelector.oneOther()));
-    if (languageDirectory != null) {
-      writeEnglishIfMissing();
+    if (languages != null) {
+      ensureEnglish();
     }
   }
 
@@ -229,33 +230,23 @@ public final class Messages {
   }
 
   public Map<String, LocalizationSnapshot> prepareInstalledLocales(Set<String> knownLocales) throws IOException {
-    if (languageDirectory == null) {
+    if (languages == null) {
       return Map.of();
     }
     Map<String, LocalizationSnapshot> prepared = new HashMap<>();
     LocalizationSnapshot english = LocalizationSnapshot.create(
         LocalizationCandidate.english(CATALOG, PluralSelector.oneOther()));
     for (String locale : knownLocales) {
-      if (VolmitLocales.nonEnglish().contains(locale) && Files.notExists(languagePath(locale))) {
+      if (languages.isRepositoryLocale(locale) && Files.notExists(languagePath(locale), LinkOption.NOFOLLOW_LINKS)) {
         prepared.put(locale, english);
       }
     }
-    if (!Files.isDirectory(languageDirectory)) {
-      return Map.copyOf(prepared);
-    }
-    try (DirectoryStream<Path> files = Files.newDirectoryStream(languageDirectory, "*.toml")) {
-      for (Path file : files) {
-        String name = file.getFileName().toString();
-        String locale = name.substring(0, name.length() - ".toml".length());
-        if (!locale.matches("[A-Za-z0-9_-]{2,32}")) {
-          continue;
-        }
-        try {
-          prepared.put(locale, loadEditorSnapshot(locale));
-        } catch (Exception failure) {
-          Logger.getLogger("HiddenOre").log(Level.WARNING,
-              "Cannot prepare language " + file + "; the last valid messages remain active.", failure);
-        }
+    for (String locale : languages.refresh()) {
+      try {
+        prepared.put(locale, loadEditorSnapshot(locale));
+      } catch (Exception failure) {
+        Logger.getLogger("HiddenOre").log(Level.WARNING, "Cannot prepare language " + languagePath(locale)
+            + "; the last valid messages remain active.", failure);
       }
     }
     return Map.copyOf(prepared);
@@ -308,7 +299,7 @@ public final class Messages {
   }
 
   private Path languagePath(String locale) {
-    return languageDirectory.resolve(requireLocale(locale, "languages") + ".toml");
+    return languages.directory().languageFile(requireLocale(locale, "languages"));
   }
 
   private LocalizationSnapshot withOverride(LocalizationCandidate base, LocaleOverlay override) {
@@ -357,28 +348,90 @@ public final class Messages {
   }
 
   private LocalizationCandidate loadCandidate(String locale) throws Exception {
-    if (languageDirectory == null) {
+    if (languages == null) {
       return LocalizationCandidate.english(CATALOG, PluralSelector.oneOther());
     }
     List<LocaleOverlay> overlays = new ArrayList<>();
-    LocaleOverlay installed = loadDownloadedOverlay(locale);
-    if (installed != null) {
-      overlays.add(installed);
+    String raw = readInstalled(locale);
+    if (raw != null) {
+      overlays.add(parseDownloadedOverlay(locale, raw));
+      overlays.addAll(baseOverlays(locale, raw));
     }
     return new LocalizationCandidate(CATALOG, overlays, PluralSelector.oneOther());
   }
 
-  private void writeEnglishIfMissing() {
-    Path path = languagePath(ENGLISH_LOCALE);
-    if (Files.exists(path)) {
-      return;
+  private String readInstalled(String locale) throws IOException {
+    Path file = languagePath(locale);
+    if (Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
+      return LanguageDirectory.readContent(file);
     }
-    List<String> header = LanguageFileHeader.render(new LanguageFileHeader.Options(
+    if (languages.isRepositoryLocale(locale)) {
+      return languages.install(locale);
+    }
+    return null;
+  }
+
+  private List<LocaleOverlay> baseOverlays(String locale, String raw) throws IOException {
+    List<LocaleOverlay> overlays = new ArrayList<>();
+    Set<String> visited = new HashSet<>();
+    visited.add(normalizedLocale(locale));
+    LanguageMeta meta = metaFromContent(locale, raw);
+    int depth = 0;
+    while (meta.base().isPresent() && depth < MAXIMUM_BASE_DEPTH) {
+      String base = languages.canonical(meta.base().get());
+      if (!visited.add(normalizedLocale(base)) || LanguageDirectory.sameLocale(base, ENGLISH_LOCALE)) {
+        break;
+      }
+      Path baseFile = languagePath(base);
+      if (!Files.isRegularFile(baseFile, LinkOption.NOFOLLOW_LINKS)) {
+        break;
+      }
+      String baseContent = LanguageDirectory.readContent(baseFile);
+      overlays.add(parseDownloadedOverlay(base, baseContent));
+      meta = metaFromContent(base, baseContent);
+      depth++;
+    }
+    return overlays;
+  }
+
+  private static LanguageMeta metaFromContent(String locale, String raw) {
+    try {
+      return LanguageMeta.parse(raw).withoutSelfBase(locale);
+    } catch (IOException failure) {
+      return LanguageMeta.empty();
+    }
+  }
+
+  private static String normalizedLocale(String locale) {
+    return locale.replace('-', '_').toLowerCase(Locale.ROOT);
+  }
+
+  private void ensureEnglish() {
+    try {
+      languages.ensureEnglish();
+    } catch (IOException failure) {
+      Logger.getLogger("HiddenOre").log(Level.WARNING,
+          "Cannot refresh English language file " + languagePath(ENGLISH_LOCALE), failure);
+    }
+  }
+
+  static String englishReference() {
+    return LanguageReferenceRenderer.render(CATALOG, englishHeader());
+  }
+
+  static void validateContent(String locale, String content) throws IOException {
+    LocalizationSnapshot.create(new LocalizationCandidate(CATALOG,
+        List.of(loadOverlay(content, "upstream:" + locale, locale)), PluralSelector.oneOther()));
+  }
+
+  private static List<String> englishHeader() {
+    return LanguageFileHeader.render(new LanguageFileHeader.Options(
         "HiddenOre", ENGLISH_LOCALE,
         List.of("prefix is added before chat messages. Set it to an empty string to hide it."),
         List.of("Use &0-&f for colors, &k-&o for formatting, &r to reset, and &#RRGGBB for hex colors.",
             "For example: &aGreen text&r. Use \\n inside quoted TOML strings for a new line."),
         Map.ofEntries(
+            Map.entry("added", "Messages added by a language update"),
             Map.entry("after", "Message value after editing"),
             Map.entry("amount", "Number of dropped items"),
             Map.entry("argument", "Unexpected command argument"),
@@ -388,6 +441,7 @@ public final class Messages {
             Map.entry("command", "Command path"),
             Map.entry("count", "Number of messages"),
             Map.entry("group", "Language editor category"),
+            Map.entry("kept", "Local edits kept by a language update"),
             Map.entry("key", "Message or parameter key"),
             Map.entry("line", "Line number within a message"),
             Map.entry("locale", "Language code"),
@@ -401,22 +455,19 @@ public final class Messages {
             Map.entry("personal", "Personal language code"),
             Map.entry("plugin", "Plugin name"),
             Map.entry("reason", "Error reason"),
+            Map.entry("remaining", "Time until the next language check"),
             Map.entry("roll", "Sampled random value"),
             Map.entry("section", "Language editor section"),
             Map.entry("target", "Plugin receiving the language selection"),
             Map.entry("type", "Expected parameter type"),
+            Map.entry("updated", "Messages changed by a language update"),
             Map.entry("value", "Current message or parameter value"),
             Map.entry("variables", "Allowed message placeholders"),
             Map.entry("vein", "Ore vein name")
         )));
-    try {
-      AtomicFileIO.writeString(path, LanguageReferenceRenderer.render(CATALOG, header));
-    } catch (IOException failure) {
-      Logger.getLogger("HiddenOre").log(Level.WARNING, "Cannot create English language file " + path, failure);
-    }
   }
 
-  private LocaleOverlay loadOverlay(String raw, String source, String locale) throws IOException {
+  private static LocaleOverlay loadOverlay(String raw, String source, String locale) throws IOException {
     LocaleOverlay.Builder overlay = LocaleOverlay.builder(source, locale);
     for (Map.Entry<String, MessageValue> entry : TomlLanguageParser.parseValidValues(raw, CATALOG).entrySet()) {
       MessageValue value = entry.getValue();
@@ -426,24 +477,6 @@ public final class Messages {
       overlay.put(entry.getKey(), value);
     }
     return overlay.build();
-  }
-
-  private LocaleOverlay loadDownloadedOverlay(String locale) throws Exception {
-    Path file = languagePath(locale);
-    String raw;
-    if (Files.exists(file)) {
-      if (!Files.isRegularFile(file) || Files.size(file) > 2L * 1024L * 1024L) {
-        throw new IOException("Language file is not a regular file within the size limit: " + file);
-      }
-      raw = Files.readString(file);
-    } else if (remoteCatalog != null && remoteCatalog.availableLocales().contains(locale)) {
-      raw = remoteCatalog.readOrInstall(locale, file, (selectedLocale, content) ->
-        LocalizationSnapshot.create(new LocalizationCandidate(CATALOG,
-            List.of(parseDownloadedOverlay(selectedLocale, content)), PluralSelector.oneOther())));
-    } else {
-      return null;
-    }
-    return parseDownloadedOverlay(locale, raw);
   }
 
   private LocaleOverlay parseDownloadedOverlay(String locale, String raw) throws IOException {

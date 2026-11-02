@@ -9,36 +9,41 @@
 # prefix는 채팅 메시지 앞에 붙습니다. 빈 문자열로 설정하면 숨겨집니다.
 #
 # === 서식 ===
-# 색상 코드: &0-&f, &k-&o, &r, &#RRGGBB; &a...&r.
+# &0-&f는 색상, &k-&o는 서식, &r은 초기화, &#RRGGBB는 16진수 색상에 사용합니다.
+# 예: &a초록색 텍스트&r. 따옴표로 묶은 TOML 문자열에서 줄을 바꾸려면 \n을 사용합니다.
 #
 # === 변수 ===
 # 변수 이름을 변경하지 말고 각 메시지에 원래 있는 변수만 사용하세요.
-#   {after}  변경 후 가치
+#   {added}  언어 업데이트로 추가된 메시지
+#   {after}  변경 후 값
 #   {amount}  드롭되는 아이템 수
 #   {argument}  예상하지 못한 인수
 #   {before}  변경 전의 값
 #   {block}  채굴한 블록 종류
 #   {chance}  설정된 발동 확률
-#   {command}  명령 경로
+#   {command}  명령어 경로
 #   {count}  메시지 수
 #   {group}  언어 편집기 분류
+#   {kept}  언어 업데이트에서 유지된 로컬 편집
 #   {key}  메시지 또는 매개변수 키
 #   {line}  메시지 안의 줄 번호
-#   {locale}  로케일
+#   {locale}  언어 코드
 #   {material}  드롭되는 아이템 종류
-#   {maximum}  최대 허용 값
+#   {maximum}  편집기 입력 최대 길이
 #   {number}  항목 번호
 #   {page}  현재 페이지 번호
 #   {pages}  전체 페이지 수
 #   {parameter}  매개변수 이름
 #   {path}  설정 항목 경로
-#   {personal}  개인 로케일
-#   {plugin}  Plugin 이름
+#   {personal}  개인 언어 코드
+#   {plugin}  플러그인 이름
 #   {reason}  실패 이유
+#   {remaining}  다음 언어 확인까지 남은 시간
 #   {roll}  추출된 난수 값
 #   {section}  언어 편집기 섹션
 #   {target}  언어 선택 대상 플러그인
 #   {type}  형식
+#   {updated}  언어 업데이트로 변경된 메시지
 #   {value}  현재값, 기본값 또는 원시값
 #   {variables}  사용 가능한 자리표시자
 #   {vein}  광맥 이름
@@ -53,10 +58,10 @@ config_reloaded_message = "&a설정을 업데이트하고 다시 불러왔습니
 [debug]
 player_placed = "&c플레이어가 설치한 {block}: 숨겨진 드롭 없음.&r"
 random_drop = "&a무작위 드롭: {material} x{amount}&r"
-random_drop_lost = "&c도구 등급이 너무 낮아 무작위 드롭 {material}을 잃었습니다.&r"
+random_drop_lost = "&c도구 등급이 너무 낮아 무작위 드롭 {material}을(를) 잃었습니다.&r"
 vein_drop = "&a광맥 {vein}: {material} x{amount}&r"
 vein_drop_discovered = "&a광맥 {vein}: {material} x{amount} (발견됨)&r"
-vein_drop_lost = "&c광맥 {vein}: 도구 등급이 너무 낮아 {material}을 잃었습니다.&r"
+vein_drop_lost = "&c광맥 {vein}: 도구 등급이 너무 낮아 {material}을(를) 잃었습니다.&r"
 command_hit = "&7명령어 판정: chance={chance}, roll={roll} -> &a성공&7&r"
 command_miss = "&7명령어 판정: chance={chance}, roll={roll} -> &c실패&7&r"
 
@@ -69,7 +74,7 @@ config = "HiddenOre 설정 편집"
 debug_group = "HiddenOre: 진단 도구"
 debugdump = "진단 보고서를 생성하고 선택적으로 업로드"
 root = "HiddenOre 명령어 그룹"
-debug = "내 광물 디버그 모드 전환"
+debug = "내 광석 디버그 모드 전환"
 
 [director.help]
 no_subcommands = "이 페이지에는 하위 명령어가 없습니다."
@@ -96,7 +101,7 @@ hover = "다음 페이지"
 required = "이 매개변수는 필수입니다."
 optional = "이 매개변수는 선택 사항입니다."
 default = "지정하지 않으면 기본값은 \"{value}\"입니다."
-type = "이 매개변수의 유형은 {type}입니다."
+type = "이 매개변수의 형식은 {type}입니다."
 
 [director.runtime.error]
 invalid_origin = "이 실행 위치에서는 이 명령어를 실행할 수 없습니다."
@@ -141,16 +146,25 @@ unavailable-for-all = "{locale} 언어는 선택한 모든 플러그인에서 �
 
 [language.usage]
 editor = "사용법: /{command} language server edit [locale]"
-selection = "사용법: /{command} language self [locale|reset] or server [locale]"
+selection = "사용법: /{command} language self [locale|reset] 또는 server [locale]"
 volmit-selection = "사용법: /volmit plugins languages [locale]"
+update = "사용법: /{command} language update"
 
 [language.selection]
 preparing = "{target}의 {locale} 언어를 준비하는 중..."
 save-failed = "{plugin}: 언어 선택을 저장하지 못했습니다. 서버 콘솔을 확인하세요."
-english-fallback = "{plugin}: {locale}을 사용할 수 없어 영어(en_US)를 사용합니다."
-personal-selected = "{plugin}: 개인 언어를 {locale}으로 변경했습니다."
-server-selected = "{plugin}: 서버 언어를 {locale}으로 변경했습니다."
+english-fallback = "{plugin}: {locale}을(를) 사용할 수 없어 영어(en_US)를 사용합니다."
+personal-selected = "{plugin}: 개인 언어를 {locale}(으)로 변경했습니다."
+server-selected = "{plugin}: 서버 언어를 {locale}(으)로 변경했습니다."
 server-default-selected = "{plugin}: 개인 언어가 이제 서버 기본 언어를 따릅니다."
+
+[language.update]
+checking = "{plugin}: 언어 저장소의 변경 사항을 확인하는 중..."
+unchanged = "{plugin}: 설치된 언어가 이미 저장소와 일치합니다."
+applied = "{plugin}: {locale} 업데이트됨 (추가 {added}, 변경 {updated}, 로컬 편집 유지 {kept})."
+cooldown = "{plugin}: 언어 저장소를 최근에 확인했습니다. {remaining} 후에 다시 시도하세요."
+locale-failed = "{plugin}: {locale}이(가) 업데이트되지 않았습니다: {reason}"
+failed = "{plugin}: 언어 업데이트 실패: {reason}"
 
 [language.editor]
 title = "{plugin} › {section}"
@@ -197,15 +211,15 @@ open = "&8클릭하여 이 언어를 엽니다.&r"
 
 [language.editor.category]
 message-count = "&7메시지 {count}개&r"
-open = "&8클릭하여 이 그룹을 엽니다.&r"
+open = "&8클릭하여 이 분류를 엽니다.&r"
 
 [language.editor.error]
 no-permission = "{plugin}의 언어를 편집할 권한이 없습니다."
 unable-to-edit = "편집하지 못했습니다: {reason}"
 
 [language.editor.saved]
-summary = "{locale}을 저장했습니다. 언어 선택은 변경되지 않았습니다."
-change = "{key}: “{before}”에서 “{after}”로 변경했습니다."
+summary = "{locale}을(를) 저장했습니다. 언어 선택은 변경되지 않았습니다."
+change = "{key}: “{before}”에서 “{after}”(으)로 변경했습니다."
 
 [language.editor.part]
 line = "{line}번째 줄"
